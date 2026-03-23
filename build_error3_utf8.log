@@ -1,0 +1,313 @@
+﻿
+> firebase-antigravity@0.1.0 build
+> next build
+
+  Ôû▓ Next.js 14.2.0
+
+   Creating an optimized production build ...
+node.exe : Failed to 
+compile.
+En línea: 1 Carácter: 1
++ & "C:\Program 
+Files\nodejs/node.exe" 
+"C:\Program 
+Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~
+    + CategoryInfo         
+     : NotSpecified: (Fai  
+  led to compile.:String   
+ ) [], RemoteException
+    + FullyQualifiedErrorI 
+   d : NativeCommandError
+ 
+
+./ai/flows/send-email.ts
+Module not found: Can't 
+resolve 'genkit'
+
+https://nextjs.org/docs/mes
+sages/module-not-found
+
+Import trace for requested 
+module:
+./app/(app)/dashboard/actio
+ns.ts
+./node_modules/next/dist/bu
+ild/webpack/loaders/next-fl
+ight-action-entry-loader.js
+?actions=%5B%5B%22C%3A%5C%5
+CUsers%5C%5Ccacornejoce%5C%
+5CDownloads%5C%5Cdownload%5
+C%5Csrc%5C%5Capp%5C%5C(app)
+%5C%5Cdashboard%5C%5Caction
+s.ts%22%2C%5B%22sendTestEma
+il%22%5D%5D%2C%5B%22C%3A%5C
+%5CUsers%5C%5Ccacornejoce%5
+C%5CDownloads%5C%5Cdownload
+%5C%5Csrc%5C%5Capp%5C%5C(ap
+p)%5C%5Ctasks%5C%5Cactions.
+ts%22%2C%5B%22clearEfemerid
+eNotificationLogs%22%2C%22u
+pdateTask%22%2C%22addEfemer
+ide%22%2C%22checkAndSendEfe
+merideNotifications%22%2C%2
+2deleteTask%22%2C%22addTask
+%22%2C%22deleteEfemeride%22
+%2C%22updateEfemeride%22%2C
+%22manualSendEfemerideNotif
+ication%22%5D%5D%5D&__clien
+t_imported__=true!
+
+./ai/flows/suggest-task-imp
+rovements.ts
+Module not found: Can't 
+resolve 'genkit'
+
+https://nextjs.org/docs/mes
+sages/module-not-found
+
+Import trace for requested 
+module:
+./app/(app)/intelligent-ass
+ignment/actions.ts
+./node_modules/next/dist/bu
+ild/webpack/loaders/next-fl
+ight-action-entry-loader.js
+?actions=%5B%5B%22C%3A%5C%5
+CUsers%5C%5Ccacornejoce%5C%
+5CDownloads%5C%5Cdownload%5
+C%5Csrc%5C%5Capp%5C%5C(app)
+%5C%5Cintelligent-assignmen
+t%5C%5Cactions.ts%22%2C%5B%
+22getTaskSuggestions%22%5D%
+5D%5D&__client_imported__=t
+rue!
+
+./ai/genkit.ts
+Module not found: Can't 
+resolve 'genkit'
+Did you mean './genkit'?
+Requests that should 
+resolve in the current 
+directory need to start 
+with './'.
+Requests that start with a 
+name are treated as module 
+requests and resolve 
+within module directories 
+(node_modules).
+If changing the source 
+code is not an option 
+there is also a resolve 
+options called 
+'preferRelative' which 
+tries to resolve these 
+kind of requests in the 
+current directory too.
+
+https://nextjs.org/docs/mes
+sages/module-not-found
+
+Import trace for requested 
+module:
+./ai/flows/send-funcionario
+-info.ts
+./app/(app)/ingreso-funcion
+arios/actions.ts
+./node_modules/next/dist/bu
+ild/webpack/loaders/next-fl
+ight-action-entry-loader.js
+?actions=%5B%5B%22C%3A%5C%5
+CUsers%5C%5Ccacornejoce%5C%
+5CDownloads%5C%5Cdownload%5
+C%5Csrc%5C%5Capp%5C%5C(app)
+%5C%5Cinventory%5C%5Caction
+s.ts%22%2C%5B%22updateInven
+toryItem%22%2C%22deleteInve
+ntoryItem%22%2C%22updateIte
+mQuantity%22%2C%22addMultip
+leInventoryItems%22%2C%22ad
+dInventoryItem%22%5D%5D%2C%
+5B%22C%3A%5C%5CUsers%5C%5Cc
+acornejoce%5C%5CDownloads%5
+C%5Cdownload%5C%5Csrc%5C%5C
+app%5C%5C(app)%5C%5Cinvento
+ry-equipos%5C%5Cactions.ts%
+22%2C%5B%22archiveEquipo%22
+%2C%22updateInventarioEquip
+o%22%2C%22deleteInventarioE
+quipo%22%2C%22addInventario
+Equipo%22%2C%22unarchiveEqu
+ipos%22%2C%22addMultipleInv
+entarioEquipos%22%5D%5D%2C%
+5B%22C%3A%5C%5CUsers%5C%5Cc
+acornejoce%5C%5CDownloads%5
+C%5Cdownload%5C%5Csrc%5C%5C
+app%5C%5C(app)%5C%5Cingreso
+-funcionarios%5C%5Cactions.
+ts%22%2C%5B%22sendFuncionar
+ioInfoEmail%22%2C%22deleteF
+uncionario%22%2C%22updateFu
+ncionario%22%2C%22addFuncio
+nario%22%2C%22addMultipleFu
+ncionarios%22%5D%5D%2C%5B%2
+2C%3A%5C%5CUsers%5C%5Ccacor
+nejoce%5C%5CDownloads%5C%5C
+download%5C%5Csrc%5C%5Capp%
+5C%5C(app)%5C%5Cinventory%5
+C%5Carchives-actions.ts%22%
+2C%5B%22addInventoryArchive
+%22%2C%22updateInventoryArc
+hive%22%2C%22deleteInventor
+yArchive%22%5D%5D%5D&__clie
+nt_imported__=true!
+
+./node_modules/@genkit-ai/g
+oogle-genai/lib/common/conv
+erters.js
+Module not found: Can't 
+resolve 'genkit'
+
+https://nextjs.org/docs/mes
+sages/module-not-found
+
+Import trace for requested 
+module:
+./node_modules/@genkit-ai/g
+oogle-genai/lib/common/util
+s.js
+./node_modules/@genkit-ai/g
+oogle-genai/lib/googleai/in
+dex.js
+./node_modules/@genkit-ai/g
+oogle-genai/lib/index.mjs
+./ai/genkit.ts
+./ai/flows/send-funcionario
+-info.ts
+./app/(app)/ingreso-funcion
+arios/actions.ts
+./node_modules/next/dist/bu
+ild/webpack/loaders/next-fl
+ight-action-entry-loader.js
+?actions=%5B%5B%22C%3A%5C%5
+CUsers%5C%5Ccacornejoce%5C%
+5CDownloads%5C%5Cdownload%5
+C%5Csrc%5C%5Capp%5C%5C(app)
+%5C%5Cinventory%5C%5Caction
+s.ts%22%2C%5B%22updateInven
+toryItem%22%2C%22deleteInve
+ntoryItem%22%2C%22updateIte
+mQuantity%22%2C%22addMultip
+leInventoryItems%22%2C%22ad
+dInventoryItem%22%5D%5D%2C%
+5B%22C%3A%5C%5CUsers%5C%5Cc
+acornejoce%5C%5CDownloads%5
+C%5Cdownload%5C%5Csrc%5C%5C
+app%5C%5C(app)%5C%5Cinvento
+ry-equipos%5C%5Cactions.ts%
+22%2C%5B%22archiveEquipo%22
+%2C%22updateInventarioEquip
+o%22%2C%22deleteInventarioE
+quipo%22%2C%22addInventario
+Equipo%22%2C%22unarchiveEqu
+ipos%22%2C%22addMultipleInv
+entarioEquipos%22%5D%5D%2C%
+5B%22C%3A%5C%5CUsers%5C%5Cc
+acornejoce%5C%5CDownloads%5
+C%5Cdownload%5C%5Csrc%5C%5C
+app%5C%5C(app)%5C%5Cingreso
+-funcionarios%5C%5Cactions.
+ts%22%2C%5B%22sendFuncionar
+ioInfoEmail%22%2C%22deleteF
+uncionario%22%2C%22updateFu
+ncionario%22%2C%22addFuncio
+nario%22%2C%22addMultipleFu
+ncionarios%22%5D%5D%2C%5B%2
+2C%3A%5C%5CUsers%5C%5Ccacor
+nejoce%5C%5CDownloads%5C%5C
+download%5C%5Csrc%5C%5Capp%
+5C%5C(app)%5C%5Cinventory%5
+C%5Carchives-actions.ts%22%
+2C%5B%22addInventoryArchive
+%22%2C%22updateInventoryArc
+hive%22%2C%22deleteInventor
+yArchive%22%5D%5D%5D&__clie
+nt_imported__=true!
+
+./node_modules/@genkit-ai/g
+oogle-genai/lib/common/type
+s.js
+Module not found: Can't 
+resolve 'genkit'
+
+https://nextjs.org/docs/mes
+sages/module-not-found
+
+Import trace for requested 
+module:
+./node_modules/@genkit-ai/g
+oogle-genai/lib/common/util
+s.js
+./node_modules/@genkit-ai/g
+oogle-genai/lib/googleai/in
+dex.js
+./node_modules/@genkit-ai/g
+oogle-genai/lib/index.mjs
+./ai/genkit.ts
+./ai/flows/send-funcionario
+-info.ts
+./app/(app)/ingreso-funcion
+arios/actions.ts
+./node_modules/next/dist/bu
+ild/webpack/loaders/next-fl
+ight-action-entry-loader.js
+?actions=%5B%5B%22C%3A%5C%5
+CUsers%5C%5Ccacornejoce%5C%
+5CDownloads%5C%5Cdownload%5
+C%5Csrc%5C%5Capp%5C%5C(app)
+%5C%5Cinventory%5C%5Caction
+s.ts%22%2C%5B%22updateInven
+toryItem%22%2C%22deleteInve
+ntoryItem%22%2C%22updateIte
+mQuantity%22%2C%22addMultip
+leInventoryItems%22%2C%22ad
+dInventoryItem%22%5D%5D%2C%
+5B%22C%3A%5C%5CUsers%5C%5Cc
+acornejoce%5C%5CDownloads%5
+C%5Cdownload%5C%5Csrc%5C%5C
+app%5C%5C(app)%5C%5Cinvento
+ry-equipos%5C%5Cactions.ts%
+22%2C%5B%22archiveEquipo%22
+%2C%22updateInventarioEquip
+o%22%2C%22deleteInventarioE
+quipo%22%2C%22addInventario
+Equipo%22%2C%22unarchiveEqu
+ipos%22%2C%22addMultipleInv
+entarioEquipos%22%5D%5D%2C%
+5B%22C%3A%5C%5CUsers%5C%5Cc
+acornejoce%5C%5CDownloads%5
+C%5Cdownload%5C%5Csrc%5C%5C
+app%5C%5C(app)%5C%5Cingreso
+-funcionarios%5C%5Cactions.
+ts%22%2C%5B%22sendFuncionar
+ioInfoEmail%22%2C%22deleteF
+uncionario%22%2C%22updateFu
+ncionario%22%2C%22addFuncio
+nario%22%2C%22addMultipleFu
+ncionarios%22%5D%5D%2C%5B%2
+2C%3A%5C%5CUsers%5C%5Ccacor
+nejoce%5C%5CDownloads%5C%5C
+download%5C%5Csrc%5C%5Capp%
+5C%5C(app)%5C%5Cinventory%5
+C%5Carchives-actions.ts%22%
+2C%5B%22addInventoryArchive
+%22%2C%22updateInventoryArc
+hive%22%2C%22deleteInventor
+yArchive%22%5D%5D%5D&__clie
+nt_imported__=true!
+
+
+> Build failed because of 
+webpack errors

@@ -1,0 +1,68 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 210 20% 98%;
+    --foreground: 224 71.4% 4.1%;
+    --card: 0 0% 100%;
+    --card-foreground: 224 71.4% 4.1%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 224 71.4% 4.1%;
+    
+    /* Primario: Rosado Institucional */
+    --primary: 340 75% 48%; 
+    --primary-foreground: 0 0% 100%;
+    
+    /* Secundario: Azul Marino Institucional */
+    --secondary: 231 57% 37%; 
+    --secondary-foreground: 0 0% 100%;
+    
+    --muted: 220 14.3% 95.9%;
+    --muted-foreground: 220 8.9% 45.1%;
+    --accent: 231 57% 37%; 
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 340 75% 48%;
+    --radius: 0.75rem;
+
+    /* Sidebar Theme (Fondo Rosado, Texto Blanco) */
+    --sidebar-background: 340 75% 48%;
+    --sidebar-foreground: 0 0% 100%;
+    --sidebar-primary: 231 57% 30%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 231 57% 30%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 340 75% 45%;
+    --sidebar-ring: 231 57% 37%;
+  }
+}
+
+@layer base {
+  * { @apply border-border; }
+  body { @apply bg-background text-foreground font-sans; }
+  h1, h2, h3, h4, h5, h6 { @apply font-headline; }
+}
+
+@layer components {
+  .fancy-border-card {
+    @apply relative border border-border/50 shadow-sm transition-all duration-300 hover:shadow-md hover:border-primary/30;
+  }
+  
+  /* Forzar letras blancas sobre fondos de estado oscuros */
+  .bg-primary, .bg-secondary, .bg-emerald-600, .bg-red-600, .bg-primary\/90, .bg-indigo-600, .bg-sky-600 {
+    @apply text-white !important;
+  }
+  
+  .bg-primary *, .bg-secondary *, .bg-emerald-600 *, .bg-red-600 *, .bg-indigo-600 *, .bg-sky-600 * {
+    @apply text-white !important;
+  }
+
+  .text-white-force {
+    @apply text-white !important;
+  }
+}
