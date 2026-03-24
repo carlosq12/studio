@@ -21,6 +21,7 @@ import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import Link from 'next/link';
 import { checkAndSendEfemerideNotifications } from "../tasks/actions";
+import { checkAndSendBirthdayNotifications } from "../birthdays/actions";
 
 function useDashboardData() {
     const firestore = useFirestore();
@@ -145,18 +146,24 @@ export default function DashboardPage() {
   useEffect(() => {
     // Trigger automático de efemérides al cargar el dashboard
     const runAutoNotify = async () => {
-        const result = await checkAndSendEfemerideNotifications();
-        if (result.success && result.count > 0) {
+        // Ejecutar ambas en paralelo
+        const [efemerideResult, birthdayResult] = await Promise.all([
+            checkAndSendEfemerideNotifications(),
+            checkAndSendBirthdayNotifications()
+        ]);
+
+        const totalSent = (efemerideResult.success ? efemerideResult.count : 0) + 
+                         (birthdayResult.success ? birthdayResult.count : 0);
+
+        if (totalSent > 0) {
             toast({
                 title: "Notificaciones Procesadas",
-                description: `Se han enviado automáticamente ${result.count} recordatorios de efemérides.`,
+                description: `Se han enviado automáticamente ${totalSent} recordatorios (cumpleaños/efemérides).`,
             });
-        } else if (result.error) {
-            toast({
-                variant: "destructive",
-                title: "Error en Notificaciones",
-                description: "No se pudieron procesar los avisos automáticos.",
-            });
+        }
+        
+        if (efemerideResult.error || birthdayResult.error) {
+            console.error('Error en notificaciones auto:', efemerideResult.error, birthdayResult.error);
         }
     };
     if (!loading) {

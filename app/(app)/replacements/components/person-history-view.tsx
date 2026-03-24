@@ -54,9 +54,13 @@ export function PersonHistoryView({ viewBy, replacements, funcionarioOptions, fu
 
     const personReplacements = useMemo(() => {
         if (!selectedPerson) return [];
+
+        const normalizeString = (str?: string) => str ? str.replace(/\s+/g, '').toLowerCase() : '';
+        const normalizedSelected = normalizeString(selectedPerson);
+
         return replacements.filter(rep => {
             const name = viewBy === 'reemplazado' ? rep['NOMBRE REEMPLAZADO'] : rep.NOMBRE;
-            return name === selectedPerson;
+            return normalizeString(name) === normalizedSelected;
         }).sort((a, b) => {
             const dateA = parseDate(a.DESDE)?.getTime() || 0;
             const dateB = parseDate(b.DESDE)?.getTime() || 0;
@@ -117,6 +121,18 @@ export function PersonHistoryView({ viewBy, replacements, funcionarioOptions, fu
         };
     }, [personReplacements, selectedPerson, viewBy]);
 
+    const filteredOptions = useMemo(() => {
+        const names = new Set<string>();
+        replacements.forEach(rep => {
+            const name = viewBy === 'reemplazado' ? rep['NOMBRE REEMPLAZADO'] : rep.NOMBRE;
+            if (name) names.add(name);
+        });
+
+        return Array.from(names)
+            .map(name => ({ label: name, value: name, id: name }))
+            .sort((a, b) => a.label.localeCompare(b.label, 'es', { sensitivity: 'base' }));
+    }, [replacements, viewBy]);
+
     const handlePersonChange = (value: string) => {
         setSelectedPerson(value);
         methods.setValue('person', value);
@@ -142,7 +158,7 @@ export function PersonHistoryView({ viewBy, replacements, funcionarioOptions, fu
                                     control={methods.control}
                                     name="person"
                                     label=""
-                                    options={funcionarioOptions.filter(o => o.value !== '')}
+                                    options={filteredOptions}
                                     placeholder="Buscar funcionario..."
                                     onValueChange={handlePersonChange}
                                 />

@@ -1,6 +1,6 @@
 'use server';
 
-import { addDoc, collection, writeBatch, doc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { addDoc, collection, writeBatch, doc, updateDoc, deleteDoc, getDocs } from 'firebase/firestore';
 import { z } from 'zod';
 import { initializeApp, getApps } from 'firebase/app';
 import { getFirestore } from 'firebase/firestore';
@@ -61,7 +61,9 @@ export async function addBirthday(data: { [key: string]: FormDataEntryValue }) {
       operation: 'create',
       requestResourceData: birthdayData,
     });
-    errorEmitter.emit('permission-error', permissionError);
+    if (errorEmitter) {
+      errorEmitter.emit('permission-error', permissionError);
+    }
     return { error: 'No se pudo guardar el cumpleaños.' };
   }
 }
@@ -100,7 +102,9 @@ export async function updateBirthday(data: { [key: string]: FormDataEntryValue }
             operation: 'update',
             requestResourceData: dataToUpdate,
         });
-        errorEmitter.emit('permission-error', permissionError);
+        if (errorEmitter) {
+            errorEmitter.emit('permission-error', permissionError);
+        }
         }
         return { error: error.message || 'No se pudo actualizar el cumpleaños.' };
     }
@@ -156,5 +160,64 @@ export async function manualSendBirthdayEmail(birthdayId: string, name: string, 
     } catch (error: any) {
         console.error('Error al enviar correo de cumpleaños:', error);
         return { error: error.message || 'No se pudo enviar el correo de cumpleaños.' };
+    }
+}
+
+export async function checkAndSendBirthdayNotifications() {
+    try {
+        const querySnapshot = await getDocs(collection(db, 'cumpleaños'));
+        const birthdays = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as any));
+        
+        const now = new Date();
+        const currentDay = now.getDate();
+        const currentMonth = now.getMonth();
+        const currentYear = now.getFullYear();
+
+        let sentCount = 0;
+
+        for (const birthday of birthdays) {
+            const birthDateValue = birthday['fecha nacimiento'];
+            if (!birthDateValue || !birthday.correo) continue;
+
+            let birthDate: Date | null = null;
+            if (birthDateValue instanceof Timestamp) {
+                birthDate = birthDateValue.toDate();
+            } else if (typeof birthDateValue === 'string') {
+                birthDate = new Date(birthDateValue);
+            }
+
+            if (birthDate && birthDate.getDate() === currentDay && birthDate.getMonth() === currentMonth) {
+                // Verificar si ya fue notificado hoy
+                const lastAviso = birthday.fecha_aviso;
+                let alreadyNotified = false;
+                if (lastAviso instanceof Timestamp) {
+                    const lastAvisoDate = lastAviso.toDate();
+                    alreadyNotified = lastAvisoDate.getFullYear() === currentYear && 
+                                     lastAvisoDate.getMonth() === currentMonth && 
+                                     lastAvisoDate.getDate() === currentDay;
+                }
+
+                if (!alreadyNotified) {
+                    try {
+                        await sendBirthdayEmail({ 
+                            to: birthday.correo, 
+                            name: birthday['nombre funcionario'] || 'Colega' 
+                        });
+                        
+                        await updateDoc(doc(db, 'cumpleaños', birthday.id), {
+                            fecha_aviso: Timestamp.now()
+                        });
+                        sentCount++;
+                    } catch (e) {
+                        console.error(`Error enviando correo automático a ${birthday.correo}:`, e);
+                    }
+                }
+            }
+        }
+
+        return { success: true, count: sentCount };
+    } catch (error: any) {
+        console.error('Error al procesar avisos automáticos de cumpleaños:', error);
+        return { error: error.message };
     }
 }

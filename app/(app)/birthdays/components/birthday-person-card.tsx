@@ -48,10 +48,11 @@ export function BirthdayPersonCard({ person, onEdit }: BirthdayPersonCardProps) 
     setIsSendingEmail(true);
     setShowSendConfirm(false);
     try {
-      const result = await manualSendBirthdayEmail({
-        name: fullName,
-        email: person.correo,
-      });
+      const result = await manualSendBirthdayEmail(
+        person.id,
+        fullName,
+        person.correo,
+      );
 
       if (result.error) {
         throw new Error(result.error);
@@ -59,7 +60,7 @@ export function BirthdayPersonCard({ person, onEdit }: BirthdayPersonCardProps) 
 
       toast({
         title: "¡Correo enviado!",
-        description: `Se ha enviado una felicitación a ${result.email}.`,
+        description: `Se ha enviado una felicitación a ${person.correo}.`,
       });
 
     } catch (error: any) {

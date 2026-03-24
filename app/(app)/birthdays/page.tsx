@@ -102,10 +102,11 @@ export default function BirthdaysPage() {
   const handleSendEmail = async (person: Birthday) => {
     if (!person.correo) return;
     try {
-      const result = await manualSendBirthdayEmail({
-        name: person['nombre funcionario'] || 'Colega',
-        email: person.correo,
-      });
+      const result = await manualSendBirthdayEmail(
+        person.id,
+        person['nombre funcionario'] || 'Colega',
+        person.correo,
+      );
       if (result.error) throw new Error(result.error);
       toast({ title: "¡Correo enviado!", description: `Felicidades enviadas a ${person.correo}` });
     } catch (e: any) {
