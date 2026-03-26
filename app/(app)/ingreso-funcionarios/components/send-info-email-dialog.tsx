@@ -28,7 +28,7 @@ import { useState, useEffect, useMemo } from 'react';
 import type { IngresoFuncionario } from '@/lib/types';
 import { sendFuncionarioInfoEmail, addNotificationRecipient, deleteNotificationRecipient } from '../actions';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { useCollection, useFirestore, useMemoFirebase } from '@/firebase/provider';
 import { collection } from 'firebase/firestore';
 
 const formSchema = z.object({

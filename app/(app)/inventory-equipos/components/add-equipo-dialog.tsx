@@ -33,7 +33,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import { format, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { useCollection, useFirestore } from '@/firebase';
+import { useCollection, useFirestore } from '@/firebase/provider';
 import { collection, Timestamp } from 'firebase/firestore';
 import type { IngresoFuncionario, InventarioEquipo } from '@/lib/types';
 import { ComboboxField } from '../../ingreso-funcionarios/components/combobox-field';

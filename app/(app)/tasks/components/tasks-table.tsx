@@ -28,7 +28,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { MoreVertical, Loader2, Edit, Trash2 } from 'lucide-react';
 import type { Task } from '@/lib/types';
-import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { useCollection, useFirestore, useMemoFirebase } from '@/firebase/provider';
 import { collection, query, Firestore } from 'firebase/firestore';
 import { useState } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';

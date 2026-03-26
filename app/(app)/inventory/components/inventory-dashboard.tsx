@@ -16,7 +16,7 @@ import {
     ShoppingBag,
     CreditCard
 } from "lucide-react";
-import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { useCollection, useFirestore, useMemoFirebase } from '@/firebase/provider';
 import { collection, query } from "firebase/firestore";
 import type { InventarioEquipo } from "@/lib/types";
 import { Skeleton } from "@/components/ui/skeleton";

@@ -59,7 +59,8 @@ const sendEmailFlow = ai.defineFlow(
             const errorData = await response.json();
             // Si el error es específicamente por la IP, lanzamos un mensaje útil
             if (errorData.message?.includes('unrecognised IP')) {
-                throw new Error(`Error de Brevo: IP no autorizada (${errorData.message.match(/\d+\.\d+\.\d+\.\d+/)?.[0] || ''}). Debes autorizarla en app.brevo.com/security/authorised_ips`);
+                const ip = errorData.message.match(/\d+\.\d+\.\d+\.\d+/)?.[0] || '';
+                throw new Error(`Error de Brevo: IP no autorizada (${ip}). Debes autorizarla en app.brevo.com/settings/security/authorised_ips. TIP: Si tienes una IP dinámica, considera desactivar la función "Authorised IP" para evitar este problema permanentemente.`);
             }
             console.error('Error al enviar el correo con Brevo:', errorData);
             throw new Error(errorData.message || response.statusText);

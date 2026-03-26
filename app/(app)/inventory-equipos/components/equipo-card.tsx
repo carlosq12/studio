@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { archiveEquipo } from '../actions';
 import { useToast } from '@/hooks/use-toast';
-import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { useCollection, useFirestore, useMemoFirebase } from '@/firebase/provider';
 import { collection, query } from 'firebase/firestore';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';

@@ -34,7 +34,7 @@ import { cn } from '@/lib/utils';
 import { format, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Timestamp } from 'firebase/firestore';
-import { useCollection, useFirestore } from '@/firebase';
+import { useCollection, useFirestore } from '@/firebase/provider';
 import { collection } from 'firebase/firestore';
 import { ComboboxField } from '../../ingreso-funcionarios/components/combobox-field';
 import React from 'react';

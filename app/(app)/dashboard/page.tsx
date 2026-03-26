@@ -9,7 +9,7 @@ import TasksByStatusChart from "./components/tasks-by-status-chart";
 import { Badge } from "@/components/ui/badge";
 import { differenceInDays, format, isToday, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { useCollection, useFirestore, useMemoFirebase } from '@/firebase/provider';
 import { collection, query, Timestamp } from "firebase/firestore";
 import type { Employee, Task, Birthday } from "@/lib/types";
 import { Skeleton } from "@/components/ui/skeleton";

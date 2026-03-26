@@ -68,7 +68,9 @@ export async function addInventarioEquipo(data: any) {
       operation: 'create',
       requestResourceData: dataToSave,
     });
-    errorEmitter.emit('permission-error', permissionError);
+    if (errorEmitter) {
+      errorEmitter.emit('permission-error', permissionError);
+    }
     return { error: 'No se pudo añadir el equipo al inventario.' };
   }
 }
@@ -104,7 +106,9 @@ export async function updateInventarioEquipo(data: z.infer<typeof equipoUpdateSc
                 operation: 'update',
                 requestResourceData: dataToUpdate,
             });
-            errorEmitter.emit('permission-error', permissionError);
+            if (errorEmitter) {
+                errorEmitter.emit('permission-error', permissionError);
+            }
         }
         return { error: error.message || 'No se pudo actualizar el equipo.' };
     }
@@ -127,7 +131,9 @@ export async function deleteInventarioEquipo(equipoId: string) {
                 path: docRef.path,
                 operation: 'delete',
             });
-            errorEmitter.emit('permission-error', permissionError);
+            if (errorEmitter) {
+                errorEmitter.emit('permission-error', permissionError);
+            }
         }
         return { error: error.message || 'No se pudo eliminar el equipo.' };
     }
@@ -169,7 +175,9 @@ export async function addMultipleInventarioEquipos(equipos: EquipoData[]) {
                 path: 'inventario_equipos',
                 operation: 'write', 
             });
-            errorEmitter.emit('permission-error', permissionError);
+            if (errorEmitter) {
+                errorEmitter.emit('permission-error', permissionError);
+            }
         }
 
         return { error: error.message || 'No se pudieron añadir los equipos a la base de datos.' };
@@ -193,7 +201,9 @@ export async function archiveEquipo(equipoId: string, archivadorId: string) {
         operation: 'update',
         requestResourceData: { archivadorId },
       });
-      errorEmitter.emit('permission-error', permissionError);
+      if (errorEmitter) {
+        errorEmitter.emit('permission-error', permissionError);
+      }
     }
     return { error: 'No se pudo archivar el equipo.' };
   }
@@ -219,7 +229,9 @@ export async function unarchiveEquipos(equipoIds: string[]) {
         path: 'inventario_equipos',
         operation: 'update',
       });
-      errorEmitter.emit('permission-error', permissionError);
+      if (errorEmitter) {
+        errorEmitter.emit('permission-error', permissionError);
+      }
     }
     return { error: 'No se pudieron desarchivar los equipos.' };
   }

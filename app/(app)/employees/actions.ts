@@ -60,7 +60,9 @@ export async function addEmployee(data: EmployeeData) {
         operation: 'create',
         requestResourceData: employeeData,
       });
-      errorEmitter.emit('permission-error', permissionError);
+      if (errorEmitter) {
+        errorEmitter.emit('permission-error', permissionError);
+      }
     }
   );
 
@@ -99,7 +101,9 @@ export async function updateEmployee(data: EmployeeUpdateData) {
         operation: 'update',
         requestResourceData: dataToUpdate,
       });
-      errorEmitter.emit('permission-error', permissionError);
+      if (errorEmitter) {
+        errorEmitter.emit('permission-error', permissionError);
+      }
     }
     return { error: error.message || 'No se pudo actualizar el empleado.' };
   }
@@ -145,7 +149,9 @@ export async function addMultipleEmployees(employees: EmployeeData[]) {
                 path: 'dotacion_personal',
                 operation: 'write', 
             });
-            errorEmitter.emit('permission-error', permissionError);
+            if (errorEmitter) {
+                errorEmitter.emit('permission-error', permissionError);
+            }
         }
 
         return { error: error.message || 'No se pudieron añadir los empleados a la base de datos.' };
@@ -169,7 +175,9 @@ export async function deleteEmployee(employeeId: string) {
         path: docRef.path,
         operation: 'delete',
       });
-      errorEmitter.emit('permission-error', permissionError);
+      if (errorEmitter) {
+        errorEmitter.emit('permission-error', permissionError);
+      }
     }
     return { error: error.message || 'No se pudo eliminar el empleado.' };
   }

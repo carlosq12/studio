@@ -43,7 +43,7 @@ import { format, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { MultipleSelector } from '@/components/ui/multiple-selector';
-import { useCollection, useFirestore } from '@/firebase';
+import { useCollection, useFirestore } from '@/firebase/provider';
 import { collection } from 'firebase/firestore';
 import type { IngresoFuncionario, Task } from '@/lib/types';
 import { updateTask } from '../actions';
@@ -305,7 +305,16 @@ export function EditGanttTaskDialog({ task, open, onOpenChange }: EditGanttTaskD
                                         </FormControl>
                                     </PopoverTrigger>
                                     <PopoverContent className="w-auto p-0" align="start">
-                                        <Calendar mode="single" selected={field.value} onSelect={field.onChange} captionLayout="dropdown-buttons" fromYear={new Date().getFullYear() - 5} toYear={new Date().getFullYear() + 5} initialFocus locale={es} />
+                                        <Calendar 
+                                            mode="single" 
+                                            selected={field.value} 
+                                            onSelect={field.onChange} 
+                                            captionLayout="dropdown-buttons" 
+                                            fromYear={new Date().getFullYear() - 5}
+                                            toYear={new Date().getFullYear() + 5}
+                                            initialFocus 
+                                            locale={es} 
+                                        />
                                     </PopoverContent>
                                     </Popover>
                                     <FormMessage />
@@ -349,7 +358,16 @@ export function EditGanttTaskDialog({ task, open, onOpenChange }: EditGanttTaskD
                                         </FormControl>
                                     </PopoverTrigger>
                                     <PopoverContent className="w-auto p-0" align="start">
-                                        <Calendar mode="single" selected={field.value} onSelect={field.onChange} captionLayout="dropdown-buttons" fromYear={new Date().getFullYear() - 5} toYear={new Date().getFullYear() + 5} initialFocus locale={es} />
+                                        <Calendar 
+                                            mode="single" 
+                                            selected={field.value} 
+                                            onSelect={field.onChange} 
+                                            captionLayout="dropdown-buttons" 
+                                            fromYear={new Date().getFullYear() - 5}
+                                            toYear={new Date().getFullYear() + 5}
+                                            initialFocus 
+                                            locale={es} 
+                                        />
                                     </PopoverContent>
                                     </Popover>
                                     <FormMessage />
@@ -372,7 +390,16 @@ export function EditGanttTaskDialog({ task, open, onOpenChange }: EditGanttTaskD
                                         </FormControl>
                                     </PopoverTrigger>
                                     <PopoverContent className="w-auto p-0" align="start">
-                                        <Calendar mode="single" selected={field.value} onSelect={field.onChange} captionLayout="dropdown-buttons" fromYear={new Date().getFullYear() - 5} toYear={new Date().getFullYear() + 5} initialFocus locale={es} />
+                                        <Calendar 
+                                            mode="single" 
+                                            selected={field.value} 
+                                            onSelect={field.onChange} 
+                                            captionLayout="dropdown-buttons" 
+                                            fromYear={new Date().getFullYear() - 5}
+                                            toYear={new Date().getFullYear() + 5}
+                                            initialFocus 
+                                            locale={es} 
+                                        />
                                     </PopoverContent>
                                     </Popover>
                                     <FormMessage />

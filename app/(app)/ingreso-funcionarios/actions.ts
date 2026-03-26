@@ -1,6 +1,6 @@
 'use server';
 
-import { collection, addDoc, doc, updateDoc, deleteDoc, getDocs } from 'firebase/firestore';
+import { collection, addDoc, doc, updateDoc, deleteDoc, getDocs, writeBatch } from 'firebase/firestore';
 import { z } from 'zod';
 import { initializeApp, getApps } from 'firebase/app';
 import { getFirestore, Timestamp } from 'firebase/firestore';
@@ -174,5 +174,41 @@ export async function sendFuncionarioInfoEmail(funcionario: IngresoFuncionario, 
     } catch (error: any) {
         console.error('Error al enviar correo manual:', error);
         return { error: error.message || 'No se pudo enviar el correo.' };
+    }
+}
+
+export async function addBirthdayFromFuncionario(data: any) {
+    try {
+        const birthdayData = {
+            'nombre funcionario': data['nombre funcionario'],
+            'fecha nacimiento': Timestamp.fromDate(new Date(data['fecha nacimiento'])),
+            correo: data.correo || '',
+            role: data.cargo || '', 
+            avatar: `https://avatar.vercel.sh/${data['nombre funcionario']}.png`,
+            fecha_aviso: null,
+        };
+        await addDoc(collection(db, 'cumpleaños'), birthdayData);
+        return { success: true };
+    } catch (error: any) {
+        console.error('Error al añadir cumpleaños desde funcionario:', error);
+        return { error: 'No se pudo añadir el cumpleaños.' };
+    }
+}
+
+export async function addNotificationRecipient(email: string) {
+    try {
+        await addDoc(collection(db, 'notification_recipients'), { email, active: true });
+        return { success: true };
+    } catch (error: any) {
+        return { error: 'No se pudo añadir el destinatario.' };
+    }
+}
+
+export async function deleteNotificationRecipient(id: string) {
+    try {
+        await deleteDoc(doc(db, 'notification_recipients', id));
+        return { success: true };
+    } catch (error: any) {
+        return { error: 'No se pudo eliminar el destinatario.' };
     }
 }

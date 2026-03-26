@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { useState, useEffect } from 'react';
-import { useDoc, useFirestore, useMemoFirebase } from '@/firebase';
+import { useDoc, useFirestore, useMemoFirebase } from '@/firebase/provider';
 import { doc } from 'firebase/firestore';
 import type { InventarioItem } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';

@@ -1,3 +1,4 @@
+
 'use client';
 
 import { PageHeader } from "@/components/page-header";
@@ -6,7 +7,7 @@ import ReplacementsTable from "./components/replacements-table";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BulkUploadReplacementsSheet } from "./components/bulk-upload-replacements-sheet";
-import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { useCollection, useFirestore, useMemoFirebase } from '@/firebase/provider';
 import { collection, query, Timestamp } from 'firebase/firestore';
 import { getMonth, getYear, isSameDay, parseISO } from 'date-fns';
 import { useMemo, useState } from 'react';
@@ -50,6 +51,7 @@ export default function ReplacementsPage() {
     const [monthFilter, setMonthFilter] = useState('');
     const [yearFilter, setYearFilter] = useState('');
     const [sortOrder, setSortOrder] = useState<'desc' | 'asc'>('desc');
+    const [showArchived, setShowArchived] = useState(false);
 
     const funcionarioOptions = useMemo(() => {
         if (!funcionarios) return [];
@@ -87,10 +89,11 @@ export default function ReplacementsPage() {
         });
     }, [replacements, nameFilter, statusFilter, dateFilter, monthFilter, yearFilter, sortOrder]);
 
-    // Pestaña Lista: Solo los que NO están archivados
+    // Pestaña Lista: Solo los que NO están archivados (o todos si showArchived es true)
     const listData = useMemo(() => {
+        if (showArchived) return allFilteredData;
         return allFilteredData.filter(rep => !rep.archivadorId || rep.archivadorId === "");
-    }, [allFilteredData]);
+    }, [allFilteredData, showArchived]);
 
     // Pestaña Pendientes: Los que están "EN PROCESO" o "NO", incluso si están archivados
     const pendingData = useMemo(() => {
@@ -98,6 +101,10 @@ export default function ReplacementsPage() {
             const estadoRNR = (rep.ESTADO_R_NR || (rep as any)['ESTADO R/NR'] || '').trim().toUpperCase();
             return (estadoRNR === 'EN PROCESO' || estadoRNR === 'NO');
         });
+    }, [allFilteredData]);
+
+    const archivedData = useMemo(() => {
+        return allFilteredData.filter(rep => rep.archivadorId && rep.archivadorId !== "");
     }, [allFilteredData]);
 
   return (
@@ -127,13 +134,13 @@ export default function ReplacementsPage() {
                     <Users className="h-4 w-4"/> Por Reemplazante
                 </TabsTrigger>
                 <TabsTrigger value="list" className="gap-2 rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white py-2 px-4">
-                    <List className="h-4 w-4"/> Lista
+                    <List className="h-4 w-4"/> Lista ({listData.length})
                 </TabsTrigger>
                 <TabsTrigger value="pending" className="gap-2 rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white py-2 px-4">
-                    <Clock className="h-4 w-4"/> Pendientes
+                    <Clock className="h-4 w-4"/> Pendientes ({pendingData.length})
                 </TabsTrigger>
                 <TabsTrigger value="archives" className="gap-2 rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white py-2 px-4">
-                    <Archive className="h-4 w-4"/> Archivadores
+                    <Archive className="h-4 w-4"/> Archivadores ({archivedData.length})
                 </TabsTrigger>
             </TabsList>
 
@@ -171,6 +178,7 @@ export default function ReplacementsPage() {
                         yearFilter={yearFilter} setYearFilter={setYearFilter}
                         sortOrder={sortOrder} toggleSortOrder={() => setSortOrder(s => s === 'asc' ? 'desc' : 'asc')}
                         clearFilters={() => { setNameFilter(''); setStatusFilter(''); setDateFilter(undefined); setMonthFilter(''); setYearFilter(''); }}
+                        showArchived={showArchived} setShowArchived={setShowArchived}
                     />
                     <ReplacementsTable 
                         replacements={listData} loading={loading}

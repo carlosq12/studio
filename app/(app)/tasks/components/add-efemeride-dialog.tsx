@@ -34,7 +34,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useState, useMemo } from 'react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { MultipleSelector } from '@/components/ui/multiple-selector';
-import { useCollection, useFirestore } from '@/firebase';
+import { useCollection, useFirestore } from '@/firebase/provider';
 import { collection } from 'firebase/firestore';
 import type { IngresoFuncionario } from '@/lib/types';
 import { addEfemeride } from '../actions';

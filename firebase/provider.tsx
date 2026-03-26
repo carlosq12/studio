@@ -1,10 +1,13 @@
 'use client';
 
-import { createContext, useContext, useMemo } from 'react';
+import { createContext, useContext, useMemo, useState, useEffect } from 'react';
 import type { FirebaseApp } from 'firebase/app';
 import type { Auth } from 'firebase/auth';
-import type { Firestore } from 'firebase/firestore';
+import { getFirestore, type Firestore, collection, onSnapshot, query, Query, DocumentReference } from 'firebase/firestore';
 import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
+import { errorEmitter } from './error-emitter';
+import { FirestorePermissionError } from './errors';
+
 
 // Explicitly type the context value
 type FirebaseContextValue = {
@@ -61,3 +64,83 @@ export const useFirestore = () => {
   }
   return context.firestore;
 }
+
+// A hook for memoizing Firebase queries and references.
+export function useMemoFirebase<T>(factory: () => T, deps: React.DependencyList): T | null {
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const memoized = useMemo(factory, deps);
+  return memoized;
+}
+
+export function useCollection<T>(query: Query | null) {
+  const [data, setData] = useState<T[] | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!query) {
+      setData(null);
+      setLoading(false);
+      return;
+    }
+
+    const unsubscribe = onSnapshot(query, (snapshot) => {
+      const result: T[] = [];
+      snapshot.forEach((doc) => {
+        result.push({ id: doc.id, ...doc.data() } as T);
+      });
+      setData(result);
+      setLoading(false);
+    }, (serverError) => {
+      const permissionError = new FirestorePermissionError({
+        path: (query as any)._query.path.segments.join('/'),
+        operation: 'list',
+      });
+      if (errorEmitter) {
+        errorEmitter.emit('permission-error', permissionError);
+      }
+      setData(null);
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, [query]);
+
+  return { data, loading };
+}
+
+export function useDoc<T>(ref: DocumentReference | null) {
+  const [data, setData] = useState<T | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!ref) {
+      setData(null);
+      setLoading(false);
+      return;
+    }
+    
+    const unsubscribe = onSnapshot(ref, (doc) => {
+      if (doc.exists()) {
+        setData({ id: doc.id, ...doc.data() } as T);
+      } else {
+        setData(null);
+      }
+      setLoading(false);
+    }, (serverError) => {
+      const permissionError = new FirestorePermissionError({
+        path: ref.path,
+        operation: 'get',
+      });
+      if (errorEmitter) {
+        errorEmitter.emit('permission-error', permissionError);
+      }
+      setData(null);
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, [ref]);
+
+  return { data, loading };
+}
+

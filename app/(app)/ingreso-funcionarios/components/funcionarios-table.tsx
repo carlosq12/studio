@@ -14,7 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Loader2, X, CalendarIcon, ArrowUp, ArrowDown } from 'lucide-react';
 import type { IngresoFuncionario } from '@/lib/types';
-import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { useCollection, useFirestore, useMemoFirebase } from '@/firebase/provider';
 import { collection, query, Firestore, Timestamp } from 'firebase/firestore';
 import { useState, useMemo } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';

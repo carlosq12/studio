@@ -27,7 +27,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { MoreVertical, Trash2, Loader2, Eye, Edit, X } from 'lucide-react';
 import type { Employee } from '@/lib/types';
-import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { useCollection, useFirestore, useMemoFirebase } from '@/firebase/provider';
 import { collection, query, Firestore } from 'firebase/firestore';
 import { useMemo, useState } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';

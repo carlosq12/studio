@@ -12,7 +12,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { CalendarClock, Loader2, Trash2, WandSparkles, CheckCircle2, AlertCircle, Clock } from 'lucide-react';
 import { useState, useMemo } from 'react';
-import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { useCollection, useFirestore, useMemoFirebase } from '@/firebase/provider';
 import { collection, query } from 'firebase/firestore';
 import type { MonthlyTemplate } from '@/lib/types';
 import { ScrollArea } from '@/components/ui/scroll-area';

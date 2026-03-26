@@ -30,7 +30,7 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { cn } from '@/lib/utils';
-import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { useCollection, useFirestore, useMemoFirebase } from '@/firebase/provider';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface ReplacementCardProps {

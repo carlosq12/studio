@@ -45,7 +45,9 @@ export async function addArchive(data: { [key: string]: FormDataEntryValue }) {
       operation: 'create',
       requestResourceData: archiveData,
     });
-    errorEmitter.emit('permission-error', permissionError);
+    if (errorEmitter) {
+      errorEmitter.emit('permission-error', permissionError);
+    }
     return { error: 'No se pudo crear el archivador.' };
   }
 }
@@ -71,7 +73,9 @@ export async function updateArchive(data: { [key: string]: FormDataEntryValue })
                 operation: 'update',
                 requestResourceData: archiveData,
             });
-            errorEmitter.emit('permission-error', permissionError);
+            if (errorEmitter) {
+                errorEmitter.emit('permission-error', permissionError);
+            }
         }
         return { error: 'No se pudo actualizar el archivador.' };
     }
@@ -92,7 +96,9 @@ export async function deleteArchive(archiveId: string) {
         path: docRef.path,
         operation: 'delete',
       });
-      errorEmitter.emit('permission-error', permissionError);
+      if (errorEmitter) {
+        errorEmitter.emit('permission-error', permissionError);
+      }
     }
     return { error: 'No se pudo eliminar el archivador.' };
   }
@@ -115,7 +121,9 @@ export async function archiveReplacement(replacementId: string, archivadorId: st
         operation: 'update',
         requestResourceData: { archivadorId },
       });
-      errorEmitter.emit('permission-error', permissionError);
+      if (errorEmitter) {
+        errorEmitter.emit('permission-error', permissionError);
+      }
     }
     return { error: 'No se pudo archivar la solicitud.' };
   }
@@ -141,7 +149,9 @@ export async function unarchiveReplacements(replacementIds: string[]) {
         path: 'reemplazos',
         operation: 'update',
       });
-      errorEmitter.emit('permission-error', permissionError);
+      if (errorEmitter) {
+        errorEmitter.emit('permission-error', permissionError);
+      }
     }
     return { error: 'No se pudieron desarchivar las solicitudes.' };
   }

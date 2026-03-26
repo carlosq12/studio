@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { CalendarIcon, X, ArrowUp, ArrowDown } from 'lucide-react';
+import { CalendarIcon, X, ArrowUp, ArrowDown, Eye, EyeOff } from 'lucide-react';
 
 interface ReplacementsFiltersProps {
   nameFilter: string;
@@ -25,6 +25,8 @@ interface ReplacementsFiltersProps {
   sortOrder: 'asc' | 'desc';
   toggleSortOrder: () => void;
   clearFilters: () => void;
+  showArchived: boolean;
+  setShowArchived: (value: boolean) => void;
 }
 
 export function ReplacementsFilters({
@@ -41,6 +43,8 @@ export function ReplacementsFilters({
   sortOrder,
   toggleSortOrder,
   clearFilters,
+  showArchived,
+  setShowArchived,
 }: ReplacementsFiltersProps) {
 
   const uniqueStatuses = ["SI", "NO", "EN PROCESO"];
@@ -117,9 +121,13 @@ export function ReplacementsFilters({
               ))}
             </SelectContent>
           </Select>
-          <Button variant="outline" onClick={toggleSortOrder}>
-            {sortOrder === 'desc' ? <ArrowDown className="mr-2 h-4 w-4" /> : <ArrowUp className="mr-2 h-4 w-4" />}
-            Ordenar por Fecha
+          <Button 
+            variant={showArchived ? "secondary" : "outline"} 
+            onClick={() => setShowArchived(!showArchived)}
+            className={cn(showArchived && "bg-secondary/20 border-secondary text-secondary")}
+          >
+            {showArchived ? <Eye className="mr-2 h-4 w-4" /> : <EyeOff className="mr-2 h-4 w-4" />}
+            {showArchived ? "Ocultar Archivados" : "Mostrar Archivados"}
           </Button>
           <Button variant="outline" onClick={clearFilters}>
             <X className="mr-2 h-4 w-4" />

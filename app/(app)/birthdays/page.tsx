@@ -3,7 +3,7 @@
 import { PageHeader } from '@/components/page-header';
 import { Card, CardContent } from '@/components/ui/card';
 import { AddBirthdayDialog } from './components/add-birthday-dialog';
-import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { useCollection, useFirestore, useMemoFirebase } from '@/firebase/provider';
 import { collection, query, Firestore, Timestamp } from 'firebase/firestore';
 import type { Birthday } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';

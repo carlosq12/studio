@@ -1,6 +1,6 @@
 'use client';
 
-import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { useCollection, useFirestore, useMemoFirebase } from '@/firebase/provider';
 import { collection, query, orderBy } from 'firebase/firestore';
 import type { Efemeride, IngresoFuncionario, EfemerideNotificationLog } from '@/lib/types';
 import { AddEfemerideDialog } from './add-efemeride-dialog';

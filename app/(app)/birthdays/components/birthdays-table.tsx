@@ -14,7 +14,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Loader2, X } from 'lucide-react';
 import type { Birthday } from '@/lib/types';
-import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { useCollection, useFirestore, useMemoFirebase } from '@/firebase/provider';
 import { collection, query, orderBy, Timestamp } from 'firebase/firestore';
 import { useState, useMemo } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';

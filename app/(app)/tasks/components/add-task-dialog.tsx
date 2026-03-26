@@ -46,7 +46,7 @@ import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { MultipleSelector } from '@/components/ui/multiple-selector';
-import { useCollection, useFirestore } from '@/firebase';
+import { useCollection, useFirestore } from '@/firebase/provider';
 import { collection } from 'firebase/firestore';
 import type { IngresoFuncionario } from '@/lib/types';
 
@@ -58,7 +58,7 @@ const taskFormSchema = z.object({
   estado: z.enum(['Pendiente', 'En Progreso', 'Completada', 'Atrasada']),
   prioridad: z.enum(['Alta', 'Media', 'Baja'], { required_error: 'La prioridad es requerida.'}),
   correo: z.string().optional(),
-  tipo_tarea: z.enum(['Día Único', 'Semanal', 'Mensual'], { required_error: 'El tipo de tarea es requerido.'}),
+  tipo_tarea: z.enum(['Día Único', 'Semanal', 'Mensual', 'Anual'], { required_error: 'El tipo de tarea es requerido.'}),
   fecha_unica: z.date().optional(),
   fecha_inicio_semanal: z.date().optional(),
   fecha_fin_semanal: z.date().optional(),
@@ -275,7 +275,16 @@ export function AddTaskDialog() {
                                         </FormControl>
                                     </PopoverTrigger>
                                     <PopoverContent className="w-auto p-0" align="start">
-                                        <Calendar mode="single" selected={field.value} onSelect={field.onChange} captionLayout="dropdown-buttons" initialFocus locale={es} />
+                                        <Calendar 
+                                            mode="single" 
+                                            selected={field.value} 
+                                            onSelect={field.onChange} 
+                                            captionLayout="dropdown-buttons" 
+                                            fromYear={new Date().getFullYear() - 5}
+                                            toYear={new Date().getFullYear() + 5}
+                                            initialFocus 
+                                            locale={es} 
+                                        />
                                     </PopoverContent>
                                     </Popover>
                                     <FormMessage />

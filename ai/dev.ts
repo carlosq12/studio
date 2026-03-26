@@ -1,5 +1,4 @@
-import { config } from 'dotenv';
-config();
+// next.js 14+ maneja .env automáticamente, eliminamos dotenv para evitar errores de tipo en build
 
 import '@/ai/flows/suggest-task-improvements.ts';
 import '@/ai/flows/summarize-employee-data.ts';

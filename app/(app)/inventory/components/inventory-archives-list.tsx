@@ -1,6 +1,6 @@
 'use client';
 
-import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { useCollection, useFirestore, useMemoFirebase } from '@/firebase/provider';
 import { collection, query, orderBy, Timestamp } from 'firebase/firestore';
 import type { Archivador, InventarioEquipo } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';

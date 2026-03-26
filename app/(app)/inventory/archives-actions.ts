@@ -46,7 +46,9 @@ export async function addInventoryArchive(data: { [key: string]: FormDataEntryVa
       operation: 'create',
       requestResourceData: archiveData,
     });
-    errorEmitter.emit('permission-error', permissionError);
+    if (errorEmitter) {
+      errorEmitter.emit('permission-error', permissionError);
+    }
     return { error: 'No se pudo crear el archivador.' };
   }
 }
@@ -72,7 +74,9 @@ export async function updateInventoryArchive(data: { [key: string]: any }) {
                 operation: 'update',
                 requestResourceData: archiveData,
             });
-            errorEmitter.emit('permission-error', permissionError);
+            if (errorEmitter) {
+                errorEmitter.emit('permission-error', permissionError);
+            }
         }
         return { error: 'No se pudo actualizar el archivador.' };
     }
@@ -93,7 +97,9 @@ export async function deleteInventoryArchive(archiveId: string) {
         path: docRef.path,
         operation: 'delete',
       });
-      errorEmitter.emit('permission-error', permissionError);
+      if (errorEmitter) {
+        errorEmitter.emit('permission-error', permissionError);
+      }
     }
     return { error: 'No se pudo eliminar el archivador.' };
   }

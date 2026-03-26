@@ -62,7 +62,9 @@ export async function addInventoryItem(data: { [key: string]: FormDataEntryValue
             operation: 'create',
             requestResourceData: dataToSave,
         });
-        errorEmitter.emit('permission-error', permissionError);
+        if (errorEmitter) {
+            errorEmitter.emit('permission-error', permissionError);
+        }
         return { error: 'No se pudo añadir el item al inventario.' };
     }
 }
@@ -95,7 +97,9 @@ export async function updateInventoryItem(data: { [key: string]: FormDataEntryVa
             operation: 'update',
             requestResourceData: dataToUpdate,
         });
-        errorEmitter.emit('permission-error', permissionError);
+        if (errorEmitter) {
+            errorEmitter.emit('permission-error', permissionError);
+        }
         }
         return { error: error.message || 'No se pudo actualizar el item del inventario.' };
     }
@@ -118,7 +122,9 @@ export async function deleteInventoryItem(itemId: string) {
         path: docRef.path,
         operation: 'delete',
       });
-      errorEmitter.emit('permission-error', permissionError);
+      if (errorEmitter) {
+        errorEmitter.emit('permission-error', permissionError);
+      }
     }
     return { error: error.message || 'No se pudo eliminar el item.' };
   }
@@ -160,7 +166,9 @@ export async function addMultipleInventoryItems(items: InventoryItemData[]) {
                 path: 'inventario',
                 operation: 'write', 
             });
-            errorEmitter.emit('permission-error', permissionError);
+            if (errorEmitter) {
+                errorEmitter.emit('permission-error', permissionError);
+            }
         }
 
         return { error: error.message || 'No se pudieron añadir los items a la base de datos.' };
@@ -201,7 +209,9 @@ export async function updateItemQuantity(itemId: string, quantityChange: number)
         operation: 'update',
         requestResourceData: { cantidad: `increment(${quantityChange})` },
       });
-      errorEmitter.emit('permission-error', permissionError);
+      if (errorEmitter) {
+        errorEmitter.emit('permission-error', permissionError);
+      }
     }
     return { error: error.message || 'No se pudo actualizar la cantidad del item.' };
   }

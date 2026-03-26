@@ -13,7 +13,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Loader2, ArrowUpDown, Printer, X } from 'lucide-react';
 import type { InventarioEquipo } from '@/lib/types';
-import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { useCollection, useFirestore, useMemoFirebase } from '@/firebase/provider';
 import { collection, query, Firestore, Timestamp } from 'firebase/firestore';
 import React, { useState, useMemo } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';

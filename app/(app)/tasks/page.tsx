@@ -3,7 +3,7 @@
 import { PageHeader } from '@/components/page-header';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { AddTaskDialog } from './components/add-task-dialog';
-import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { useCollection, useFirestore, useMemoFirebase } from '@/firebase/provider';
 import { collection, query, Firestore } from 'firebase/firestore';
 import type { Task } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';

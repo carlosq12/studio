@@ -12,7 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Boxes, HardDrive, Archive, LayoutDashboard } from "lucide-react";
 import InventoryEquiposTable from "../inventory-equipos/components/inventory-equipos-table";
 import { EquipoDetailsDialog } from "../inventory-equipos/components/equipo-details-dialog";
-import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
+import { useCollection, useFirestore, useMemoFirebase } from '@/firebase/provider';
 import { doc, getDoc, collection, query, orderBy } from "firebase/firestore";
 import type { InventarioEquipo, Archivador } from "@/lib/types";
 import { BulkUploadEquiposSheet } from '../inventory-equipos/components/bulk-upload-equipos-sheet';

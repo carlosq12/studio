@@ -11,7 +11,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { useState, useMemo } from 'react';
 import { ArrowRightLeft } from 'lucide-react';
-import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { useCollection, useFirestore, useMemoFirebase } from '@/firebase/provider';
 import { collection, query } from 'firebase/firestore';
 import type { InventarioItem } from '@/lib/types';
 import {

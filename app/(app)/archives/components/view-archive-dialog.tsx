@@ -24,7 +24,7 @@ import { ReplacementDetailsDialog } from '../../replacements/components/replacem
 import { EditReplacementDialog } from '../../replacements/components/edit-replacement-dialog';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { useCollection, useFirestore, useMemoFirebase } from '@/firebase/provider';
 
 interface ViewArchiveDialogProps {
   open: boolean;
