@@ -53,7 +53,11 @@ export function AddArchiveDialog() {
   async function onSubmit(data: ArchiveFormValues) {
     setIsSubmitting(true);
     try {
-      const result = await addArchive(data);
+      const result = await addArchive({
+        ...data,
+        description: data.description || '',
+        year: data.year || ''
+      });
       if (result?.error) {
         throw new Error(result.error);
       }

@@ -22,7 +22,7 @@ const archiveUpdateSchema = archiveSchema.extend({
     id: z.string().min(1, 'El ID es requerido.'),
 });
 
-export async function addArchive(data: { [key: string]: any }) {
+export async function addArchive(data: any) {
   const validation = archiveSchema.safeParse(data);
 
   if (!validation.success) {
@@ -52,7 +52,7 @@ export async function addArchive(data: { [key: string]: any }) {
   }
 }
 
-export async function updateArchive(data: { [key: string]: any }) {
+export async function updateArchive(data: any) {
     const validation = archiveUpdateSchema.safeParse(data);
 
     if (!validation.success) {
