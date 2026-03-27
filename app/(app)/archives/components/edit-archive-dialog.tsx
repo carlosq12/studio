@@ -65,7 +65,13 @@ export function EditArchiveDialog({ archive, open, onOpenChange }: EditArchiveDi
 
     setIsSubmitting(true);
     try {
-      const result = await updateArchive({ ...data, id: archive.id, color: archive.color });
+      const result = await updateArchive({ 
+        ...data, 
+        id: archive.id, 
+        color: archive.color || 'bg-gray-500',
+        description: data.description || '',
+        year: data.year || ''
+      });
       if (result?.error) {
         throw new Error(result.error);
       }
