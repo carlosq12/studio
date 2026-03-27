@@ -344,7 +344,13 @@ export default function ArchivesList({ funcionarios, funcionarioOptions }: Archi
 
   const handleColorChange = async (archive: Archivador, color: string) => {
     try {
-        const result = await updateArchive({ id: archive.id, name: archive.name, description: archive.description, color: color, year: archive.year });
+        const result = await updateArchive({ 
+            id: archive.id, 
+            name: archive.name, 
+            description: archive.description || '', 
+            color: color, 
+            year: archive.year || '' 
+        });
         if (result.error) throw new Error(result.error);
         toast({
             title: '¡Color actualizado!',
