@@ -1,0 +1,78 @@
+﻿
+> firebase-antigravity@0.1.0 build
+> next build
+
+  Ôû▓ Next.js 14.2.0
+  - Environments: .env
+
+   Creating an optimized production build ...
+node.exe :  ÔÜá Compiled with warnings
+En línea: 1 Carácter: 1
++ & "C:\Program Files\nodejs/node.exe" "C:\Program 
+Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~
+    + CategoryInfo          : NotSpecified: ( ÔÜá Compiled wit 
+   h warnings:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+
+./node_modules/require-in-the-middle/index.js
+Critical dependency: require function is used in a way in 
+which dependencies cannot be statically extracted
+
+Import trace for requested module:
+./node_modules/require-in-the-middle/index.js
+./node_modules/@opentelemetry/instrumentation/build/esm/platfor
+m/node/instrumentation.js
+./node_modules/@opentelemetry/instrumentation/build/esm/platfor
+m/node/index.js
+./node_modules/@opentelemetry/instrumentation/build/esm/platfor
+m/index.js
+./node_modules/@opentelemetry/instrumentation/build/esm/index.j
+s
+./node_modules/@opentelemetry/sdk-node/build/src/sdk.js
+./node_modules/@opentelemetry/sdk-node/build/src/index.js
+./node_modules/@genkit-ai/core/lib/tracing/node-telemetry-provi
+der.js
+./node_modules/@genkit-ai/core/lib/node.js
+./node_modules/genkit/lib/common.js
+./node_modules/genkit/lib/index.mjs
+./ai/flows/suggest-task-improvements.ts
+./app/(app)/intelligent-assignment/actions.ts
+
+ Ô£ô Compiled successfully
+   Linting and checking validity of types ...
+Failed to compile.
+
+./app/(app)/ingreso-funcionarios/components/add-funcionario-dia
+log.tsx:293:51
+Type error: Type 'Date | null | undefined' is not assignable 
+to type 'Matcher | Matcher[] | undefined'.
+  Type 'null' is not assignable to type 'Matcher | Matcher[] | 
+undefined'.
+
+[0m [90m 291 |[39m                         
+[33m<[39m[33m/[39m[33mPopoverTrigger[39m[33m>[39m[0m
+[0m [90m 292 |[39m                         
+[33m<[39m[33mPopoverContent[39m 
+className[33m=[39m[32m"w-auto p-0"[39m 
+align[33m=[39m[32m"start"[39m[33m>[39m[0m
+[0m[31m[1m>[22m[39m[90m 293 |[39m                       
+    [33m<[39m[33mCalendar[39m 
+mode[33m=[39m[32m"single"[39m 
+selected[33m=[39m{field[33m.[39mvalue} 
+onSelect[33m=[39m{field[33m.[39monChange} 
+captionLayout[33m=[39m[32m"dropdown-buttons"[39m 
+fromYear[33m=[39m{[35m1980[39m} 
+toYear[33m=[39m{[36mnew[39m 
+[33mDate[39m()[33m.[39mgetFullYear()} initialFocus 
+locale[33m=[39m{es} [33m/[39m[33m>[39m[0m
+[0m [90m     |[39m                                          
+         [31m[1m^[22m[39m[0m
+[0m [90m 294 |[39m                         
+[33m<[39m[33m/[39m[33mPopoverContent[39m[33m>[39m[0m
+[0m [90m 295 |[39m                       
+[33m<[39m[33m/[39m[33mPopover[39m[33m>[39m[0m
+[0m [90m 296 |[39m                       
+[33m<[39m[33mFormMessage[39m [33m/[39m[33m>[39m[0m

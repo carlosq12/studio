@@ -232,7 +232,7 @@ export function AddReplacementDialog({
                         <PopoverContent className="w-auto p-0" align="start">
                           <Calendar 
                             mode="single" 
-                            selected={field.value} 
+                            selected={field.value ?? undefined} 
                             onSelect={field.onChange} 
                             initialFocus 
                             locale={es}
@@ -265,7 +265,7 @@ export function AddReplacementDialog({
                         <PopoverContent className="w-auto p-0" align="start">
                           <Calendar 
                             mode="single" 
-                            selected={field.value} 
+                            selected={field.value ?? undefined} 
                             onSelect={field.onChange} 
                             initialFocus 
                             locale={es}

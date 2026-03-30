@@ -1,0 +1,69 @@
+﻿
+> firebase-antigravity@0.1.0 build
+> next build
+
+  Ôû▓ Next.js 14.2.0
+  - Environments: .env
+
+   Creating an optimized production build ...
+node.exe :  ÔÜá Compiled with warnings
+En línea: 1 Carácter: 1
++ & "C:\Program Files\nodejs/node.exe" "C:\Program 
+Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~
+    + CategoryInfo          : NotSpecified: ( ÔÜá Compiled wit 
+   h warnings:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+
+./node_modules/require-in-the-middle/index.js
+Critical dependency: require function is used in a way in 
+which dependencies cannot be statically extracted
+
+Import trace for requested module:
+./node_modules/require-in-the-middle/index.js
+./node_modules/@opentelemetry/instrumentation/build/esm/platfor
+m/node/instrumentation.js
+./node_modules/@opentelemetry/instrumentation/build/esm/platfor
+m/node/index.js
+./node_modules/@opentelemetry/instrumentation/build/esm/platfor
+m/index.js
+./node_modules/@opentelemetry/instrumentation/build/esm/index.j
+s
+./node_modules/@opentelemetry/sdk-node/build/src/sdk.js
+./node_modules/@opentelemetry/sdk-node/build/src/index.js
+./node_modules/@genkit-ai/core/lib/tracing/node-telemetry-provi
+der.js
+./node_modules/@genkit-ai/core/lib/node.js
+./node_modules/genkit/lib/common.js
+./node_modules/genkit/lib/index.mjs
+./ai/flows/send-email.ts
+./app/(app)/replacements/actions.ts
+
+ Ô£ô Compiled successfully
+   Linting and checking validity of types ...
+Failed to compile.
+
+./app/(app)/inventory-equipos/components/link-qr-dialog.tsx:16:
+10
+Type error: Module '"../actions"' has no exported member 
+'linkQrToEquipo'.
+
+[0m [90m 14 |[39m [36mimport[39m { 
+[33mLink2[39m[33m,[39m [33mLoader2[39m[33m,[39m 
+[33mQrCode[39m } [36mfrom[39m 
+[32m'lucide-react'[39m[33m;[39m[0m
+[0m [90m 15 |[39m [36mimport[39m { [33mScanQrDialog[39m 
+} [36mfrom[39m [32m'../../inventory/components/scan-qr-dialo
+g'[39m[33m;[39m[0m
+[0m[31m[1m>[22m[39m[90m 16 |[39m [36mimport[39m { 
+linkQrToEquipo } [36mfrom[39m 
+[32m'../actions'[39m[33m;[39m[0m
+[0m [90m    |[39m          [31m[1m^[22m[39m[0m
+[0m [90m 17 |[39m [36mimport[39m type { 
+[33mInventarioEquipo[39m } [36mfrom[39m 
+[32m'@/lib/types'[39m[33m;[39m[0m
+[0m [90m 18 |[39m[0m
+[0m [90m 19 |[39m [36minterface[39m 
+[33mLinkQrDialogProps[39m {[0m

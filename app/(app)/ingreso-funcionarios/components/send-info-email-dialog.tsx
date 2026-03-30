@@ -83,7 +83,7 @@ export function SendInfoEmailDialog({ funcionario, open, onOpenChange }: SendInf
   useEffect(() => {
     if (open) {
       const recipientEmails = recipients?.map(r => r.email) || [];
-      const initialEmails = [...new Set([...recipientEmails].filter(Boolean))] as string[];
+      const initialEmails = Array.from(new Set(recipientEmails.filter(Boolean)));
       form.reset({ emails: initialEmails });
       setCurrentEmail('');
       setInputError(null);

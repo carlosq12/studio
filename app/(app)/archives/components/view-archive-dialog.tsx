@@ -97,7 +97,7 @@ export function ViewArchiveDialog({ open, onOpenChange, archive, allReplacements
     });
 
     return Array.from(groups.entries())
-      .sort(([dateA, dateB]) => {
+      .sort(([dateA], [dateB]) => {
           if (dateA === 'Sin Fecha') return 1;
           if (dateB === 'Sin Fecha') return -1;
           return new Date(dateB).getTime() - new Date(dateA).getTime();

@@ -210,7 +210,7 @@ export function EditEmployeeDialog({ employee, open, onOpenChange }: EditEmploye
                         <PopoverContent className="w-auto p-0" align="start">
                             <Calendar
                                 mode="single"
-                                selected={field.value}
+                                selected={field.value ?? undefined}
                                 onSelect={field.onChange}
                                 captionLayout="dropdown-buttons"
                                 fromYear={1950}

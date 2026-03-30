@@ -236,3 +236,29 @@ export async function unarchiveEquipos(equipoIds: string[]) {
     return { error: 'No se pudieron desarchivar los equipos.' };
   }
 }
+
+export async function linkQrToEquipo(equipoId: string, qrCode: string) {
+  if (!equipoId || !qrCode) {
+    return { error: 'ID de equipo o código QR no válido.' };
+  }
+
+  const equipoRef = doc(db, 'inventario_equipos', equipoId);
+
+  try {
+    await updateDoc(equipoRef, { numero_interno: qrCode });
+    return { success: true };
+  } catch (error: any) {
+    if (error.code === 'permission-denied') {
+      const permissionError = new FirestorePermissionError({
+        path: equipoRef.path,
+        operation: 'update',
+        requestResourceData: { numero_interno: qrCode },
+      });
+      if (errorEmitter) {
+        errorEmitter.emit('permission-error', permissionError);
+      }
+    }
+    return { error: 'No se pudo vincular el código QR al equipo.' };
+  }
+}
+

@@ -1,0 +1,65 @@
+﻿
+> firebase-antigravity@0.1.0 build
+> next build
+
+  Ôû▓ Next.js 14.2.0
+  - Environments: .env
+
+   Creating an optimized production build ...
+node.exe :  ÔÜá Compiled with warnings
+En línea: 1 Carácter: 1
++ & "C:\Program Files\nodejs/node.exe" "C:\Program 
+Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~
+    + CategoryInfo          : NotSpecified: ( ÔÜá Compiled wit 
+   h warnings:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+
+./node_modules/require-in-the-middle/index.js
+Critical dependency: require function is used in a way in 
+which dependencies cannot be statically extracted
+
+Import trace for requested module:
+./node_modules/require-in-the-middle/index.js
+./node_modules/@opentelemetry/instrumentation/build/esm/platfor
+m/node/instrumentation.js
+./node_modules/@opentelemetry/instrumentation/build/esm/platfor
+m/node/index.js
+./node_modules/@opentelemetry/instrumentation/build/esm/platfor
+m/index.js
+./node_modules/@opentelemetry/instrumentation/build/esm/index.j
+s
+./node_modules/@opentelemetry/sdk-node/build/src/sdk.js
+./node_modules/@opentelemetry/sdk-node/build/src/index.js
+./node_modules/@genkit-ai/core/lib/tracing/node-telemetry-provi
+der.js
+./node_modules/@genkit-ai/core/lib/node.js
+./node_modules/genkit/lib/common.js
+./node_modules/genkit/lib/index.mjs
+./ai/flows/suggest-task-improvements.ts
+./app/(app)/intelligent-assignment/actions.ts
+
+ Ô£ô Compiled successfully
+   Linting and checking validity of types ...
+Failed to compile.
+
+./app/(app)/birthdays/components/birthday-card.tsx:42:33
+Type error: Property 'fecha_aviso' does not exist on type 
+'Birthday'.
+
+[0m [90m 40 |[39m     
+[33m.[39mjoin([32m''[39m)[33m;[39m[0m
+[0m [90m 41 |[39m[0m
+[0m[31m[1m>[22m[39m[90m 42 |[39m   [36mconst[39m 
+isNotified [33m=[39m [33m![39m[33m![39mbirthday[33m.[39
+mfecha_aviso[33m;[39m[0m
+[0m [90m    |[39m                                 
+[31m[1m^[22m[39m[0m
+[0m [90m 43 |[39m[0m
+[0m [90m 44 |[39m   [36mreturn[39m ([0m
+[0m [90m 45 |[39m     [33m<[39m[33mCard[39m 
+className[33m=[39m[32m"flex flex-col justify-between 
+animate-in fade-in-50 group relative hover:shadow-lg 
+transition-all border-none shadow-md"[39m[33m>[39m[0m

@@ -1,0 +1,67 @@
+﻿
+> firebase-antigravity@0.1.0 build
+> next build
+
+  Ôû▓ Next.js 14.2.0
+  - Environments: .env
+
+   Creating an optimized production build ...
+node.exe :  ÔÜá Compiled with warnings
+En línea: 1 Carácter: 1
++ & "C:\Program Files\nodejs/node.exe" "C:\Program 
+Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~
+    + CategoryInfo          : NotSpecified: ( ÔÜá Compiled     
+with warnings:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+
+./node_modules/require-in-the-middle/index.js
+Critical dependency: require function is used in a way in 
+which dependencies cannot be statically extracted
+
+Import trace for requested module:
+./node_modules/require-in-the-middle/index.js
+./node_modules/@opentelemetry/instrumentation/build/esm/platfor
+m/node/instrumentation.js
+./node_modules/@opentelemetry/instrumentation/build/esm/platfor
+m/node/index.js
+./node_modules/@opentelemetry/instrumentation/build/esm/platfor
+m/index.js
+./node_modules/@opentelemetry/instrumentation/build/esm/index.j
+s
+./node_modules/@opentelemetry/sdk-node/build/src/sdk.js
+./node_modules/@opentelemetry/sdk-node/build/src/index.js
+./node_modules/@genkit-ai/core/lib/tracing/node-telemetry-provi
+der.js
+./node_modules/@genkit-ai/core/lib/node.js
+./node_modules/genkit/lib/common.js
+./node_modules/genkit/lib/index.mjs
+./ai/flows/send-email.ts
+./app/(app)/dashboard/actions.ts
+
+ Ô£ô Compiled successfully
+   Linting and checking validity of types ...
+Failed to compile.
+
+./app/(app)/inventory/components/inventory-report-dialog.tsx:33
+9:27
+Type error: Type '{ value: string; label: string; }[] | 
+undefined' is not assignable to type 'Option[]'.
+  Type 'undefined' is not assignable to type 'Option[]'.
+
+[0m [90m 337 |[39m                       
+[33m<[39m[33mFormControl[39m[33m>[39m[0m
+[0m [90m 338 |[39m                         
+[33m<[39m[33mMultipleSelector[39m[0m
+[0m[31m[1m>[22m[39m[90m 339 |[39m                       
+    value[33m=[39m{field[33m.[39mvalue}[0m
+[0m [90m     |[39m                           
+[31m[1m^[22m[39m[0m
+[0m [90m 340 |[39m                           
+onChange[33m=[39m{field[33m.[39monChange}[0m
+[0m [90m 341 |[39m                           
+options[33m=[39m{archiveOptions}[0m
+[0m [90m 342 |[39m                           
+placeholder[33m=[39m[32m"Todos los archivadores..."[39m[0m

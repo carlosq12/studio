@@ -43,7 +43,7 @@ export interface Option {
   label: string;
 }
 
-interface MultipleSelectorProps extends React.InputHTMLAttributes<HTMLInputElement>, VariantProps<typeof multipleSelectorVariants> {
+interface MultipleSelectorProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'value' | 'onChange'>, VariantProps<typeof multipleSelectorVariants> {
   value: Option[];
   onChange: (value: Option[]) => void;
   options: Option[];

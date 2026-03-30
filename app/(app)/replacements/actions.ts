@@ -143,7 +143,7 @@ export async function addMultipleReplacements(replacements: any[]) {
     }
 }
 
-export async function generateMonthlyReplacements(monthKey?: string) {
+export async function generateMonthlyReplacements(monthKey?: string): Promise<{ success?: boolean; count?: number; error?: string }> {
     return { success: true, count: 0 };
 }
 

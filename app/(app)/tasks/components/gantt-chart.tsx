@@ -43,7 +43,7 @@ export function GanttChart({ tasks, onTaskSelect, currentYear }: GanttChartProps
       return { chartData: [], yAxisLabels: [], monthLabels: [] };
     }
 
-    const uniqueTaskNames = [...new Set(tasks.map(t => t['nombre tarea']))];
+    const uniqueTaskNames = Array.from(new Set(tasks.map(t => t['nombre tarea'])));
 
     const chartData: any[] = [];
     tasks.forEach(task => {

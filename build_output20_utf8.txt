@@ -1,0 +1,73 @@
+﻿
+> firebase-antigravity@0.1.0 build
+> next build
+
+  Ôû▓ Next.js 14.2.0
+  - Environments: .env
+
+   Creating an optimized production build ...
+node.exe :  ÔÜá Compiled with warnings
+En línea: 1 Carácter: 1
++ & "C:\Program Files\nodejs/node.exe" "C:\Program 
+Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ( ÔÜá Compiled 
+    with warnings:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+
+./node_modules/require-in-the-middle/index.js
+Critical dependency: require function is used in a way in 
+which dependencies cannot be statically extracted
+
+Import trace for requested module:
+./node_modules/require-in-the-middle/index.js
+./node_modules/@opentelemetry/instrumentation/build/esm/pla
+tform/node/instrumentation.js
+./node_modules/@opentelemetry/instrumentation/build/esm/pla
+tform/node/index.js
+./node_modules/@opentelemetry/instrumentation/build/esm/pla
+tform/index.js
+./node_modules/@opentelemetry/instrumentation/build/esm/ind
+ex.js
+./node_modules/@opentelemetry/sdk-node/build/src/sdk.js
+./node_modules/@opentelemetry/sdk-node/build/src/index.js
+./node_modules/@genkit-ai/core/lib/tracing/node-telemetry-p
+rovider.js
+./node_modules/@genkit-ai/core/lib/node.js
+./node_modules/genkit/lib/common.js
+./node_modules/genkit/lib/index.mjs
+./ai/flows/send-email.ts
+./app/(app)/dashboard/actions.ts
+
+ Ô£ô Compiled successfully
+   Linting and checking validity of types ...
+   Collecting page data ...
+   Generating static pages (0/13) ...
+   Generating static pages (3/13) 
+   Generating static pages (6/13) 
+   Generating static pages (9/13) 
+ Ô£ô Generating static pages (13/13)
+   Finalizing page optimization ...
+   Collecting build traces ...
+
+Route (app)                              Size     First Load JS
+Ôöî Ôùï /                                    142 B          87.3 kB
+Ôö£ Ôùï /_not-found                          875 B            88 kB
+Ôö£ Ôùï /birthdays                           16.6 kB         424 kB
+Ôö£ Ôùï /dashboard                           8.79 kB         305 kB
+Ôö£ Ôùï /employees                           11.2 kB         418 kB
+Ôö£ Ôùï /ingreso-funcionarios                14.5 kB         426 kB
+Ôö£ Ôùï /intelligent-assignment              6.06 kB         101 kB
+Ôö£ Ôùï /inventory                           49.1 kB         576 kB
+Ôö£ Ôùï /replacements                        30.6 kB         558 kB
+Ôöö Ôùï /tasks                               15.7 kB         397 kB
++ First Load JS shared by all            87.2 kB
+  Ôö£ chunks/23-67318db7bff57c6c.js        31.5 kB
+  Ôö£ chunks/fd9d1056-8b3841715335d9ee.js  53.6 kB
+  Ôöö other shared chunks (total)          2.01 kB
+
+
+Ôùï  (Static)  prerendered as static content
+

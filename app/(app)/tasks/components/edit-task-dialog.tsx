@@ -280,7 +280,7 @@ export function EditTaskDialog({ task, open, onOpenChange }: EditTaskDialogProps
                                     <PopoverContent className="w-auto p-0" align="start">
                                         <Calendar 
                                             mode="single" 
-                                            selected={field.value} 
+                                            selected={field.value ?? undefined} 
                                             onSelect={field.onChange} 
                                             captionLayout="dropdown-buttons" 
                                             fromYear={new Date().getFullYear() - 5}

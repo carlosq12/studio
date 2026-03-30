@@ -336,9 +336,9 @@ export function InventoryReportDialog({ equipos, archivadores }: InventoryReport
                       </FormLabel>
                       <FormControl>
                         <MultipleSelector
-                          value={field.value}
+                          value={field.value || []}
                           onChange={field.onChange}
-                          options={archiveOptions}
+                          options={archiveOptions || []}
                           placeholder="Todos los archivadores..."
                           emptyIndicator={<p className="text-center text-xs p-2">No hay archivadores creados.</p>}
                         />
@@ -355,7 +355,7 @@ export function InventoryReportDialog({ equipos, archivadores }: InventoryReport
                       <FormLabel>Tipos de Equipo</FormLabel>
                       <FormControl>
                         <MultipleSelector
-                          value={field.value}
+                          value={field.value || []}
                           onChange={field.onChange}
                           options={tipoOptions}
                           placeholder="Todos los tipos..."
@@ -373,7 +373,7 @@ export function InventoryReportDialog({ equipos, archivadores }: InventoryReport
                       <FormLabel>Estados</FormLabel>
                       <FormControl>
                         <MultipleSelector
-                          value={field.value}
+                          value={field.value || []}
                           onChange={field.onChange}
                           options={estadoOptions}
                           placeholder="Todos los estados..."
@@ -391,7 +391,7 @@ export function InventoryReportDialog({ equipos, archivadores }: InventoryReport
                       <FormLabel>Tipos de Arriendo</FormLabel>
                       <FormControl>
                         <MultipleSelector
-                          value={field.value}
+                          value={field.value || []}
                           onChange={field.onChange}
                           options={arriendoOptions}
                           placeholder="Todos los arriendos..."

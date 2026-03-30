@@ -103,8 +103,8 @@ export function EfemerideCard({ efemeride, funcionarios, logs, onEdit, onDelete 
       .filter((f): f is { name: string; email: string | undefined } => !!f);
       
     return { 
-        encargadosEmails: [...new Map(encargados.map(item => [item.email, item])).values()].filter(f => f.email), 
-        funcionariosAfectosEmails: [...new Map(funcionariosAfectos.map(item => [item.email, item])).values()].filter(f => f.email)
+        encargadosEmails: Array.from(new Map(encargados.map(item => [item.email, item])).values()).filter(f => f.email), 
+        funcionariosAfectosEmails: Array.from(new Map(funcionariosAfectos.map(item => [item.email, item])).values()).filter(f => f.email)
     };
   }, [efemeride, funcionarioMap]);
   

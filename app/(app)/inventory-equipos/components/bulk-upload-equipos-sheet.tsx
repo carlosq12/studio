@@ -26,7 +26,7 @@ import {
 } from '@/components/ui/table';
 
 type InventarioEquipoData = {
-  'nombre equipo'?: string;
+  'nombre equipo': string;
   modelo?: string;
   serial?: string;
   'tipo de equipo'?: string;
@@ -213,7 +213,7 @@ export function BulkUploadEquiposSheet() {
 
     setIsSubmitting(true);
     try {
-      const result = await addMultipleInventarioEquipos(parsedData);
+      const result = await addMultipleInventarioEquipos(parsedData as any);
 
       if (result?.error) {
         throw new Error(result.error);

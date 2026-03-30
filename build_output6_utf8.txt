@@ -1,0 +1,65 @@
+﻿
+> firebase-antigravity@0.1.0 build
+> next build
+
+  Ôû▓ Next.js 14.2.0
+  - Environments: .env
+
+   Creating an optimized production build ...
+node.exe :  ÔÜá Compiled with warnings
+En línea: 1 Carácter: 1
++ & "C:\Program Files\nodejs/node.exe" "C:\Program 
+Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~
+    + CategoryInfo          : NotSpecified: ( ÔÜá Compiled wit 
+   h warnings:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+
+./node_modules/require-in-the-middle/index.js
+Critical dependency: require function is used in a way in 
+which dependencies cannot be statically extracted
+
+Import trace for requested module:
+./node_modules/require-in-the-middle/index.js
+./node_modules/@opentelemetry/instrumentation/build/esm/platfor
+m/node/instrumentation.js
+./node_modules/@opentelemetry/instrumentation/build/esm/platfor
+m/node/index.js
+./node_modules/@opentelemetry/instrumentation/build/esm/platfor
+m/index.js
+./node_modules/@opentelemetry/instrumentation/build/esm/index.j
+s
+./node_modules/@opentelemetry/sdk-node/build/src/sdk.js
+./node_modules/@opentelemetry/sdk-node/build/src/index.js
+./node_modules/@genkit-ai/core/lib/tracing/node-telemetry-provi
+der.js
+./node_modules/@genkit-ai/core/lib/node.js
+./node_modules/genkit/lib/common.js
+./node_modules/genkit/lib/index.mjs
+./ai/flows/send-email.ts
+./app/(app)/dashboard/actions.ts
+
+ Ô£ô Compiled successfully
+   Linting and checking validity of types ...
+Failed to compile.
+
+./app/(app)/intelligent-assignment/components/intelligent-assig
+nment-client.tsx:29:21
+Type error: Property 'fecha' does not exist on type 'Task'.
+
+[0m [90m 27 |[39m         taskDescription[33m:[39m 
+t[33m.[39mdescripcion [33m||[39m 
+[32m''[39m[33m,[39m[0m
+[0m [90m 28 |[39m         assignedEmployee[33m:[39m 
+t[33m.[39mpersona [36mas[39m string[33m,[39m[0m
+[0m[31m[1m>[22m[39m[90m 29 |[39m         
+deadline[33m:[39m t[33m.[39mfecha[33m,[39m[0m
+[0m [90m    |[39m                     
+[31m[1m^[22m[39m[0m
+[0m [90m 30 |[39m         priority[33m:[39m 
+t[33m.[39mprioridad[0m
+[0m [90m 31 |[39m       }))[33m,[39m[0m
+[0m [90m 32 |[39m       employees[33m:[39m 
+employees[33m.[39mmap(e [33m=>[39m ({[0m

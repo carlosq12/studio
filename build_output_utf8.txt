@@ -1,0 +1,69 @@
+﻿
+> firebase-antigravity@0.1.0 build
+> next build
+
+  Ôû▓ Next.js 14.2.0
+  - Environments: .env
+
+   Creating an optimized production build ...
+node.exe :  ÔÜá Compiled with warnings
+En línea: 1 Carácter: 1
++ & "C:\Program Files\nodejs/node.exe" "C:\Program 
+Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ( ÔÜá Compiled 
+wit    h warnings:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+
+./node_modules/require-in-the-middle/index.js
+Critical dependency: require function is used in a way in 
+which dependencies cannot be statically extracted
+
+Import trace for requested module:
+./node_modules/require-in-the-middle/index.js
+./node_modules/@opentelemetry/instrumentation/build/esm/plat
+form/node/instrumentation.js
+./node_modules/@opentelemetry/instrumentation/build/esm/plat
+form/node/index.js
+./node_modules/@opentelemetry/instrumentation/build/esm/plat
+form/index.js
+./node_modules/@opentelemetry/instrumentation/build/esm/inde
+x.js
+./node_modules/@opentelemetry/sdk-node/build/src/sdk.js
+./node_modules/@opentelemetry/sdk-node/build/src/index.js
+./node_modules/@genkit-ai/core/lib/tracing/node-telemetry-pr
+ovider.js
+./node_modules/@genkit-ai/core/lib/node.js
+./node_modules/genkit/lib/common.js
+./node_modules/genkit/lib/index.mjs
+./ai/flows/suggest-task-improvements.ts
+./app/(app)/intelligent-assignment/actions.ts
+
+ Ô£ô Compiled successfully
+   Linting and checking validity of types ...
+Failed to compile.
+
+./app/(app)/archives/components/view-archive-dialog.tsx:102:
+15
+Type error: This comparison appears to be unintentional 
+because the types 'Replacement[]' and 'string' have no 
+overlap.
+
+[0m [90m 100 |[39m       
+[33m.[39msort(([dateA[33m,[39m dateB]) [33m=>[39m 
+{[0m
+[0m [90m 101 |[39m           [36mif[39m (dateA 
+[33m===[39m [32m'Sin Fecha'[39m) [36mreturn[39m 
+[35m1[39m[33m;[39m[0m
+[0m[31m[1m>[22m[39m[90m 102 |[39m           
+[36mif[39m (dateB [33m===[39m [32m'Sin Fecha'[39m) 
+[36mreturn[39m [33m-[39m[35m1[39m[33m;[39m[0m
+[0m [90m     |[39m               [31m[1m^[22m[39m[0m
+[0m [90m 103 |[39m           [36mreturn[39m 
+[36mnew[39m [33mDate[39m(dateB)[33m.[39mgetTime() 
+[33m-[39m [36mnew[39m 
+[33mDate[39m(dateA)[33m.[39mgetTime()[33m;[39m[0m
+[0m [90m 104 |[39m       })[33m;[39m[0m
+[0m [90m 105 |[39m[0m

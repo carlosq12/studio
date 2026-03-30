@@ -41,18 +41,20 @@ export type Birthday = {
   correo?: string;
   role?: string;
   avatar?: string;
+  fecha_aviso?: any;
 };
 
 export type Task = {
   id: string;
   'nombre tarea': string;
+  name?: string;
   descripcion?: string;
   persona: string[] | string;
+  fecha?: any;
   lugar?: string;
   estado: 'Pendiente' | 'En Progreso' | 'Completada' | 'Atrasada';
   prioridad: 'Alta' | 'Media' | 'Baja';
   correo?: string;
-  name?: string;
   assignedTo?: string;
   deadline?: string;
   // Recurrence fields

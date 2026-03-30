@@ -1,0 +1,77 @@
+﻿
+> firebase-antigravity@0.1.0 build
+> next build
+
+  Ôû▓ Next.js 14.2.0
+  - Environments: .env
+
+   Creating an optimized production build ...
+node.exe :  ÔÜá Compiled with warnings
+En línea: 1 Carácter: 1
++ & "C:\Program Files\nodejs/node.exe" "C:\Program 
+Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ( ÔÜá Compiled 
+    with warnings:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+
+./node_modules/require-in-the-middle/index.js
+Critical dependency: require function is used in a way in 
+which dependencies cannot be statically extracted
+
+Import trace for requested module:
+./node_modules/require-in-the-middle/index.js
+./node_modules/@opentelemetry/instrumentation/build/esm/pla
+tform/node/instrumentation.js
+./node_modules/@opentelemetry/instrumentation/build/esm/pla
+tform/node/index.js
+./node_modules/@opentelemetry/instrumentation/build/esm/pla
+tform/index.js
+./node_modules/@opentelemetry/instrumentation/build/esm/ind
+ex.js
+./node_modules/@opentelemetry/sdk-node/build/src/sdk.js
+./node_modules/@opentelemetry/sdk-node/build/src/index.js
+./node_modules/@genkit-ai/core/lib/tracing/node-telemetry-p
+rovider.js
+./node_modules/@genkit-ai/core/lib/node.js
+./node_modules/genkit/lib/common.js
+./node_modules/genkit/lib/index.mjs
+./ai/flows/suggest-task-improvements.ts
+./app/(app)/intelligent-assignment/actions.ts
+
+ Ô£ô Compiled successfully
+   Linting and checking validity of types ...
+Failed to compile.
+
+./app/(app)/replacements/components/bulk-upload-replacement
+s-sheet.tsx:151:19
+Type error: Type 'Date | null' is not assignable to type 
+'Date | undefined'.
+  Type 'null' is not assignable to type 'Date | undefined'.
+
+[0m [90m 149 |[39m                   
+[32m'FUNCIONES'[39m[33m:[39m 
+[33mString[39m(rowData[[32m'FUNCIONES'[39m] 
+[33m||[39m [32m''[39m)[33m.[39mtrim()[33m,[39m[0m
+[0m [90m 150 |[39m                   
+[32m'UNIDAD'[39m[33m:[39m 
+[33mString[39m(rowData[[32m'UNIDAD'[39m] [33m||[39m 
+[32m''[39m)[33m.[39mtrim()[33m,[39m[0m
+[0m[31m[1m>[22m[39m[90m 151 |[39m                   
+[32m'DESDE'[39m[33m:[39m 
+parseDate(rowData[[32m'DESDE'[39m])[33m,[39m[0m
+[0m [90m     |[39m                   
+[31m[1m^[22m[39m[0m
+[0m [90m 152 |[39m                   
+[32m'HASTA'[39m[33m:[39m 
+parseDate(rowData[[32m'HASTA'[39m])[33m,[39m[0m
+[0m [90m 153 |[39m                   [32m'NOMBRE 
+REEMPLAZADO'[39m[33m:[39m 
+[33mString[39m(rowData[[32m'NOMBRE REEMPLAZADO'[39m] 
+[33m||[39m [32m''[39m)[33m.[39mtrim()[33m,[39m[0m
+[0m [90m 154 |[39m                   
+[32m'MOTIVO'[39m[33m:[39m 
+[33mString[39m(rowData[[32m'MOTIVO'[39m] [33m||[39m 
+[32m''[39m)[33m.[39mtrim()[33m,[39m[0m

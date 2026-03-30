@@ -390,7 +390,7 @@ export function ReportDialog({ replacements }: ReportDialogProps) {
                                 <PopoverContent className="w-auto p-0" align="start">
                                     <Calendar 
                                         mode="single" 
-                                        selected={field.value} 
+                                        selected={field.value ?? undefined} 
                                         onSelect={field.onChange} 
                                         captionLayout="dropdown-buttons" 
                                         fromYear={new Date().getFullYear() - 10} 
@@ -420,7 +420,7 @@ export function ReportDialog({ replacements }: ReportDialogProps) {
                                     </FormControl>
                                 </PopoverTrigger>
                                 <PopoverContent className="w-auto p-0" align="start">
-                                    <Calendar mode="single" selected={field.value} onSelect={field.onChange} captionLayout="dropdown-buttons" fromYear={new Date().getFullYear() - 10} toYear={new Date().getFullYear() + 10} initialFocus locale={es} />
+                                    <Calendar mode="single" selected={field.value ?? undefined} onSelect={field.onChange} captionLayout="dropdown-buttons" fromYear={new Date().getFullYear() - 10} toYear={new Date().getFullYear() + 10} initialFocus locale={es} />
                                 </PopoverContent>
                                 </Popover>
                                 <FormMessage />
@@ -461,9 +461,9 @@ export function ReportDialog({ replacements }: ReportDialogProps) {
                             <FormLabel>Estado R/NR</FormLabel>
                             <FormControl>
                                 <MultipleSelector
-                                    value={field.value}
+                                    value={field.value || []}
                                     onChange={field.onChange}
-                                    options={estadoOptions}
+                                    options={estadoOptions || []}
                                     placeholder="Selecciona estados..."
                                 />
                             </FormControl>

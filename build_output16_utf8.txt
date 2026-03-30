@@ -1,0 +1,66 @@
+﻿
+> firebase-antigravity@0.1.0 build
+> next build
+
+  Ôû▓ Next.js 14.2.0
+  - Environments: .env
+
+   Creating an optimized production build ...
+node.exe :  ÔÜá Compiled with warnings
+En línea: 1 Carácter: 1
++ & "C:\Program Files\nodejs/node.exe" "C:\Program 
+Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ( ÔÜá Compiled 
+    with warnings:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+
+./node_modules/require-in-the-middle/index.js
+Critical dependency: require function is used in a way in 
+which dependencies cannot be statically extracted
+
+Import trace for requested module:
+./node_modules/require-in-the-middle/index.js
+./node_modules/@opentelemetry/instrumentation/build/esm/pla
+tform/node/instrumentation.js
+./node_modules/@opentelemetry/instrumentation/build/esm/pla
+tform/node/index.js
+./node_modules/@opentelemetry/instrumentation/build/esm/pla
+tform/index.js
+./node_modules/@opentelemetry/instrumentation/build/esm/ind
+ex.js
+./node_modules/@opentelemetry/sdk-node/build/src/sdk.js
+./node_modules/@opentelemetry/sdk-node/build/src/index.js
+./node_modules/@genkit-ai/core/lib/tracing/node-telemetry-p
+rovider.js
+./node_modules/@genkit-ai/core/lib/node.js
+./node_modules/genkit/lib/common.js
+./node_modules/genkit/lib/index.mjs
+./ai/flows/suggest-task-improvements.ts
+./app/(app)/intelligent-assignment/actions.ts
+
+ Ô£ô Compiled successfully
+   Linting and checking validity of types ...
+Failed to compile.
+
+./app/(app)/tasks/components/gantt-chart.tsx:46:33
+Type error: Type 'Set<string>' can only be iterated 
+through when using the '--downlevelIteration' flag or with 
+a '--target' of 'es2015' or higher.
+
+[0m [90m 44 |[39m     }[0m
+[0m [90m 45 |[39m[0m
+[0m[31m[1m>[22m[39m[90m 46 |[39m     
+[36mconst[39m uniqueTaskNames [33m=[39m 
+[[33m...[39m[36mnew[39m 
+[33mSet[39m(tasks[33m.[39mmap(t [33m=>[39m 
+t[[32m'nombre tarea'[39m]))][33m;[39m[0m
+[0m [90m    |[39m                                 
+[31m[1m^[22m[39m[0m
+[0m [90m 47 |[39m[0m
+[0m [90m 48 |[39m     [36mconst[39m 
+chartData[33m:[39m any[] [33m=[39m [][33m;[39m[0m
+[0m [90m 49 |[39m     tasks[33m.[39mforEach(task 
+[33m=>[39m {[0m
