@@ -18,6 +18,7 @@ export function BulkUploadMarcasSheet() {
   const [parsedData, setParsedData] = useState<any[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [mesTarget, setMesTarget] = useState<string>('');
+  const [valorVale, setValorVale] = useState<number>(4000);
   const { toast } = useToast();
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -83,7 +84,7 @@ export function BulkUploadMarcasSheet() {
 
     setIsProcessing(true);
     try {
-      const result = await processMarcasMasivas(parsedData, mesTarget);
+      const result = await processMarcasMasivas(parsedData, mesTarget, valorVale);
       
       if (result.error) {
         throw new Error(result.error);
@@ -148,19 +149,33 @@ export function BulkUploadMarcasSheet() {
             </Button>
           </div>
 
-          <div className="space-y-3">
-             <Label htmlFor="mesVales">Selecciona el Mes del Registro</Label>
-             <Select value={mesTarget} onValueChange={setMesTarget}>
-                <SelectTrigger id="mesVales">
-                    <SelectValue placeholder="Ej: 2024-10" />
-                </SelectTrigger>
-                <SelectContent>
-                    {generateMonthsOptions().map(opt => (
-                        <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
-                    ))}
-                </SelectContent>
-             </Select>
-          </div>
+           <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-3">
+                 <Label htmlFor="mesVales">Selecciona el Mes del Registro</Label>
+                 <Select value={mesTarget} onValueChange={setMesTarget}>
+                    <SelectTrigger id="mesVales">
+                        <SelectValue placeholder="Ej: 2024-10" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        {generateMonthsOptions().map(opt => (
+                            <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                        ))}
+                    </SelectContent>
+                 </Select>
+              </div>
+
+              <div className="space-y-3">
+                 <Label htmlFor="valorVale">Valor del Vale ($)</Label>
+                 <Input 
+                   id="valorVale" 
+                   type="number" 
+                   min="0"
+                   step="100"
+                   value={valorVale} 
+                   onChange={(e) => setValorVale(Number(e.target.value))} 
+                 />
+              </div>
+           </div>
 
           <div className="grid w-full max-w-sm items-center gap-2">
             <Label htmlFor="bulk-upload">Archivo Excel</Label>

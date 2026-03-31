@@ -71,7 +71,7 @@ export async function deleteFuncionarioVale(id: string) {
   }
 }
 
-export async function processMarcasMasivas(marcas: any[], mesStr: string) {
+export async function processMarcasMasivas(marcas: any[], mesStr: string, valorVale: number = 4000) {
     // 1. Obtener todos los funcionarios actuales
     const funcionariosSnapshot = await getDocs(collection(db, 'funcionarios_vales'));
     const funcionariosMap = new Map<string, FuncionarioVale>(); // acNo -> Funcionario
@@ -137,7 +137,7 @@ export async function processMarcasMasivas(marcas: any[], mesStr: string) {
                 mes: mesStr, // Ej. "2023-10"
                 diasTrabajados: result.jornadasValidas,
                 diasAusencia: result.noMarcajes,
-                montoAsignado: result.jornadasValidas * 4000, // Podemos calcular provisoriamente 4000 x jornada
+                montoAsignado: result.jornadasValidas * valorVale,
                 fechaCarga: Timestamp.now()
             };
             batch.set(marcaRef, marcaData);
