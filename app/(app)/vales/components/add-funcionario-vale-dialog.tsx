@@ -32,6 +32,8 @@ const funcionarioSchema = z.object({
   apellidos: z.string().optional(),
   departamento: z.string().optional(),
   cargo: z.string().optional(),
+  acNo: z.string().optional(),
+  jornada: z.string().optional(),
   estado: z.string().optional(),
 });
 
@@ -55,6 +57,8 @@ export function AddFuncionarioValeDialog({ open, onOpenChange, funcionario }: Ad
             apellidos: "",
             departamento: "",
             cargo: "",
+            acNo: "",
+            jornada: "",
             estado: "Activo",
         },
     });
@@ -67,6 +71,8 @@ export function AddFuncionarioValeDialog({ open, onOpenChange, funcionario }: Ad
                 apellidos: funcionario.apellidos || "",
                 departamento: funcionario.departamento || "",
                 cargo: funcionario.cargo || "",
+                acNo: funcionario.acNo || "",
+                jornada: funcionario.jornada || "",
                 estado: funcionario.estado || "Activo",
             });
         } else if (!open) {
@@ -76,6 +82,8 @@ export function AddFuncionarioValeDialog({ open, onOpenChange, funcionario }: Ad
                 apellidos: "",
                 departamento: "",
                 cargo: "",
+                acNo: "",
+                jornada: "",
                 estado: "Activo",
             });
         }
@@ -111,7 +119,7 @@ export function AddFuncionarioValeDialog({ open, onOpenChange, funcionario }: Ad
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-[425px]">
+            <DialogContent className="sm:max-w-[500px]">
                 <DialogHeader>
                     <DialogTitle>{funcionario ? 'Editar Funcionario' : 'Agregar Funcionario'}</DialogTitle>
                     <DialogDescription>
@@ -161,7 +169,35 @@ export function AddFuncionarioValeDialog({ open, onOpenChange, funcionario }: Ad
                                 )}
                             />
                         </div>
-                         <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-2 gap-4">
+                            <FormField
+                                control={form.control}
+                                name="acNo"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>AC-No. (Reloj)</FormLabel>
+                                        <FormControl>
+                                            <Input placeholder="Ej: 1234" {...field} />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                            <FormField
+                                control={form.control}
+                                name="jornada"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Jornada / Turno</FormLabel>
+                                        <FormControl>
+                                            <Input placeholder="Ej: T4" {...field} />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
                             <FormField
                                 control={form.control}
                                 name="departamento"

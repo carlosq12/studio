@@ -222,6 +222,8 @@ export type FuncionarioVale = {
   fechaIngreso?: any;
   departamento?: string;
   cargo?: string;
+  acNo?: string;
+  jornada?: string;
 };
 
 export type MarcaVale = {

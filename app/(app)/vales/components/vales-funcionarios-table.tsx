@@ -77,6 +77,8 @@ export function ValesFuncionariosTable({ funcionarios, isLoading }: ValesFuncion
               <TableRow>
                 <TableHead>RUT</TableHead>
                 <TableHead>Nombre Completo</TableHead>
+                <TableHead>Jornada</TableHead>
+                <TableHead>AC-No.</TableHead>
                 <TableHead>Departamento</TableHead>
                 <TableHead>Estado</TableHead>
                 <TableHead className="text-right">Acciones</TableHead>
@@ -91,11 +93,13 @@ export function ValesFuncionariosTable({ funcionarios, isLoading }: ValesFuncion
                     <TableCell><Skeleton className="h-4 w-full" /></TableCell>
                     <TableCell><Skeleton className="h-4 w-full" /></TableCell>
                     <TableCell><Skeleton className="h-4 w-full" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-full" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-full" /></TableCell>
                   </TableRow>
                 ))
               ) : filteredFuncionarios.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="h-24 text-center">
+                  <TableCell colSpan={7} className="h-24 text-center">
                     No hay funcionarios registrados en Vales.
                   </TableCell>
                 </TableRow>
@@ -104,6 +108,8 @@ export function ValesFuncionariosTable({ funcionarios, isLoading }: ValesFuncion
                   <TableRow key={f.id}>
                     <TableCell className="font-medium">{f.RUT}</TableCell>
                     <TableCell>{f.nombres} {f.apellidos || ''}</TableCell>
+                    <TableCell>{f.jornada || '-'}</TableCell>
+                    <TableCell>{f.acNo || '-'}</TableCell>
                     <TableCell>{f.departamento || '-'}</TableCell>
                     <TableCell>
                       <Badge variant={f.estado === 'Activo' ? 'default' : 'secondary'}>

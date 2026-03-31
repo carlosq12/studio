@@ -50,17 +50,21 @@ export function BulkUploadFuncionariosValesSheet() {
   const downloadTemplate = () => {
     const templateData = [
       {
-        'RUT': '12345678-9',
-        'Nombres': 'Juan Alberto',
-        'Apellidos': 'Perez Soto',
-        'Departamento': 'Informática',
+        'AC-No.': '1359',
+        'Nombres': 'ROBERTO',
+        'Apellidos': 'ESPINA',
+        'Jornada': 'T1',
+        'RUT': '13598655-0',
+        'Departamento': 'Operaciones',
         'Estado': 'Activo'
       },
       {
-        'RUT': '9876543-2',
-        'Nombres': 'María José',
-        'Apellidos': 'González',
-        'Departamento': 'Recursos Humanos',
+        'AC-No.': '1178',
+        'Nombres': 'ROSA',
+        'Apellidos': 'AVILES',
+        'Jornada': 'N3',
+        'RUT': '11787648-9',
+        'Departamento': 'Administración',
         'Estado': 'Activo'
       }
     ];

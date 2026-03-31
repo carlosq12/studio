@@ -144,6 +144,8 @@ export async function uploadFuncionariosValesMasivos(funcionariosList: any[]) {
         const nombres = String(item['NOMBRES'] || item['Nombres'] || item['NOMBRE'] || item['Nombre'] || '').trim();
         const apellidos = String(item['APELLIDOS'] || item['Apellidos'] || item['APELLIDO'] || item['Apellido'] || '').trim();
         const departamento = String(item['DEPARTAMENTO'] || item['Departamento'] || item['UNIDAD'] || item['Unidad'] || '').trim();
+        const acNo = String(item['AC-No.'] || item['AC-NO'] || item['Ac-No'] || item['Reloj'] || item['RELOJ'] || '').trim();
+        const jornada = String(item['JORNADA'] || item['Jornada'] || item['Turno'] || item['TURNO'] || '').trim();
         const estado = String(item['ESTADO'] || item['Estado'] || 'Activo').trim();
 
         if (!rutStr || (!nombres && !apellidos)) continue;
@@ -154,6 +156,8 @@ export async function uploadFuncionariosValesMasivos(funcionariosList: any[]) {
             nombres: nombres,
             apellidos: apellidos,
             departamento: departamento,
+            acNo: acNo,
+            jornada: jornada,
             estado: estado,
             fechaIngreso: Timestamp.now()
         };
