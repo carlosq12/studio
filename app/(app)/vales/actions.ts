@@ -134,3 +134,39 @@ export async function processMarcasMasivas(marcas: any[], mesStr: string) {
         return { error: 'Error al realizar la carga masiva: ' + error.message };
     }
 }
+
+export async function uploadFuncionariosValesMasivos(funcionariosList: any[]) {
+    const batch = writeBatch(db);
+    let guardados = 0;
+
+    for (const item of funcionariosList) {
+        const rutStr = String(item['RUT'] || item['Rut'] || item['rut'] || '').trim();
+        const nombres = String(item['NOMBRES'] || item['Nombres'] || item['NOMBRE'] || item['Nombre'] || '').trim();
+        const apellidos = String(item['APELLIDOS'] || item['Apellidos'] || item['APELLIDO'] || item['Apellido'] || '').trim();
+        const departamento = String(item['DEPARTAMENTO'] || item['Departamento'] || item['UNIDAD'] || item['Unidad'] || '').trim();
+        const estado = String(item['ESTADO'] || item['Estado'] || 'Activo').trim();
+
+        if (!rutStr || (!nombres && !apellidos)) continue;
+
+        const funcRef = doc(collection(db, 'funcionarios_vales'));
+        const funcData: Partial<FuncionarioVale> = {
+            RUT: rutStr,
+            nombres: nombres,
+            apellidos: apellidos,
+            departamento: departamento,
+            estado: estado,
+            fechaIngreso: Timestamp.now()
+        };
+        batch.set(funcRef, funcData);
+        guardados++;
+    }
+
+    try {
+        if (guardados > 0) {
+            await batch.commit();
+        }
+        return { success: true, count: guardados };
+    } catch (error: any) {
+        return { error: 'Error al importar funcionarios: ' + error.message };
+    }
+}
