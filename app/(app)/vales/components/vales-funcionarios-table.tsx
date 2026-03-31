@@ -20,7 +20,7 @@ import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { AddFuncionarioValeDialog } from './add-funcionario-vale-dialog';
-import { deleteFuncionarioVale } from '../actions';
+import { deleteFuncionarioVale, deleteFuncionariosValesMasivos } from '../actions';
 import { BulkUploadFuncionariosValesSheet } from './bulk-upload-funcionarios-vales-sheet';
 
 interface ValesFuncionariosTableProps {
@@ -32,6 +32,8 @@ export function ValesFuncionariosTable({ funcionarios, isLoading }: ValesFuncion
   const [searchTerm, setSearchTerm] = useState('');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [editingFuncionario, setEditingFuncionario] = useState<FuncionarioVale | null>(null);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [isDeletingMasivo, setIsDeletingMasivo] = useState(false);
   const { toast } = useToast();
 
   const filteredFuncionarios = funcionarios.filter(f => 
@@ -44,6 +46,37 @@ export function ValesFuncionariosTable({ funcionarios, isLoading }: ValesFuncion
           const result = await deleteFuncionarioVale(id);
           if (result.success) {
               toast({ title: 'Funcionario eliminado exitosamente' });
+              setSelectedIds(prev => prev.filter(selectedId => selectedId !== id));
+          } else {
+              toast({ variant: 'destructive', title: 'Error', description: result.error });
+          }
+      }
+  };
+
+  const handleToggleSelectAll = () => {
+      if (selectedIds.length === filteredFuncionarios.length) {
+          setSelectedIds([]);
+      } else {
+          setSelectedIds(filteredFuncionarios.map(f => f.id));
+      }
+  };
+
+  const handleToggleSelect = (id: string) => {
+      setSelectedIds(prev => 
+          prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
+      );
+  };
+
+  const handleDeleteMasivo = async () => {
+      if (selectedIds.length === 0) return;
+      if (confirm(`¿Estás seguro de eliminar masivamente los ${selectedIds.length} funcionarios seleccionados? Esta acción no se puede deshacer.`)) {
+          setIsDeletingMasivo(true);
+          const result = await deleteFuncionariosValesMasivos(selectedIds);
+          setIsDeletingMasivo(false);
+          
+          if (result.success) {
+              toast({ title: 'Eliminación masiva exitosa', description: `Se eliminaron ${result.count} funcionarios.` });
+              setSelectedIds([]);
           } else {
               toast({ variant: 'destructive', title: 'Error', description: result.error });
           }
@@ -62,6 +95,17 @@ export function ValesFuncionariosTable({ funcionarios, isLoading }: ValesFuncion
           />
         </div>
         <div className="flex items-center gap-2">
+          {selectedIds.length > 0 && (
+            <Button 
+                variant="destructive" 
+                size="sm" 
+                onClick={handleDeleteMasivo} 
+                disabled={isDeletingMasivo}
+            >
+              <Trash2 className="mr-2 h-4 w-4" />
+              Borrar {selectedIds.length} selec.
+            </Button>
+          )}
           <BulkUploadFuncionariosValesSheet />
           <Button onClick={() => { setEditingFuncionario(null); setIsAddDialogOpen(true); }}>
             <PlusCircle className="mr-2 h-4 w-4" />
@@ -75,6 +119,14 @@ export function ValesFuncionariosTable({ funcionarios, isLoading }: ValesFuncion
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className="w-12">
+                   <input 
+                      type="checkbox" 
+                      className="w-4 h-4 cursor-pointer accent-primary" 
+                      checked={filteredFuncionarios.length > 0 && selectedIds.length === filteredFuncionarios.length}
+                      onChange={handleToggleSelectAll}
+                   />
+                </TableHead>
                 <TableHead>RUT</TableHead>
                 <TableHead>Nombre Completo</TableHead>
                 <TableHead>Jornada</TableHead>
@@ -95,17 +147,26 @@ export function ValesFuncionariosTable({ funcionarios, isLoading }: ValesFuncion
                     <TableCell><Skeleton className="h-4 w-full" /></TableCell>
                     <TableCell><Skeleton className="h-4 w-full" /></TableCell>
                     <TableCell><Skeleton className="h-4 w-full" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-full" /></TableCell>
                   </TableRow>
                 ))
               ) : filteredFuncionarios.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="h-24 text-center">
+                  <TableCell colSpan={8} className="h-24 text-center">
                     No hay funcionarios registrados en Vales.
                   </TableCell>
                 </TableRow>
               ) : (
                 filteredFuncionarios.map((f) => (
-                  <TableRow key={f.id}>
+                  <TableRow key={f.id} className={selectedIds.includes(f.id) ? "bg-muted/50" : ""}>
+                    <TableCell>
+                        <input 
+                            type="checkbox" 
+                            className="w-4 h-4 cursor-pointer accent-primary"
+                            checked={selectedIds.includes(f.id)}
+                            onChange={() => handleToggleSelect(f.id)}
+                        />
+                    </TableCell>
                     <TableCell className="font-medium">{f.RUT}</TableCell>
                     <TableCell>{f.nombres} {f.apellidos || ''}</TableCell>
                     <TableCell>{f.jornada || '-'}</TableCell>

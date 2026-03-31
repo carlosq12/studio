@@ -174,3 +174,17 @@ export async function uploadFuncionariosValesMasivos(funcionariosList: any[]) {
         return { error: 'Error al importar funcionarios: ' + error.message };
     }
 }
+
+export async function deleteFuncionariosValesMasivos(ids: string[]) {
+    const batch = writeBatch(db);
+    try {
+        for (const id of ids) {
+            const funcRef = doc(db, 'funcionarios_vales', id);
+            batch.delete(funcRef);
+        }
+        await batch.commit();
+        return { success: true, count: ids.length };
+    } catch (error: any) {
+        return { error: 'Error al eliminar funcionarios: ' + error.message };
+    }
+}
