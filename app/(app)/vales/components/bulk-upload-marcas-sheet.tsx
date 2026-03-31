@@ -52,16 +52,16 @@ export function BulkUploadMarcasSheet() {
   const downloadTemplate = () => {
     const templateData = [
       {
-        'RUT': '12345678-9',
-        'Dias Trabajados': 20,
-        'Ausencias': 1,
-        'Monto': 100000,
+        'AC-No.': '400',
+        'Nombre': 'EDUARDO ESPINA',
+        'Horario': '06/03/2026 07:58',
+        'Estado': 'M/Ent',
       },
       {
-        'RUT': '9876543-2',
-        'Dias Trabajados': 22,
-        'Ausencias': 0,
-        'Monto': 110000,
+        'AC-No.': '400',
+        'Nombre': 'EDUARDO ESPINA',
+        'Horario': '06/03/2026 23:43',
+        'Estado': 'M/Sal',
       }
     ];
 
@@ -133,7 +133,7 @@ export function BulkUploadMarcasSheet() {
         <SheetHeader>
           <SheetTitle>Carga de Marcas (Asistencia) para Vales</SheetTitle>
           <SheetDescription>
-            Sube el archivo Excel extraído del reloj control. El sistema emparejará usando la columna <b>RUT</b> contra la Base de Datos de funcionarios en el sistema.
+            Sube el archivo Excel extraído del reloj control. El sistema emparejará usando la columna <b>AC-No.</b> contra la Base de Datos de funcionarios, calculará las <b>Jornadas Válidas</b> usando el motor avanzado y las guardará.
           </SheetDescription>
         </SheetHeader>
 

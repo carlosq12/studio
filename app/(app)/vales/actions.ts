@@ -6,6 +6,7 @@ import { initializeApp, getApps } from 'firebase/app';
 import { getFirestore } from 'firebase/firestore';
 import { firebaseConfig } from '@/firebase/config';
 import type { FuncionarioVale, MarcaVale } from '@/lib/types';
+import { calcularJornadasAvanzado, MarcacionRow, FuncionarioInfo } from './utils/calculos';
 
 const app = getApps().find(app => app.name === 'server-actions-vales') || initializeApp(firebaseConfig, 'server-actions-vales');
 const db = getFirestore(app);
@@ -73,33 +74,60 @@ export async function deleteFuncionarioVale(id: string) {
 export async function processMarcasMasivas(marcas: any[], mesStr: string) {
     // 1. Obtener todos los funcionarios actuales
     const funcionariosSnapshot = await getDocs(collection(db, 'funcionarios_vales'));
-    const funcionariosMap = new Map<string, FuncionarioVale>(); // RUT -> Funcionario
+    const funcionariosMap = new Map<string, FuncionarioVale>(); // acNo -> Funcionario
+    const funcMapParaCalculo: Record<string, FuncionarioInfo> = {};
     
     funcionariosSnapshot.docs.forEach(docSnap => {
         const data = docSnap.data() as FuncionarioVale;
         data.id = docSnap.id;
-        // Limpiamos el RUT para facilitar el cruce (quitando puntos y guiones opcional)
-        const cleanRut = (data.RUT || '').trim().toLowerCase();
-        funcionariosMap.set(cleanRut, data);
+        const acNo = String(data.acNo || '').trim();
+        if (acNo) {
+            funcionariosMap.set(acNo, data);
+            funcMapParaCalculo[acNo] = {
+                acNo: acNo,
+                nombre: `${data.nombres} ${data.apellidos || ''}`.trim(),
+                jornadaTipo: (data.jornada || '').toLowerCase().includes('turno') ? 'turno' : 'normal',
+                rut: data.RUT
+            };
+        }
     });
+
+    // 2. Convierte marcas crudas del Excel temporal a formáto válido para cálculo
+    const marcacionesCrudas: MarcacionRow[] = [];
+    marcas.forEach((row: any) => {
+        const keys = Object.keys(row);
+        const acKey = keys.find(k => k.toLowerCase().includes('ac-no') || k.toLowerCase().includes('ac - no'));
+        const nameKey = keys.find(k => k.toLowerCase() === 'nombre');
+        const timeKey = keys.find(k => k.toLowerCase() === 'horario' || k.toLowerCase().includes('fecha'));
+        const statusKey = keys.find(k => k.toLowerCase() === 'estado' || k.toLowerCase() === 'estado nombre');
+
+        if (acKey && timeKey && statusKey) {
+            marcacionesCrudas.push({
+               acNo: String(row[acKey]).trim(),
+               nombre: nameKey ? String(row[nameKey]).trim() : "",
+               horario: String(row[timeKey]).trim(),
+               estado: String(row[statusKey]).trim()
+            });
+        }
+    });
+
+    if (marcacionesCrudas.length === 0) {
+        return { error: 'No se encontraron registros crudos válidos. Verifica que las columnas sean: AC-No., Nombre, Horario, Estado.' };
+    }
+
+    // 3. Evaluar las horas trabajadas reales con su política de jornada de acuerdo al DB
+    const resultadosCalculados = calcularJornadasAvanzado(marcacionesCrudas, funcMapParaCalculo);
 
     const batch = writeBatch(db);
     let guardados = 0;
-    let noEncontrados = [];
+    let noEncontrados: string[] = [];
 
-    // 2. Iterar sobre las marcas del Excel
-    for (const item of marcas) {
-        const rutExcel = String(item['RUT'] || item['Rut'] || item['rut'] || '').trim().toLowerCase();
-        const diasTrabajados = Number(item['DIAS TRABAJADOS'] || item['Dias Trabajados'] || item['Dias'] || 0);
-        const diasAusencia = Number(item['AUSENCIAS'] || item['Ausencias'] || 0);
-        const monto = Number(item['MONTO'] || item['Monto'] || 0);
-        
-        if (!rutExcel) continue;
-
-        const funcionarioMatch = funcionariosMap.get(rutExcel);
+    // 4. Guardar resultados
+    for (const result of resultadosCalculados) {
+        const funcionarioMatch = funcionariosMap.get(result.acNo);
 
         if (funcionarioMatch) {
-            // El funcionario existe, crear la Marca vinculada
+            // El funcionario fue localizado en BD, guardar la marca validada!
             const marcaRef = doc(collection(db, 'marcas_vales'));
             const marcaData: Partial<MarcaVale> = {
                 funcionarioId: funcionarioMatch.id,
@@ -107,16 +135,16 @@ export async function processMarcasMasivas(marcas: any[], mesStr: string) {
                 nombres: funcionarioMatch.nombres,
                 apellidos: funcionarioMatch.apellidos,
                 mes: mesStr, // Ej. "2023-10"
-                diasTrabajados: diasTrabajados,
-                diasAusencia: diasAusencia,
-                montoAsignado: monto,
+                diasTrabajados: result.jornadasValidas,
+                diasAusencia: result.noMarcajes,
+                montoAsignado: result.jornadasValidas * 4000, // Podemos calcular provisoriamente 4000 x jornada
                 fechaCarga: Timestamp.now()
             };
             batch.set(marcaRef, marcaData);
             guardados++;
         } else {
-            // No existe el funcionario en la base de datos de Vales
-            noEncontrados.push(rutExcel);
+            // No existe este funcionario en el DB, avisaremos
+            noEncontrados.push(`${result.acNo} - ${result.nombre}`);
         }
     }
 
@@ -131,7 +159,7 @@ export async function processMarcasMasivas(marcas: any[], mesStr: string) {
             missingList: noEncontrados.slice(0, 5) // Mostramos solo algunos en el UI
         };
     } catch (error: any) {
-        return { error: 'Error al realizar la carga masiva: ' + error.message };
+        return { error: 'Error al persistir cálculo masivo: ' + error.message };
     }
 }
 
