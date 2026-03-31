@@ -212,3 +212,28 @@ export type NotificationRecipient = {
   id: string;
   email: string;
 };
+
+export type FuncionarioVale = {
+  id: string;
+  RUT: string;
+  nombres: string;
+  apellidos: string;
+  estado: string; // 'Activo' | 'Inactivo'
+  fechaIngreso?: any;
+  departamento?: string;
+  cargo?: string;
+};
+
+export type MarcaVale = {
+  id: string;
+  funcionarioId: string;
+  RUT: string;
+  nombres: string;
+  apellidos: string;
+  mes: string; // YYYY-MM
+  diasTrabajados: number;
+  diasAusencia: number;
+  montoAsignado?: number;
+  observaciones?: string;
+  fechaCarga?: any;
+};
