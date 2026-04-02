@@ -51,7 +51,7 @@ export default function ReplacementsPage() {
     const [monthFilter, setMonthFilter] = useState('');
     const [yearFilter, setYearFilter] = useState('');
     const [sortOrder, setSortOrder] = useState<'desc' | 'asc'>('desc');
-    const [showArchived, setShowArchived] = useState(false);
+    const [showArchived, setShowArchived] = useState(true);
 
     const funcionarioOptions = useMemo(() => {
         if (!funcionarios) return [];
