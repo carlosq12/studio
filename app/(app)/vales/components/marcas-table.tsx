@@ -13,16 +13,17 @@ import {
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Search } from 'lucide-react';
+import { Search, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 
 interface MarcasTableProps {
   marcas: MarcaVale[];
   isLoading: boolean;
+  onDeleteMarca?: (marca: MarcaVale) => void;
 }
 
-export function MarcasTable({ marcas, isLoading }: MarcasTableProps) {
+export function MarcasTable({ marcas, isLoading, onDeleteMarca }: MarcasTableProps) {
   const [searchTerm, setSearchTerm] = useState('');
 
   const filteredMarcas = marcas.filter(m => 
@@ -54,6 +55,7 @@ export function MarcasTable({ marcas, isLoading }: MarcasTableProps) {
                 <TableHead className="text-right">Ausencias</TableHead>
                 <TableHead className="text-right">Monto Asignado</TableHead>
                 <TableHead>Fecha Carga</TableHead>
+                <TableHead className="w-[50px]"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -67,11 +69,12 @@ export function MarcasTable({ marcas, isLoading }: MarcasTableProps) {
                     <TableCell><Skeleton className="h-4 w-full" /></TableCell>
                     <TableCell><Skeleton className="h-4 w-full" /></TableCell>
                     <TableCell><Skeleton className="h-4 w-full" /></TableCell>
+                    <TableCell></TableCell>
                   </TableRow>
                 ))
               ) : filteredMarcas.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="h-24 text-center">
+                  <TableCell colSpan={8} className="h-24 text-center">
                     No se han registrado marcas de vales aún.
                   </TableCell>
                 </TableRow>
@@ -94,6 +97,17 @@ export function MarcasTable({ marcas, isLoading }: MarcasTableProps) {
                           : typeof m.fechaCarga === 'string' 
                             ? format(new Date(m.fechaCarga), "d MMM yyyy HH:mm", { locale: es })
                             : '-'}
+                     </TableCell>
+                     <TableCell className="text-right">
+                       {onDeleteMarca && (
+                         <button 
+                           onClick={() => onDeleteMarca(m)}
+                           className="text-muted-foreground hover:text-destructive transition-colors"
+                           title="Eliminar registro individual"
+                         >
+                           <Trash2 className="h-4 w-4" />
+                         </button>
+                       )}
                      </TableCell>
                   </TableRow>
                 ))

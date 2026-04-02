@@ -17,7 +17,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Button } from '@/components/ui/button';
 import { Trash } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { deleteHistorialCarga } from './actions';
+import { deleteHistorialCarga, deleteMarcaVale } from './actions';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 
@@ -95,6 +95,19 @@ export default function ValesPage() {
         }
     };
 
+    const handleDeleteMarca = async (marca: MarcaVale) => {
+        const confirmDelete = window.confirm(`¿Seguro que deseas eliminar el registro de ${marca.nombres} rut ${marca.RUT}?`);
+        if (!confirmDelete) return;
+
+        try {
+            const res = await deleteMarcaVale(marca.id, marca.historialId, marca.montoAsignado);
+            if (res.error) throw new Error(res.error);
+            toast({ title: 'Éxito', description: 'Registro eliminado correctamente.' });
+        } catch (error: any) {
+            toast({ variant: 'destructive', title: 'Error', description: error.message });
+        }
+    };
+
     return (
         <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
             <PageHeader 
@@ -149,7 +162,7 @@ export default function ValesPage() {
                                     </Button>
                                 )}
                             </div>
-                            <MarcasTable marcas={filteredMarcas} isLoading={isLoadingMarcas} />
+                            <MarcasTable marcas={filteredMarcas} isLoading={isLoadingMarcas} onDeleteMarca={handleDeleteMarca} />
                         </CardContent>
                     </Card>
                 </TabsContent>

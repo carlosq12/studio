@@ -1,6 +1,6 @@
 'use server';
 
-import { collection, addDoc, doc, updateDoc, deleteDoc, getDocs, query, where, Timestamp, writeBatch } from 'firebase/firestore';
+import { collection, addDoc, doc, updateDoc, deleteDoc, getDocs, query, where, Timestamp, writeBatch, getDoc } from 'firebase/firestore';
 import { z } from 'zod';
 import { initializeApp, getApps } from 'firebase/app';
 import { getFirestore } from 'firebase/firestore';
@@ -247,4 +247,29 @@ export async function deleteHistorialCarga(historialId: string) {
         return { error: 'Error al eliminar el historial: ' + error.message };
     }
 }
+
+export async function deleteMarcaVale(id: string, historialId?: string, monto?: number) {
+    try {
+        const batch = writeBatch(db);
+        const marcaRef = doc(db, 'marcas_vales', id);
+        batch.delete(marcaRef);
+
+        if (historialId && monto !== undefined) {
+             const historialRef = doc(db, 'historial_cargas_vales', historialId);
+             const historialSnap = await getDoc(historialRef);
+             if (historialSnap.exists()) {
+                 const currentData = historialSnap.data();
+                 batch.update(historialRef, {
+                     cantidadRegistros: Math.max(0, (currentData.cantidadRegistros || 1) - 1),
+                     montoTotal: Math.max(0, (currentData.montoTotal || 0) - monto)
+                 });
+             }
+        }
+        await batch.commit();
+        return { success: true };
+    } catch (error: any) {
+        return { error: 'Error al eliminar el vale: ' + error.message };
+    }
+}
+
 
