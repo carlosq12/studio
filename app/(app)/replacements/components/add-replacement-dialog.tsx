@@ -48,6 +48,17 @@ import type { IngresoFuncionario, Replacement } from '@/lib/types';
 import { ComboboxField } from '../../ingreso-funcionarios/components/combobox-field';
 import { Timestamp } from 'firebase/firestore';
 
+const parseDate = (date: any): Date | null => {
+    if (!date) return null;
+    if (date instanceof Timestamp) return date.toDate();
+    if (date instanceof Date) return date;
+    if (typeof date === 'string') {
+      const parsed = parseISO(date);
+      return isNaN(parsed.getTime()) ? null : parsed;
+    }
+    return null;
+};
+
 const replacementSchema = z.object({
   'FECHA DE INGRESO DOC': z.date().optional().nullable(),
   NOMBRE: z.string().min(1, 'El nombre del reemplazante es requerido.'),
@@ -148,6 +159,41 @@ export function AddReplacementDialog({
       'FECHA DEL AVISO': null,
     },
   });
+
+  useEffect(() => {
+    if (initialData && open) {
+      const { archivadorId, id, ...restData } = initialData as any;
+      form.reset({
+        ...restData,
+        DESDE: parseDate(initialData.DESDE) || new Date(),
+        HASTA: parseDate(initialData.HASTA) || new Date(),
+        'FECHA DE INGRESO DOC': parseDate(initialData['FECHA DE INGRESO DOC']) || new Date(),
+        'FECHA DEL AVISO': parseDate(initialData['FECHA DEL AVISO']),
+        ESTADO: initialData.ESTADO || 'Pendiente',
+        ESTADO_R_NR: initialData.ESTADO_R_NR || 'EN PROCESO',
+      });
+    } else if (!open) {
+      form.reset({
+        NOMBRE: '',
+        'NOMBRE REEMPLAZADO': '',
+        MOTIVO: '',
+        MES: '',
+        CARGO: '',
+        FUNCIONES: '',
+        UNIDAD: '',
+        OBSERVACION: '',
+        IMAGEN: '',
+        ESTADO: 'Pendiente',
+        'JEFE SERVICIO': '',
+        CORREO: '',
+        ESTADO_R_NR: 'EN PROCESO',
+        AÑO: new Date().getFullYear().toString(),
+        'NUMERO RES': '',
+        'FECHA DE INGRESO DOC': new Date(),
+        'FECHA DEL AVISO': null,
+      });
+    }
+  }, [initialData, open, form]);
 
   async function onSubmit(data: ReplacementFormValues) {
     setIsSubmitting(true);

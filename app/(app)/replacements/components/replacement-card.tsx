@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Edit, Trash2, CalendarDays, ArrowRight, User, Eye, Check, Clock, Archive, MessageSquare, CalendarClock, X, MailCheck, MailWarning } from 'lucide-react';
+import { Edit, Trash2, CalendarDays, ArrowRight, User, Eye, Check, Clock, Archive, MessageSquare, CalendarClock, X, MailCheck, MailWarning, Copy } from 'lucide-react';
 import type { Replacement, Archivador } from '@/lib/types';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Badge } from '@/components/ui/badge';
@@ -234,6 +234,10 @@ export function ReplacementCard({ replacement, onView, onEdit, onDelete, onCopy,
                         </ScrollArea>
                     </DropdownMenuContent>
                 </DropdownMenu>
+
+                <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:bg-slate-100" onClick={onCopy} title="Duplicar">
+                    <Copy className="h-4 w-4" />
+                </Button>
 
                 <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:bg-slate-100" onClick={onEdit} title="Editar">
                     <Edit className="h-4 w-4" />
