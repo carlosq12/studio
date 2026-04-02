@@ -15,7 +15,10 @@ import { CalculoJornadasTab } from "./components/calculo-jornadas-tab";
 import { PageHeader } from "@/components/page-header";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { Trash } from 'lucide-react';
+import { Trash, Check, ChevronsUpDown } from 'lucide-react';
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { cn } from "@/lib/utils";
 import { useToast } from '@/hooks/use-toast';
 import { deleteHistorialCarga, deleteMarcaVale } from './actions';
 import { format } from 'date-fns';
@@ -31,6 +34,7 @@ export default function ValesPage() {
     const [selectedHistorialId, setSelectedHistorialId] = useState<string>('');
     const [searchType, setSearchType] = useState<'historial' | 'person'>('historial');
     const [selectedPersonId, setSelectedPersonId] = useState<string>('');
+    const [openPersonCombo, setOpenPersonCombo] = useState(false);
     const [isLoadingFuncionarios, setIsLoadingFuncionarios] = useState(true);
     const [isLoadingMarcas, setIsLoadingMarcas] = useState(true);
     const [isLoadingHistoriales, setIsLoadingHistoriales] = useState(true);
@@ -207,18 +211,50 @@ export default function ValesPage() {
                                     </div>
                                 ) : (
                                     <div className="flex items-center gap-2">
-                                        <Select value={selectedPersonId} onValueChange={setSelectedPersonId} disabled={isLoadingFuncionarios}>
-                                            <SelectTrigger className="w-[300px]">
-                                                <SelectValue placeholder="Buscar funcionario..." />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {funcionarios.map(f => (
-                                                    <SelectItem key={f.id} value={f.id}>
-                                                        {f.RUT} - {f.nombres} {f.apellidos}
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
+                                        <Popover open={openPersonCombo} onOpenChange={setOpenPersonCombo}>
+                                            <PopoverTrigger asChild>
+                                                <Button
+                                                    variant="outline"
+                                                    role="combobox"
+                                                    aria-expanded={openPersonCombo}
+                                                    className="w-[300px] justify-between font-normal"
+                                                    disabled={isLoadingFuncionarios}
+                                                >
+                                                    {selectedPersonId && funcionarios.find((f) => f.id === selectedPersonId)
+                                                        ? `${funcionarios.find((f) => f.id === selectedPersonId)?.RUT} - ${funcionarios.find((f) => f.id === selectedPersonId)?.nombres}`
+                                                        : "Buscar funcionario por Nombre/RUT..."}
+                                                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                                </Button>
+                                            </PopoverTrigger>
+                                            <PopoverContent className="w-[300px] p-0">
+                                                <Command>
+                                                    <CommandInput placeholder="Ej: 198273... o Juan" />
+                                                    <CommandList>
+                                                    <CommandEmpty>No se encontraron trabajadores.</CommandEmpty>
+                                                    <CommandGroup>
+                                                        {funcionarios.map((f) => (
+                                                            <CommandItem
+                                                                key={f.id}
+                                                                value={`${f.RUT} ${f.nombres} ${f.apellidos}`}
+                                                                onSelect={() => {
+                                                                    setSelectedPersonId(f.id === selectedPersonId ? "" : f.id);
+                                                                    setOpenPersonCombo(false);
+                                                                }}
+                                                            >
+                                                                <Check
+                                                                    className={cn(
+                                                                        "mr-2 h-4 w-4",
+                                                                        selectedPersonId === f.id ? "opacity-100" : "opacity-0"
+                                                                    )}
+                                                                />
+                                                                {f.RUT} - {f.nombres} {f.apellidos}
+                                                            </CommandItem>
+                                                        ))}
+                                                    </CommandGroup>
+                                                    </CommandList>
+                                                </Command>
+                                            </PopoverContent>
+                                        </Popover>
                                     </div>
                                 )}
                             </div>
