@@ -183,14 +183,10 @@ export function ReplacementCard({ replacement, onView, onEdit, onDelete, onCopy,
                     )}
 
                     {archiveName && (
-                        <Tooltip>
-                            <TooltipTrigger asChild>
-                                <Archive className="h-4 w-4 text-muted-foreground/70" />
-                            </TooltipTrigger>
-                            <TooltipContent side="bottom">
-                                <p className="text-xs">Archivado en: {archiveName}</p>
-                            </TooltipContent>
-                        </Tooltip>
+                        <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 text-[10px] uppercase font-bold gap-1 px-1.5 border-none shadow-sm ml-auto">
+                            <Archive className="h-3 w-3" />
+                            {archiveName}
+                        </Badge>
                     )}
 
                     {isMonthly && (
