@@ -76,6 +76,7 @@ export type JornadaResult = {
   jornadasValidas: number;
   errores: string[];
   noMarcajes: number;
+  detalles?: { horario: string; estado: string }[];
 };
 
 export function calcularJornadasAvanzado(
@@ -167,7 +168,8 @@ export function calcularJornadasAvanzado(
       jornadaTipo,
       jornadasValidas,
       errores,
-      noMarcajes
+      noMarcajes,
+      detalles: registros.map(r => ({ horario: r.horario, estado: r.estado }))
     });
   }
 

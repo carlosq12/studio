@@ -13,9 +13,10 @@ import {
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Search, Trash2 } from 'lucide-react';
+import { Search, Trash2, Eye } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 interface MarcasTableProps {
   marcas: MarcaVale[];
@@ -25,6 +26,7 @@ interface MarcasTableProps {
 
 export function MarcasTable({ marcas, isLoading, onDeleteMarca }: MarcasTableProps) {
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedDetails, setSelectedDetails] = useState<MarcaVale | null>(null);
 
   const filteredMarcas = marcas.filter(m => 
     (m.nombres || '').toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -99,6 +101,13 @@ export function MarcasTable({ marcas, isLoading, onDeleteMarca }: MarcasTablePro
                             : '-'}
                      </TableCell>
                      <TableCell className="text-right">
+                       <button 
+                           onClick={() => setSelectedDetails(m)}
+                           className="text-blue-600 hover:text-blue-800 transition-colors mr-3"
+                           title="Ver detalle de marcas"
+                         >
+                           <Eye className="h-4 w-4" />
+                       </button>
                        {onDeleteMarca && (
                          <button 
                            onClick={() => onDeleteMarca(m)}
@@ -116,6 +125,39 @@ export function MarcasTable({ marcas, isLoading, onDeleteMarca }: MarcasTablePro
           </Table>
         </ScrollArea>
       </div>
+
+      <Dialog open={!!selectedDetails} onOpenChange={() => setSelectedDetails(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Detalle de Marcas ({selectedDetails?.mes})</DialogTitle>
+            <DialogDescription>
+              {selectedDetails?.nombres} {selectedDetails?.apellidos} - RUT: {selectedDetails?.RUT}
+            </DialogDescription>
+          </DialogHeader>
+          <ScrollArea className="h-[350px] mt-2 border rounded-md">
+            {!selectedDetails?.detalles || selectedDetails.detalles.length === 0 ? (
+                <div className="text-sm text-center text-muted-foreground p-8">No hay detalle guardado para este registro. Vuelve a subir el Excel si deseas registrarlo.</div>
+            ) : (
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead>Horario (Día/Hora)</TableHead>
+                            <TableHead>Estado</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {selectedDetails.detalles.map((d, i) => (
+                            <TableRow key={i}>
+                                <TableCell>{d.horario}</TableCell>
+                                <TableCell>{d.estado}</TableCell>
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                </Table>
+            )}
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

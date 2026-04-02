@@ -142,7 +142,8 @@ export async function processMarcasMasivas(marcas: any[], mesStr: string, valorV
                 diasTrabajados: result.jornadasValidas,
                 diasAusencia: result.noMarcajes,
                 montoAsignado: result.jornadasValidas * valorVale,
-                fechaCarga: Timestamp.now()
+                fechaCarga: Timestamp.now(),
+                detalles: result.detalles || []
             };
             batch.set(marcaRef, marcaData);
             guardados++;
