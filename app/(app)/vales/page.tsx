@@ -39,6 +39,7 @@ export default function ValesPage() {
     const [isLoadingMarcas, setIsLoadingMarcas] = useState(true);
     const [isLoadingHistoriales, setIsLoadingHistoriales] = useState(true);
     const [isDeleting, setIsDeleting] = useState(false);
+    const [activeTab, setActiveTab] = useState("jornadas");
     const { toast } = useToast();
 
     useEffect(() => {
@@ -141,6 +142,12 @@ export default function ValesPage() {
         }
     };
 
+    const handleViewMarcasOf = (id: string) => {
+        setSearchType('person');
+        setSelectedPersonId(id);
+        setActiveTab('marcas');
+    };
+
     return (
         <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
             <PageHeader 
@@ -148,7 +155,7 @@ export default function ValesPage() {
                 description="Calcula jornadas válidas, cruza datos de viáticos y gestiona los registros de marcas." 
             />
 
-            <Tabs defaultValue="jornadas" className="mt-6 space-y-4">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-6 space-y-4">
                 <TabsList className="grid w-full grid-cols-1 md:grid-cols-3 max-w-[800px]">
                     <TabsTrigger value="jornadas">Cálculo de Jornadas</TabsTrigger>
                     <TabsTrigger value="marcas">Carga de Marcas</TabsTrigger>
@@ -272,7 +279,7 @@ export default function ValesPage() {
                             </CardDescription>
                         </CardHeader>
                         <CardContent>
-                            <ValesFuncionariosTable funcionarios={funcionarios} isLoading={isLoadingFuncionarios} />
+                            <ValesFuncionariosTable funcionarios={funcionarios} isLoading={isLoadingFuncionarios} onViewMarcas={handleViewMarcasOf} />
                         </CardContent>
                     </Card>
                 </TabsContent>

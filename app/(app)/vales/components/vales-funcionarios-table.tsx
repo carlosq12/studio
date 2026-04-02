@@ -11,7 +11,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, Search, Edit, Trash2 } from 'lucide-react';
+import { PlusCircle, Search, Edit, Trash2, CalendarSearch } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -26,9 +26,10 @@ import { BulkUploadFuncionariosValesSheet } from './bulk-upload-funcionarios-val
 interface ValesFuncionariosTableProps {
   funcionarios: FuncionarioVale[];
   isLoading: boolean;
+  onViewMarcas?: (id: string) => void;
 }
 
-export function ValesFuncionariosTable({ funcionarios, isLoading }: ValesFuncionariosTableProps) {
+export function ValesFuncionariosTable({ funcionarios, isLoading, onViewMarcas }: ValesFuncionariosTableProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [editingFuncionario, setEditingFuncionario] = useState<FuncionarioVale | null>(null);
@@ -178,10 +179,15 @@ export function ValesFuncionariosTable({ funcionarios, isLoading }: ValesFuncion
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">
-                       <Button variant="ghost" size="icon" onClick={() => { setEditingFuncionario(f); setIsAddDialogOpen(true); }}>
+                       {onViewMarcas && (
+                           <Button variant="ghost" size="icon" title="Ver sus Marcas" onClick={() => onViewMarcas(f.id)}>
+                              <CalendarSearch className="h-4 w-4 text-blue-600" />
+                           </Button>
+                       )}
+                       <Button variant="ghost" size="icon" title="Editar" onClick={() => { setEditingFuncionario(f); setIsAddDialogOpen(true); }}>
                           <Edit className="h-4 w-4" />
                        </Button>
-                       <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => handleDelete(f.id)}>
+                       <Button variant="ghost" size="icon" title="Eliminar" className="text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => handleDelete(f.id)}>
                           <Trash2 className="h-4 w-4" />
                        </Button>
                     </TableCell>
