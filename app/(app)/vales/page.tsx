@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { collection, onSnapshot, query, orderBy } from 'firebase/firestore';
+import { collection, onSnapshot, query, orderBy, where } from 'firebase/firestore';
 import { getApps, initializeApp } from 'firebase/app';
 import { getFirestore } from 'firebase/firestore';
 import { firebaseConfig } from '@/firebase/config';
@@ -28,7 +28,9 @@ export default function ValesPage() {
     const [funcionarios, setFuncionarios] = useState<FuncionarioVale[]>([]);
     const [marcas, setMarcas] = useState<MarcaVale[]>([]);
     const [historiales, setHistoriales] = useState<HistorialCargaVales[]>([]);
-    const [selectedHistorialId, setSelectedHistorialId] = useState<string>('all');
+    const [selectedHistorialId, setSelectedHistorialId] = useState<string>('');
+    const [searchType, setSearchType] = useState<'historial' | 'person'>('historial');
+    const [selectedPersonId, setSelectedPersonId] = useState<string>('');
     const [isLoadingFuncionarios, setIsLoadingFuncionarios] = useState(true);
     const [isLoadingMarcas, setIsLoadingMarcas] = useState(true);
     const [isLoadingHistoriales, setIsLoadingHistoriales] = useState(true);
@@ -46,16 +48,6 @@ export default function ValesPage() {
             setIsLoadingFuncionarios(false);
         });
 
-        const qMarcas = query(collection(db, 'marcas_vales'), orderBy('fechaCarga', 'desc'));
-        const unsubMarcas = onSnapshot(qMarcas, (snapshot) => {
-            const marcData = snapshot.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data()
-            })) as MarcaVale[];
-            setMarcas(marcData);
-            setIsLoadingMarcas(false);
-        });
-
         const qHistoriales = query(collection(db, 'historial_cargas_vales'), orderBy('fechaCarga', 'desc'));
         const unsubHistoriales = onSnapshot(qHistoriales, (snapshot) => {
             const histData = snapshot.docs.map(doc => ({
@@ -63,22 +55,59 @@ export default function ValesPage() {
                 ...doc.data()
             })) as HistorialCargaVales[];
             setHistoriales(histData);
+            if (histData.length > 0) {
+                setSelectedHistorialId(prev => prev || histData[0].id);
+            }
             setIsLoadingHistoriales(false);
         });
 
         return () => {
             unsubFun();
-            unsubMarcas();
             unsubHistoriales();
         };
     }, []);
 
-    const filteredMarcas = selectedHistorialId === 'all' 
-        ? marcas 
-        : marcas.filter(m => m.historialId === selectedHistorialId);
+    useEffect(() => {
+        let qMarcas;
+        
+        if (searchType === 'historial') {
+            if (!selectedHistorialId) {
+                setMarcas([]);
+                setIsLoadingMarcas(false);
+                return;
+            }
+            qMarcas = query(collection(db, 'marcas_vales'), where('historialId', '==', selectedHistorialId));
+        } else {
+            if (!selectedPersonId) {
+                setMarcas([]);
+                setIsLoadingMarcas(false);
+                return;
+            }
+            qMarcas = query(collection(db, 'marcas_vales'), where('funcionarioId', '==', selectedPersonId));
+        }
+
+        setIsLoadingMarcas(true);
+        const unsubMarcas = onSnapshot(qMarcas, (snapshot) => {
+            const marcData = snapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            })) as MarcaVale[];
+            
+            marcData.sort((a, b) => {
+                const timeA = a.fechaCarga?.toMillis ? a.fechaCarga.toMillis() : new Date(a.fechaCarga || 0).getTime();
+                const timeB = b.fechaCarga?.toMillis ? b.fechaCarga.toMillis() : new Date(b.fechaCarga || 0).getTime();
+                return timeB - timeA;
+            });
+            
+            setMarcas(marcData);
+            setIsLoadingMarcas(false);
+        });
+
+        return () => unsubMarcas();
+    }, [searchType, selectedHistorialId, selectedPersonId]);
 
     const handleDeleteHistorial = async () => {
-        if (selectedHistorialId === 'all') return;
+        if (!selectedHistorialId) return;
         const confirmDelete = window.confirm("¿Estás seguro de que deseas eliminar este historial y todos sus vales asociados? Esta acción no se puede deshacer.");
         if (!confirmDelete) return;
 
@@ -87,7 +116,7 @@ export default function ValesPage() {
             const res = await deleteHistorialCarga(selectedHistorialId);
             if (res.error) throw new Error(res.error);
             toast({ title: 'Éxito', description: 'Historial eliminado correctamente.' });
-            setSelectedHistorialId('all');
+            setSelectedHistorialId('');
         } catch (error: any) {
             toast({ variant: 'destructive', title: 'Error', description: error.message });
         } finally {
@@ -140,29 +169,60 @@ export default function ValesPage() {
                             </div>
                         </CardHeader>
                         <CardContent className="space-y-4">
-                            <div className="flex items-center gap-4 bg-muted/30 p-4 rounded-md border flex-wrap">
-                                <span className="text-sm font-medium">Ver Historial:</span>
-                                <Select value={selectedHistorialId} onValueChange={setSelectedHistorialId} disabled={isLoadingHistoriales}>
-                                    <SelectTrigger className="w-[300px]">
-                                        <SelectValue placeholder="Seleccionar historial..." />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="all">Todas las Marcas</SelectItem>
-                                        {historiales.map(h => (
-                                            <SelectItem key={h.id} value={h.id}>
-                                                Carga: {h.mes} - {h.fechaCarga?.toDate ? format(h.fechaCarga.toDate(), "d MMM HH:mm", {locale: es}) : ''}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                                {selectedHistorialId !== 'all' && (
-                                    <Button variant="destructive" size="sm" onClick={handleDeleteHistorial} disabled={isDeleting}>
-                                        <Trash className="h-4 w-4 mr-2" />
-                                        {isDeleting ? 'Eliminando...' : 'Eliminar Historial'}
-                                    </Button>
+                            <div className="flex flex-col md:flex-row items-start md:items-center gap-4 bg-muted/30 p-4 rounded-md border flex-wrap">
+                                <div className="flex items-center gap-2">
+                                    <span className="text-sm font-medium">Buscar por:</span>
+                                    <Select value={searchType} onValueChange={(val: any) => setSearchType(val)}>
+                                        <SelectTrigger className="w-[150px]">
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="historial">Historial (Carga)</SelectItem>
+                                            <SelectItem value="person">Funcionario</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+
+                                {searchType === 'historial' ? (
+                                    <div className="flex items-center gap-2">
+                                        <Select value={selectedHistorialId} onValueChange={setSelectedHistorialId} disabled={isLoadingHistoriales}>
+                                            <SelectTrigger className="w-[300px]">
+                                                <SelectValue placeholder="Seleccionar carga..." />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {historiales.length === 0 && <SelectItem value="empty" disabled>No hay historiales</SelectItem>}
+                                                {historiales.map(h => (
+                                                    <SelectItem key={h.id} value={h.id}>
+                                                        Carga: {h.mes} - {h.fechaCarga?.toDate ? format(h.fechaCarga.toDate(), "d MMM HH:mm", {locale: es}) : ''}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                        {selectedHistorialId && (
+                                            <Button variant="destructive" size="sm" onClick={handleDeleteHistorial} disabled={isDeleting}>
+                                                <Trash className="h-4 w-4 mr-2" />
+                                                {isDeleting ? 'Eliminando...' : 'Eliminar Historial'}
+                                            </Button>
+                                        )}
+                                    </div>
+                                ) : (
+                                    <div className="flex items-center gap-2">
+                                        <Select value={selectedPersonId} onValueChange={setSelectedPersonId} disabled={isLoadingFuncionarios}>
+                                            <SelectTrigger className="w-[300px]">
+                                                <SelectValue placeholder="Buscar funcionario..." />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {funcionarios.map(f => (
+                                                    <SelectItem key={f.id} value={f.id}>
+                                                        {f.RUT} - {f.nombres} {f.apellidos}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
                                 )}
                             </div>
-                            <MarcasTable marcas={filteredMarcas} isLoading={isLoadingMarcas} onDeleteMarca={handleDeleteMarca} />
+                            <MarcasTable marcas={marcas} isLoading={isLoadingMarcas} onDeleteMarca={handleDeleteMarca} />
                         </CardContent>
                     </Card>
                 </TabsContent>
