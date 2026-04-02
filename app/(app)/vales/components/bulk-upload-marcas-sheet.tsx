@@ -10,7 +10,6 @@ import { UploadCloud, FileSpreadsheet, Loader2, Save, Download } from 'lucide-re
 import * as XLSX from 'xlsx';
 import { Card, CardContent } from '@/components/ui/card';
 import { processMarcasMasivas } from '../actions';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 export function BulkUploadMarcasSheet() {
   const [isOpen, setIsOpen] = useState(false);
@@ -110,17 +109,7 @@ export function BulkUploadMarcasSheet() {
     }
   };
 
-  // Generador de los últimos y próximos meses de forma sencilla
-  const generateMonthsOptions = () => {
-      const options = [];
-      const currentDate = new Date();
-      for (let i = -3; i <= 1; i++) {
-          const d = new Date(currentDate.getFullYear(), currentDate.getMonth() + i, 1);
-          const val = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-          options.push({ value: val, label: val });
-      }
-      return options;
-  };
+
 
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
@@ -152,16 +141,12 @@ export function BulkUploadMarcasSheet() {
            <div className="grid grid-cols-2 gap-4">
               <div className="space-y-3">
                  <Label htmlFor="mesVales">Selecciona el Mes del Registro</Label>
-                 <Select value={mesTarget} onValueChange={setMesTarget}>
-                    <SelectTrigger id="mesVales">
-                        <SelectValue placeholder="Ej: 2024-10" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        {generateMonthsOptions().map(opt => (
-                            <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
-                        ))}
-                    </SelectContent>
-                 </Select>
+                 <Input 
+                   id="mesVales" 
+                   type="month" 
+                   value={mesTarget} 
+                   onChange={(e) => setMesTarget(e.target.value)}
+                 />
               </div>
 
               <div className="space-y-3">
