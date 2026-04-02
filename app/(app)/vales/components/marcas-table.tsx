@@ -17,6 +17,7 @@ import { Search, Trash2, Eye } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { parseHorarioTS } from '../utils/calculos';
 
 interface MarcasTableProps {
   marcas: MarcaVale[];
@@ -141,11 +142,19 @@ export function MarcasTable({ marcas, isLoading, onDeleteMarca }: MarcasTablePro
                 <div className="space-y-4 p-1">
                   {Object.entries(
                     selectedDetails.detalles.reduce((acc, current) => {
-                      const parts = current.horario.split('|');
-                      const datePart = parts.length > 1 ? parts[0] : current.horario;
+                      let horarioStr = current.horario;
+                      if (!horarioStr.includes('|')) {
+                          const parsedD = parseHorarioTS(current.horario);
+                          if (parsedD && !isNaN(parsedD.getTime())) {
+                              horarioStr = format(parsedD, "EEEE dd MMM yyyy|HH:mm", { locale: es });
+                          }
+                      }
+                    
+                      const parts = horarioStr.split('|');
+                      const datePart = parts.length > 1 ? parts[0] : horarioStr;
                       const timePart = parts.length > 1 ? parts[1] : '';
                       if (!acc[datePart]) acc[datePart] = [];
-                      acc[datePart].push({ ...current, time: timePart || current.horario });
+                      acc[datePart].push({ ...current, time: timePart || horarioStr });
                       return acc;
                     }, {} as Record<string, { horario: string, estado: string, time: string }[]>)
                   ).map(([dia, marcasDia]) => (
