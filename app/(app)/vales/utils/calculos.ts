@@ -1,4 +1,6 @@
 import * as XLSX from 'xlsx';
+import { format } from 'date-fns';
+import { es } from 'date-fns/locale';
 
 export type MarcacionRow = {
   acNo: string;
@@ -169,7 +171,13 @@ export function calcularJornadasAvanzado(
       jornadasValidas,
       errores,
       noMarcajes,
-      detalles: registros.map(r => ({ horario: r.horario, estado: r.estado }))
+      detalles: registros.map(r => {
+        const d = parseHorarioTS(r.horario);
+        return { 
+          horario: d ? format(d, "EEEE dd MMM yyyy|HH:mm", { locale: es }) : String(r.horario), 
+          estado: r.estado 
+        };
+      })
     });
   }
 

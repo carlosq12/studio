@@ -138,22 +138,38 @@ export function MarcasTable({ marcas, isLoading, onDeleteMarca }: MarcasTablePro
             {!selectedDetails?.detalles || selectedDetails.detalles.length === 0 ? (
                 <div className="text-sm text-center text-muted-foreground p-8">No hay detalle guardado para este registro. Vuelve a subir el Excel si deseas registrarlo.</div>
             ) : (
-                <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead>Horario (Día/Hora)</TableHead>
-                            <TableHead>Estado</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {selectedDetails.detalles.map((d, i) => (
-                            <TableRow key={i}>
-                                <TableCell>{d.horario}</TableCell>
-                                <TableCell>{d.estado}</TableCell>
-                            </TableRow>
-                        ))}
-                    </TableBody>
-                </Table>
+                <div className="space-y-4 p-1">
+                  {Object.entries(
+                    selectedDetails.detalles.reduce((acc, current) => {
+                      const parts = current.horario.split('|');
+                      const datePart = parts.length > 1 ? parts[0] : current.horario;
+                      const timePart = parts.length > 1 ? parts[1] : '';
+                      if (!acc[datePart]) acc[datePart] = [];
+                      acc[datePart].push({ ...current, time: timePart || current.horario });
+                      return acc;
+                    }, {} as Record<string, { horario: string, estado: string, time: string }[]>)
+                  ).map(([dia, marcasDia]) => (
+                    <div key={dia} className="border rounded-md overflow-hidden">
+                      <div className="bg-muted px-3 py-2 text-sm font-semibold border-b capitalize">
+                        {dia}
+                      </div>
+                      <Table>
+                        <TableBody>
+                            {marcasDia.map((m, i) => (
+                                <TableRow key={i}>
+                                    <TableCell className="text-sm py-2">{m.time}</TableCell>
+                                    <TableCell className="text-sm font-medium py-2 text-right">
+                                        <span className={m.estado.toLowerCase().includes('ent') ? "text-blue-600" : "text-orange-600"}>
+                                            {m.estado}
+                                        </span>
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  ))}
+                </div>
             )}
           </ScrollArea>
         </DialogContent>
