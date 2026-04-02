@@ -122,6 +122,9 @@ export async function processMarcasMasivas(marcas: any[], mesStr: string, valorV
     let guardados = 0;
     let noEncontrados: string[] = [];
 
+    const historialRef = doc(collection(db, 'historial_cargas_vales'));
+    let montoTotal = 0;
+
     // 4. Guardar resultados
     for (const result of resultadosCalculados) {
         const funcionarioMatch = funcionariosMap.get(result.acNo);
@@ -130,6 +133,7 @@ export async function processMarcasMasivas(marcas: any[], mesStr: string, valorV
             // El funcionario fue localizado en BD, guardar la marca validada!
             const marcaRef = doc(collection(db, 'marcas_vales'));
             const marcaData: Partial<MarcaVale> = {
+                historialId: historialRef.id,
                 funcionarioId: funcionarioMatch.id,
                 RUT: funcionarioMatch.RUT,
                 nombres: funcionarioMatch.nombres,
@@ -142,6 +146,7 @@ export async function processMarcasMasivas(marcas: any[], mesStr: string, valorV
             };
             batch.set(marcaRef, marcaData);
             guardados++;
+            montoTotal += result.jornadasValidas * valorVale;
         } else {
             // No existe este funcionario en el DB, avisaremos
             noEncontrados.push(`${result.acNo} - ${result.nombre}`);
@@ -150,6 +155,12 @@ export async function processMarcasMasivas(marcas: any[], mesStr: string, valorV
 
     try {
         if (guardados > 0) {
+            batch.set(historialRef, {
+                mes: mesStr,
+                fechaCarga: Timestamp.now(),
+                cantidadRegistros: guardados,
+                montoTotal: montoTotal
+            });
             await batch.commit();
         }
         return { 
@@ -216,3 +227,24 @@ export async function deleteFuncionariosValesMasivos(ids: string[]) {
         return { error: 'Error al eliminar funcionarios: ' + error.message };
     }
 }
+
+export async function deleteHistorialCarga(historialId: string) {
+    try {
+        const batch = writeBatch(db);
+        
+        const historialRef = doc(db, 'historial_cargas_vales', historialId);
+        batch.delete(historialRef);
+
+        const q = query(collection(db, 'marcas_vales'), where('historialId', '==', historialId));
+        const snapshot = await getDocs(q);
+        snapshot.forEach(d => {
+            batch.delete(d.ref);
+        });
+
+        await batch.commit();
+        return { success: true };
+    } catch (error: any) {
+        return { error: 'Error al eliminar el historial: ' + error.message };
+    }
+}
+

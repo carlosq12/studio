@@ -228,6 +228,7 @@ export type FuncionarioVale = {
 
 export type MarcaVale = {
   id: string;
+  historialId?: string;
   funcionarioId: string;
   RUT: string;
   nombres: string;
@@ -238,4 +239,12 @@ export type MarcaVale = {
   montoAsignado?: number;
   observaciones?: string;
   fechaCarga?: any;
+};
+
+export type HistorialCargaVales = {
+  id: string;
+  mes: string;
+  fechaCarga: any;
+  cantidadRegistros: number;
+  montoTotal: number;
 };
