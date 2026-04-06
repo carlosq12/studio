@@ -11,7 +11,6 @@ import type { FuncionarioVale, MarcaVale, HistorialCargaVales } from '@/lib/type
 import { ValesFuncionariosTable } from './components/vales-funcionarios-table';
 import { BulkUploadMarcasSheet } from './components/bulk-upload-marcas-sheet';
 import { MarcasTable } from './components/marcas-table';
-import { CalculoJornadasTab } from "./components/calculo-jornadas-tab";
 import { PageHeader } from "@/components/page-header";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
@@ -39,7 +38,7 @@ export default function ValesPage() {
     const [isLoadingMarcas, setIsLoadingMarcas] = useState(true);
     const [isLoadingHistoriales, setIsLoadingHistoriales] = useState(true);
     const [isDeleting, setIsDeleting] = useState(false);
-    const [activeTab, setActiveTab] = useState("jornadas");
+    const [activeTab, setActiveTab] = useState("marcas");
     const { toast } = useToast();
 
     useEffect(() => {
@@ -156,16 +155,11 @@ export default function ValesPage() {
             />
 
             <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-6 space-y-4">
-                <TabsList className="grid w-full grid-cols-1 md:grid-cols-3 max-w-[800px]">
-                    <TabsTrigger value="jornadas">Cálculo de Jornadas</TabsTrigger>
+                <TabsList className="grid w-full grid-cols-1 md:grid-cols-2 max-w-[600px]">
                     <TabsTrigger value="marcas">Carga de Marcas</TabsTrigger>
                     <TabsTrigger value="funcionarios">DB Funcionarios</TabsTrigger>
                 </TabsList>
 
-                <TabsContent value="jornadas" className="mt-6">
-                    <CalculoJornadasTab />
-                </TabsContent>
-                
                 <TabsContent value="marcas" className="space-y-4 mt-6">
                     <Card>
                         <CardHeader className="flex flex-row items-center justify-between">
