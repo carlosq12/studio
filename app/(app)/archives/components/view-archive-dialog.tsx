@@ -222,10 +222,10 @@ export function ViewArchiveDialog({ open, onOpenChange, archive, allReplacements
                                       <div key={rep.id} className="relative">
                                           <ReplacementCard 
                                               replacement={rep}
-                                              isMonthly={monthlyTemplates?.some(t => 
-                                                  t.NOMBRE === rep.NOMBRE && 
-                                                  t['NOMBRE REEMPLAZADO'] === rep['NOMBRE REEMPLAZADO']
-                                              )}
+                                              monthlyTemplateId={monthlyTemplates?.find(t => 
+                                                  t.NOMBRE?.trim().toLowerCase() === rep.NOMBRE?.trim().toLowerCase() && 
+                                                  t['NOMBRE REEMPLAZADO']?.trim().toLowerCase() === rep['NOMBRE REEMPLAZADO']?.trim().toLowerCase()
+                                              )?.id}
                                               onView={() => setReplacementToView(rep)}
                                               onEdit={() => setReplacementToEdit(rep)}
                                               onDelete={() => { onOpenChange(false); }}

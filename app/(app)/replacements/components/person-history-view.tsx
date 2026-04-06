@@ -192,10 +192,10 @@ export function PersonHistoryView({ viewBy, replacements, funcionarioOptions, fu
                                     onEdit={() => setReplacementToEdit(rep)}
                                     onDelete={() => {}}
                                     onCopy={() => {}}
-                                    isMonthly={monthlyTemplates.some(t => 
-                                        t.NOMBRE === rep.NOMBRE && 
-                                        t['NOMBRE REEMPLAZADO'] === rep['NOMBRE REEMPLAZADO']
-                                    )}
+                                    monthlyTemplateId={monthlyTemplates?.find(t => 
+                                        t.NOMBRE?.trim().toLowerCase() === rep.NOMBRE?.trim().toLowerCase() && 
+                                        t['NOMBRE REEMPLAZADO']?.trim().toLowerCase() === rep['NOMBRE REEMPLAZADO']?.trim().toLowerCase()
+                                    )?.id}
                                 />
                             ))}
                         </div>
