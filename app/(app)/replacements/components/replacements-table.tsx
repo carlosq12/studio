@@ -127,8 +127,8 @@ export default function ReplacementsTable({ replacements, loading, funcionarios,
                                     key={replacement.id} 
                                     replacement={replacement}
                                     monthlyTemplateId={monthlyTemplates?.find(t => 
-                                        t.NOMBRE === replacement.NOMBRE && 
-                                        t['NOMBRE REEMPLAZADO'] === replacement['NOMBRE REEMPLAZADO']
+                                        t.NOMBRE?.trim().toLowerCase() === replacement.NOMBRE?.trim().toLowerCase() && 
+                                        t['NOMBRE REEMPLAZADO']?.trim().toLowerCase() === replacement['NOMBRE REEMPLAZADO']?.trim().toLowerCase()
                                     )?.id}
                                     onView={() => setReplacementToView(replacement)}
                                     onEdit={() => setReplacementToEdit(replacement)}
