@@ -80,7 +80,7 @@ const replacementSchema = z.object({
   AÑO: z.string().optional(),
   'NUMERO RES': z.string().optional(),
   archivadorId: z.string().optional(),
-  esMensual: z.boolean().default(false),
+  esMensual: z.boolean(),
 });
 
 type ReplacementFormValues = z.infer<typeof replacementSchema>;

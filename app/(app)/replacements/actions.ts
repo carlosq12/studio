@@ -1,6 +1,6 @@
 'use server';
 
-import { collection, addDoc, getDocs, doc, updateDoc, deleteDoc, Timestamp, writeBatch, query } from 'firebase/firestore';
+import { collection, addDoc, getDoc, getDocs, doc, updateDoc, deleteDoc, Timestamp, writeBatch, query } from 'firebase/firestore';
 import { z } from 'zod';
 import { initializeApp, getApps } from 'firebase/app';
 import { getFirestore } from 'firebase/firestore';
