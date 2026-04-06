@@ -126,10 +126,10 @@ export default function ReplacementsTable({ replacements, loading, funcionarios,
                                 <ReplacementCard 
                                     key={replacement.id} 
                                     replacement={replacement}
-                                    isMonthly={monthlyTemplates?.some(t => 
+                                    monthlyTemplateId={monthlyTemplates?.find(t => 
                                         t.NOMBRE === replacement.NOMBRE && 
                                         t['NOMBRE REEMPLAZADO'] === replacement['NOMBRE REEMPLAZADO']
-                                    )}
+                                    )?.id}
                                     onView={() => setReplacementToView(replacement)}
                                     onEdit={() => setReplacementToEdit(replacement)}
                                     onDelete={() => setReplacementToDelete(replacement)}

@@ -25,7 +25,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useToast } from '@/hooks/use-toast';
 import { useState, useEffect } from 'react';
-import { addReplacement } from '../actions';
+import { addReplacement, createMonthlyTemplate } from '../actions';
 import {
   Popover,
   PopoverContent,
@@ -80,6 +80,7 @@ const replacementSchema = z.object({
   AÑO: z.string().optional(),
   'NUMERO RES': z.string().optional(),
   archivadorId: z.string().optional(),
+  esMensual: z.boolean().default(false),
 });
 
 type ReplacementFormValues = z.infer<typeof replacementSchema>;
@@ -157,6 +158,7 @@ export function AddReplacementDialog({
       'NUMERO RES': '',
       'FECHA DE INGRESO DOC': new Date(),
       'FECHA DEL AVISO': null,
+      esMensual: false,
     },
   });
 
@@ -191,6 +193,7 @@ export function AddReplacementDialog({
         'NUMERO RES': '',
         'FECHA DE INGRESO DOC': new Date(),
         'FECHA DEL AVISO': null,
+        esMensual: false,
       });
     }
   }, [initialData, open, form]);
@@ -198,12 +201,17 @@ export function AddReplacementDialog({
   async function onSubmit(data: ReplacementFormValues) {
     setIsSubmitting(true);
     try {
-      // Enviamos el objeto con las fechas como Date para que la acción las maneje
-      const result = await addReplacement(data);
+      const { esMensual, ...replacementData } = data;
+      const result = await addReplacement(replacementData);
 
       if (result?.error) {
         throw new Error(result.error);
       }
+
+      if (esMensual && result.success) {
+          await createMonthlyTemplate(replacementData);
+      }
+
       toast({
         title: initialData ? '¡Solicitud Duplicada!' : '¡Solicitud añadida!',
         description: `La solicitud para ${data['NOMBRE REEMPLAZADO']} ha sido registrada.`,
@@ -395,6 +403,29 @@ export function AddReplacementDialog({
                   name="NUMERO RES"
                   render={({ field }) => (
                     <FormItem><FormLabel>Nº Resolución</FormLabel><FormControl><Input {...field} value={field.value ?? ''} /></FormControl></FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="esMensual"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4 shadow-sm bg-indigo-50/30 border-indigo-100">
+                      <div className="space-y-0.5">
+                        <FormLabel className="text-base font-bold text-indigo-700">Contrato Mensual</FormLabel>
+                        <div className="text-[10px] text-indigo-600">
+                          Marcar como recurrente mensual
+                        </div>
+                      </div>
+                      <FormControl>
+                        <input
+                          type="checkbox"
+                          className="h-5 w-5 rounded border-indigo-300 text-indigo-600 focus:ring-indigo-600"
+                          checked={field.value}
+                          onChange={field.onChange}
+                        />
+                      </FormControl>
+                    </FormItem>
                   )}
                 />
               </div>

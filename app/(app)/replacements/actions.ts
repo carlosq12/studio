@@ -1,6 +1,6 @@
 'use server';
 
-import { collection, addDoc, doc, updateDoc, deleteDoc, Timestamp, writeBatch } from 'firebase/firestore';
+import { collection, addDoc, getDocs, doc, updateDoc, deleteDoc, Timestamp, writeBatch, query } from 'firebase/firestore';
 import { z } from 'zod';
 import { initializeApp, getApps } from 'firebase/app';
 import { getFirestore } from 'firebase/firestore';
@@ -143,8 +143,86 @@ export async function addMultipleReplacements(replacements: any[]) {
     }
 }
 
-export async function generateMonthlyReplacements(monthKey?: string): Promise<{ success?: boolean; count?: number; error?: string }> {
-    return { success: true, count: 0 };
+export async function generateMonthlyReplacements(monthKey?: string, templateId?: string): Promise<{ success?: boolean; count?: number; error?: string }> {
+    const targetMonth = monthKey || format(new Date(), 'yyyy-MM');
+    const [year, month] = targetMonth.split('-').map(Number);
+    
+    const startDate = new Date(year, month - 1, 1);
+    const endDate = new Date(year, month, 0); 
+
+    try {
+        let templates: any[] = [];
+        if (templateId) {
+            const templateDoc = await getDoc(doc(db, 'reemplazos_mensuales', templateId));
+            if (templateDoc.exists()) {
+                templates = [{ ...templateDoc.data(), ref: templateDoc.ref }];
+            }
+        } else {
+            const templatesQuery = query(collection(db, 'reemplazos_mensuales'));
+            const querySnapshot = await getDocs(templatesQuery);
+            templates = querySnapshot.docs.map(d => ({ ...d.data(), ref: d.ref }));
+        }
+
+        const batch = writeBatch(db);
+        let count = 0;
+
+        for (const template of templates) {
+            if (template.lastGeneratedMonth !== targetMonth) {
+                const newReplacementRef = doc(collection(db, 'reemplazos'));
+                
+                batch.set(newReplacementRef, {
+                    NOMBRE: template.NOMBRE,
+                    'NOMBRE REEMPLAZADO': template['NOMBRE REEMPLAZADO'],
+                    CARGO: template.CARGO || '',
+                    UNIDAD: template.UNIDAD || '',
+                    MOTIVO: template.MOTIVO || '',
+                    FUNCIONES: template.FUNCIONES || '',
+                    'JEFE SERVICIO': template['JEFE SERVICIO'] || '',
+                    CORREO: template.CORREO || '',
+                    DESDE: Timestamp.fromDate(startDate),
+                    HASTA: Timestamp.fromDate(endDate),
+                    'FECHA DE INGRESO DOC': Timestamp.now(),
+                    ESTADO_R_NR: 'EN PROCESO',
+                    MES: format(startDate, 'MMMM', { locale: es }),
+                    AÑO: year.toString(),
+                    ESTADO: 'Pendiente'
+                });
+                
+                batch.update(template.ref, { lastGeneratedMonth: targetMonth });
+                count++;
+            }
+        }
+
+        if (count > 0) {
+            await batch.commit();
+        }
+        
+        return { success: true, count };
+    } catch (error: any) {
+        console.error("Error generating replacements:", error);
+        return { error: 'Error al generar reemplazos: ' + error.message };
+    }
+}
+
+export async function createMonthlyTemplate(replacement: any) {
+    try {
+        const templateData = {
+            NOMBRE: replacement.NOMBRE,
+            'NOMBRE REEMPLAZADO': replacement['NOMBRE REEMPLAZADO'],
+            CARGO: replacement.CARGO || '',
+            UNIDAD: replacement.UNIDAD || '',
+            MOTIVO: replacement.MOTIVO || '',
+            FUNCIONES: replacement.FUNCIONES || '',
+            'JEFE SERVICIO': replacement['JEFE SERVICIO'] || '',
+            CORREO: replacement.CORREO || '',
+            lastGeneratedMonth: format(new Date(), 'yyyy-MM') // Marcar el mes actual como ya generado
+        };
+        
+        await addDoc(collection(db, 'reemplazos_mensuales'), templateData);
+        return { success: true };
+    } catch (error: any) {
+        return { error: 'Error al crear plantilla: ' + error.message };
+    }
 }
 
 export async function deleteMonthlyTemplate(id: string) {

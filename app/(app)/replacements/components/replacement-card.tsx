@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Edit, Trash2, CalendarDays, ArrowRight, User, Eye, Check, Clock, Archive, MessageSquare, CalendarClock, X, MailCheck, MailWarning, Copy } from 'lucide-react';
+import { Edit, Trash2, CalendarDays, ArrowRight, User, Eye, Check, Clock, Archive, MessageSquare, CalendarClock, X, MailCheck, MailWarning, Copy, WandSparkles } from 'lucide-react';
 import type { Replacement, Archivador } from '@/lib/types';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Badge } from '@/components/ui/badge';
@@ -10,7 +10,7 @@ import { format, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Timestamp, collection, query } from 'firebase/firestore';
 import { useState, useMemo } from 'react';
-import { updateReplacementStatus, archiveReplacement } from '../actions';
+import { updateReplacementStatus, archiveReplacement, createMonthlyTemplate, generateMonthlyReplacements } from '../actions';
 import { useToast } from '@/hooks/use-toast';
 import {
   AlertDialog,
@@ -39,7 +39,7 @@ interface ReplacementCardProps {
   onEdit: () => void;
   onDelete: () => void;
   onCopy: () => void;
-  isMonthly?: boolean;
+  monthlyTemplateId?: string;
 }
 
 const formatDate = (timestamp: any) => {
@@ -54,7 +54,8 @@ const formatFullDate = (timestamp: any) => {
     return isNaN(date.getTime()) ? 'N/A' : format(date, "d 'de' MMMM yyyy 'a las' HH:mm", { locale: es });
 }
 
-export function ReplacementCard({ replacement, onView, onEdit, onDelete, onCopy, isMonthly }: ReplacementCardProps) {
+export function ReplacementCard({ replacement, onView, onEdit, onDelete, onCopy, monthlyTemplateId }: ReplacementCardProps) {
+    const isMonthly = !!monthlyTemplateId;
   const { toast } = useToast();
   const firestore = useFirestore();
   const archivesQuery = useMemoFirebase(() => firestore ? query(collection(firestore, 'archivadores')) : null, [firestore]);
@@ -238,6 +239,57 @@ export function ReplacementCard({ replacement, onView, onEdit, onDelete, onCopy,
                 <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:bg-slate-100" onClick={onCopy} title="Duplicar">
                     <Copy className="h-4 w-4" />
                 </Button>
+
+                {!isMonthly ? (
+                    <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-7 w-7 text-indigo-600 hover:bg-indigo-50" 
+                        onClick={async () => {
+                            const res = await createMonthlyTemplate(replacement);
+                            if (res.success) {
+                                toast({ 
+                                    title: '¡Convertido a Mensual!', 
+                                    description: 'La solicitud se ha guardado como plantilla para generación mensual.' 
+                                });
+                            } else {
+                                toast({ 
+                                    variant: 'destructive', 
+                                    title: 'Error', 
+                                    description: res.error 
+                                });
+                            }
+                        }} 
+                        title="Convertir a Mensual"
+                    >
+                        <CalendarClock className="h-4 w-4" />
+                    </Button>
+                ) : (
+                    <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-7 w-7 text-emerald-600 hover:bg-emerald-50" 
+                        onClick={async () => {
+                            const nextMonth = format(new Date(new Date().setMonth(new Date().getMonth() + 1)), 'yyyy-MM');
+                            const res = await generateMonthlyReplacements(nextMonth, monthlyTemplateId);
+                            if (res.success) {
+                                toast({ 
+                                    title: '¡Solicitud Generada!', 
+                                    description: `Se ha creado la solicitud para el próximo mes.` 
+                                });
+                            } else {
+                                toast({ 
+                                    variant: 'destructive', 
+                                    title: 'Error', 
+                                    description: res.error 
+                                });
+                            }
+                        }} 
+                        title="Generar para Mes Siguiente"
+                    >
+                        <WandSparkles className="h-4 w-4" />
+                    </Button>
+                )}
 
                 <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:bg-slate-100" onClick={onEdit} title="Editar">
                     <Edit className="h-4 w-4" />
