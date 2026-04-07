@@ -13,7 +13,8 @@ import {
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Search, Trash2, Eye, CheckCircle2, Edit3, Save, X, Loader2 } from 'lucide-react';
+import { Search, Trash2, Eye, CheckCircle2, Edit3, Save, X, Loader2, Clock } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -158,17 +159,22 @@ export function MarcasTable({ marcas, isLoading, onDeleteMarca }: MarcasTablePro
       </div>
 
       <Dialog open={!!selectedDetails} onOpenChange={() => { setSelectedDetails(null); setIsEditingCount(false); }}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle className="flex items-center justify-between">
-                <span>Detalle de Marcas ({selectedDetails?.mes})</span>
-                <div className="flex items-center gap-2 mr-6">
-                    <span className="text-sm font-normal text-muted-foreground">Vales: </span>
+                <div className="flex flex-col gap-1">
+                    <span>Detalle de Marcas ({selectedDetails?.mes})</span>
+                    <span className="text-sm font-normal text-muted-foreground">
+                        {selectedDetails?.nombres} {selectedDetails?.apellidos} - RUT: {selectedDetails?.RUT}
+                    </span>
+                </div>
+                <div className="flex items-center gap-3 bg-muted/50 p-2 px-4 rounded-lg border">
+                    <span className="text-sm font-medium">Total Vales: </span>
                     {isEditingCount ? (
                         <div className="flex items-center gap-1">
                             <Input 
                                 type="number" 
-                                className="w-16 h-8 text-center" 
+                                className="w-16 h-8 text-center bg-background" 
                                 value={editedCount} 
                                 onChange={(e) => setEditedCount(Number(e.target.value))}
                             />
@@ -181,23 +187,29 @@ export function MarcasTable({ marcas, isLoading, onDeleteMarca }: MarcasTablePro
                         </div>
                     ) : (
                         <div className="flex items-center gap-2">
-                            <span className="font-bold text-lg">{selectedDetails?.diasTrabajados}</span>
-                            <Button size="icon" variant="ghost" className="h-7 w-7 text-muted-foreground" onClick={handleStartEdit}>
-                                <Edit3 className="h-3.5 w-3.5" />
+                            <span className="font-bold text-2xl text-primary">{selectedDetails?.diasTrabajados}</span>
+                            <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-primary" onClick={handleStartEdit} title="Ajustar manualmente">
+                                <Edit3 className="h-4 w-4" />
                             </Button>
                         </div>
                     )}
                 </div>
             </DialogTitle>
-            <DialogDescription>
-              {selectedDetails?.nombres} {selectedDetails?.apellidos} - RUT: {selectedDetails?.RUT}
-            </DialogDescription>
           </DialogHeader>
-          <ScrollArea className="h-[350px] mt-2 border rounded-md">
+
+          <div className="bg-blue-50/50 border border-blue-100 rounded-md p-3 mb-2 flex items-start gap-2">
+            <Clock className="h-4 w-4 text-blue-600 mt-0.5" />
+            <p className="text-xs text-blue-800">
+                Las marcas resaltadas en <span className="bg-green-100 px-1 rounded">verde</span> indican una jornada válida (&gt;6h u 8h según estamento). 
+                Revisa el indicador por día para confirmar el conteo.
+            </p>
+          </div>
+
+          <ScrollArea className="h-[450px] pr-4">
             {!selectedDetails?.detalles || selectedDetails.detalles.length === 0 ? (
-                <div className="text-sm text-center text-muted-foreground p-8">No hay detalle guardado para este registro. Vuelve a subir el Excel si deseas registrarlo.</div>
+                <div className="text-sm text-center text-muted-foreground p-12 bg-muted/20 rounded-lg border-dashed border-2">No hay detalle guardado para este registro. Vuelve a subir el Excel si deseas registrarlo.</div>
             ) : (
-                <div className="space-y-4 p-1">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {Object.entries(
                     selectedDetails.detalles.reduce((acc, current) => {
                       let horarioStr = current.horario;
@@ -211,24 +223,39 @@ export function MarcasTable({ marcas, isLoading, onDeleteMarca }: MarcasTablePro
                       const parts = horarioStr.split('|');
                       const datePart = parts.length > 1 ? parts[0] : horarioStr;
                       const timePart = parts.length > 1 ? parts[1] : '';
-                      if (!acc[datePart]) acc[datePart] = [];
-                      acc[datePart].push({ ...current, time: timePart || horarioStr });
+                      
+                      if (!acc[datePart]) acc[datePart] = { marcas: [], valesCount: 0 };
+                      acc[datePart].marcas.push({ ...current, time: timePart || horarioStr });
+                      
+                      // Contar vales: cada par marcado como valido cuenta como un vale en ese dia
+                      // Usamos la marca de SALIDA para contar, ya que cierra el par.
+                      if (current.esValida && current.estado.toLowerCase().includes('sal')) {
+                          acc[datePart].valesCount++;
+                      }
+                      
                       return acc;
-                    }, {} as Record<string, { horario: string, estado: string, time: string, esValida?: boolean }[]>)
-                  ).map(([dia, marcasDia]) => (
-                    <div key={dia} className="border rounded-md overflow-hidden">
-                      <div className="bg-muted px-3 py-2 text-sm font-semibold border-b capitalize">
-                        {dia}
+                    }, {} as Record<string, { marcas: any[], valesCount: number }>)
+                  ).map(([dia, data]) => (
+                    <div key={dia} className="border rounded-md overflow-hidden bg-background shadow-sm flex flex-col h-fit">
+                      <div className="bg-muted/50 px-3 py-2 text-sm font-semibold border-b flex items-center justify-between">
+                        <span className="capitalize text-muted-foreground">{dia}</span>
+                        {data.valesCount > 0 ? (
+                            <Badge variant="default" className="bg-green-600 hover:bg-green-700 whitespace-nowrap">
+                                {data.valesCount} {data.valesCount === 1 ? 'Vale' : 'Vales'}
+                            </Badge>
+                        ) : (
+                            <Badge variant="outline" className="text-muted-foreground whitespace-nowrap">0 Vales</Badge>
+                        )}
                       </div>
                       <Table>
                         <TableBody>
-                            {marcasDia.map((m, i) => (
-                                <TableRow key={i} className={m.esValida ? "bg-green-50/50" : ""}>
-                                    <TableCell className="text-sm py-2 flex items-center gap-2">
-                                        {m.time}
-                                        {m.esValida && <CheckCircle2 className="h-3 w-3 text-green-600" aria-label="Marca validada para vale" />}
+                            {data.marcas.map((m, i) => (
+                                <TableRow key={i} className={`${m.esValida ? "bg-green-50/50" : ""} hover:bg-muted/30 border-none`}>
+                                    <TableCell className="text-sm py-1.5 flex items-center gap-2">
+                                        <span className="font-mono">{m.time}</span>
+                                        {m.esValida && <CheckCircle2 className="h-3 w-3 text-green-600 shrink-0" />}
                                     </TableCell>
-                                    <TableCell className="text-sm font-medium py-2 text-right">
+                                    <TableCell className="text-xs font-medium py-1.5 text-right">
                                         <span className={m.estado.toLowerCase().includes('ent') ? "text-blue-600" : "text-orange-600"}>
                                             {m.estado}
                                         </span>
