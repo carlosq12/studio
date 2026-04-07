@@ -1,6 +1,5 @@
-'use client';
-
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
+// ... (rest of imports from 4 to 25 remain similar)
 import type { MarcaVale } from '@/lib/types';
 import {
   Table,
@@ -57,7 +56,6 @@ export function MarcasTable({ marcas, isLoading, onDeleteMarca }: MarcasTablePro
       
       toast({ title: 'Ajuste Guardado', description: `Se actualizó el conteo a ${editedCount} vales.` });
       setIsEditingCount(false);
-      // Actualizar localmente el objeto seleccionado para ver el cambio de inmediato reflejado en el header del modal
       setSelectedDetails(prev => prev ? { ...prev, diasTrabajados: editedCount } : null);
     } catch (error: any) {
       toast({ variant: 'destructive', title: 'Error', description: error.message });
@@ -65,6 +63,64 @@ export function MarcasTable({ marcas, isLoading, onDeleteMarca }: MarcasTablePro
       setIsUpdating(false);
     }
   };
+
+  const processedGroups = useMemo(() => {
+    if (!selectedDetails?.detalles) return [];
+    
+    // Sort chronologically for enrichment logic
+    const sorted = [...selectedDetails.detalles].sort((a,b) => {
+        const da = parseHorarioTS(a.horario);
+        const db = parseHorarioTS(b.horario);
+        return (da?.getTime() || 0) - (db?.getTime() || 0);
+    });
+
+    // Check if it already has esValida
+    const hasValida = sorted.some(d => d.esValida !== undefined);
+    if (!hasValida) {
+        let lastEntrada: Date | null = null;
+        let lastEntradaIdx: number = -1;
+        sorted.forEach((d, idx) => {
+            const fecha = parseHorarioTS(d.horario);
+            const estado = d.estado.toLowerCase();
+            if (estado.includes('ent')) {
+                lastEntrada = fecha;
+                lastEntradaIdx = idx;
+            } else if (estado.includes('sal') && lastEntrada && fecha) {
+                const horas = (fecha.getTime() - lastEntrada.getTime()) / (1000 * 60 * 60);
+                if (horas >= 6) {
+                    sorted[lastEntradaIdx] = { ...sorted[lastEntradaIdx], esValida: true };
+                    sorted[idx] = { ...d, esValida: true };
+                }
+                lastEntrada = null;
+            }
+        });
+    }
+
+    const grouped = sorted.reduce((acc, current) => {
+      let horarioStr = current.horario;
+      if (!horarioStr.includes('|')) {
+          const parsedD = parseHorarioTS(current.horario);
+          if (parsedD && !isNaN(parsedD.getTime())) {
+              horarioStr = format(parsedD, "EEEE dd MMM yyyy|HH:mm", { locale: es });
+          }
+      }
+    
+      const parts = horarioStr.split('|');
+      const datePart = parts.length > 1 ? parts[0] : horarioStr;
+      const timePart = parts.length > 1 ? parts[1] : '';
+      
+      if (!acc[datePart]) acc[datePart] = { marcas: [], valesCount: 0 };
+      acc[datePart].marcas.push({ ...current, time: timePart || horarioStr });
+      
+      if (current.esValida && current.estado.toLowerCase().includes('sal')) {
+          acc[datePart].valesCount++;
+      }
+      
+      return acc;
+    }, {} as Record<string, { marcas: any[], valesCount: number }>)
+    
+    return Object.entries(grouped);
+  }, [selectedDetails]);
 
   return (
     <div className="space-y-4">
@@ -210,32 +266,7 @@ export function MarcasTable({ marcas, isLoading, onDeleteMarca }: MarcasTablePro
                 <div className="text-sm text-center text-muted-foreground p-12 bg-muted/20 rounded-lg border-dashed border-2">No hay detalle guardado para este registro. Vuelve a subir el Excel si deseas registrarlo.</div>
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {Object.entries(
-                    selectedDetails.detalles.reduce((acc, current) => {
-                      let horarioStr = current.horario;
-                      if (!horarioStr.includes('|')) {
-                          const parsedD = parseHorarioTS(current.horario);
-                          if (parsedD && !isNaN(parsedD.getTime())) {
-                              horarioStr = format(parsedD, "EEEE dd MMM yyyy|HH:mm", { locale: es });
-                          }
-                      }
-                    
-                      const parts = horarioStr.split('|');
-                      const datePart = parts.length > 1 ? parts[0] : horarioStr;
-                      const timePart = parts.length > 1 ? parts[1] : '';
-                      
-                      if (!acc[datePart]) acc[datePart] = { marcas: [], valesCount: 0 };
-                      acc[datePart].marcas.push({ ...current, time: timePart || horarioStr });
-                      
-                      // Contar vales: cada par marcado como valido cuenta como un vale en ese dia
-                      // Usamos la marca de SALIDA para contar, ya que cierra el par.
-                      if (current.esValida && current.estado.toLowerCase().includes('sal')) {
-                          acc[datePart].valesCount++;
-                      }
-                      
-                      return acc;
-                    }, {} as Record<string, { marcas: any[], valesCount: number }>)
-                  ).map(([dia, data]) => (
+                  {processedGroups.map(([dia, data]) => (
                     <div key={dia} className="border rounded-md overflow-hidden bg-background shadow-sm flex flex-col h-fit">
                       <div className="bg-muted/50 px-3 py-2 text-sm font-semibold border-b flex items-center justify-between">
                         <span className="capitalize text-muted-foreground">{dia}</span>
