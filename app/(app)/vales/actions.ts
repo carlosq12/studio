@@ -274,3 +274,45 @@ export async function deleteMarcaVale(id: string, historialId?: string, monto?: 
 }
 
 
+export async function updateMarcaValeCount(marcaId: string, newCount: number, valorVale: number = 4000) {
+    try {
+        const marcaRef = doc(db, 'marcas_vales', marcaId);
+        const marcaSnap = await getDoc(marcaRef);
+        
+        if (!marcaSnap.exists()) {
+            return { error: 'El registro de marca no existe.' };
+        }
+        
+        const marcaData = marcaSnap.data() as MarcaVale;
+        const oldMonto = marcaData.montoAsignado || 0;
+        const newMonto = newCount * valorVale;
+        const diffMonto = newMonto - oldMonto;
+        
+        const batch = writeBatch(db);
+        
+        // 1. Actualizar el registro individual
+        batch.update(marcaRef, {
+            diasTrabajados: newCount,
+            montoAsignado: newMonto,
+            observaciones: `Ajuste manual: de ${marcaData.diasTrabajados} a ${newCount} vales.`
+        });
+        
+        // 2. Actualizar el total del historial si corresponde
+        if (marcaData.historialId) {
+            const historialRef = doc(db, 'historial_cargas_vales', marcaData.historialId);
+            const historialSnap = await getDoc(historialRef);
+            if (historialSnap.exists()) {
+                const histData = historialSnap.data();
+                batch.update(historialRef, {
+                    montoTotal: (histData.montoTotal || 0) + diffMonto
+                });
+            }
+        }
+        
+        await batch.commit();
+        return { success: true };
+    } catch (error: any) {
+        console.error('Error al actualizar conteo de vales:', error);
+        return { error: error.message || 'No se pudo actualizar el registro.' };
+    }
+}

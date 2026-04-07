@@ -13,11 +13,14 @@ import {
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Search, Trash2, Eye } from 'lucide-react';
+import { Search, Trash2, Eye, CheckCircle2, Edit3, Save, X, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { parseHorarioTS } from '../utils/calculos';
+import { updateMarcaValeCount } from '../actions';
+import { useToast } from '@/hooks/use-toast';
+import { Button } from '@/components/ui/button';
 
 interface MarcasTableProps {
   marcas: MarcaVale[];
@@ -28,12 +31,39 @@ interface MarcasTableProps {
 export function MarcasTable({ marcas, isLoading, onDeleteMarca }: MarcasTableProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedDetails, setSelectedDetails] = useState<MarcaVale | null>(null);
+  const [isEditingCount, setIsEditingCount] = useState(false);
+  const [editedCount, setEditedCount] = useState<number>(0);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const { toast } = useToast();
 
   const filteredMarcas = marcas.filter(m => 
     (m.nombres || '').toLowerCase().includes(searchTerm.toLowerCase()) || 
     (m.RUT || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
     (m.mes || '').toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const handleStartEdit = () => {
+    setEditedCount(selectedDetails?.diasTrabajados || 0);
+    setIsEditingCount(true);
+  };
+
+  const handleSaveAdjustment = async () => {
+    if (!selectedDetails) return;
+    setIsUpdating(true);
+    try {
+      const res = await updateMarcaValeCount(selectedDetails.id, editedCount);
+      if (res.error) throw new Error(res.error);
+      
+      toast({ title: 'Ajuste Guardado', description: `Se actualizó el conteo a ${editedCount} vales.` });
+      setIsEditingCount(false);
+      // Actualizar localmente el objeto seleccionado para ver el cambio de inmediato reflejado en el header del modal
+      setSelectedDetails(prev => prev ? { ...prev, diasTrabajados: editedCount } : null);
+    } catch (error: any) {
+      toast({ variant: 'destructive', title: 'Error', description: error.message });
+    } finally {
+      setIsUpdating(false);
+    }
+  };
 
   return (
     <div className="space-y-4">
@@ -103,7 +133,7 @@ export function MarcasTable({ marcas, isLoading, onDeleteMarca }: MarcasTablePro
                      </TableCell>
                      <TableCell className="text-right">
                        <button 
-                           onClick={() => setSelectedDetails(m)}
+                           onClick={() => { setSelectedDetails(m); setIsEditingCount(false); }}
                            className="text-blue-600 hover:text-blue-800 transition-colors mr-3"
                            title="Ver detalle de marcas"
                          >
@@ -127,10 +157,38 @@ export function MarcasTable({ marcas, isLoading, onDeleteMarca }: MarcasTablePro
         </ScrollArea>
       </div>
 
-      <Dialog open={!!selectedDetails} onOpenChange={() => setSelectedDetails(null)}>
+      <Dialog open={!!selectedDetails} onOpenChange={() => { setSelectedDetails(null); setIsEditingCount(false); }}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Detalle de Marcas ({selectedDetails?.mes})</DialogTitle>
+            <DialogTitle className="flex items-center justify-between">
+                <span>Detalle de Marcas ({selectedDetails?.mes})</span>
+                <div className="flex items-center gap-2 mr-6">
+                    <span className="text-sm font-normal text-muted-foreground">Vales: </span>
+                    {isEditingCount ? (
+                        <div className="flex items-center gap-1">
+                            <Input 
+                                type="number" 
+                                className="w-16 h-8 text-center" 
+                                value={editedCount} 
+                                onChange={(e) => setEditedCount(Number(e.target.value))}
+                            />
+                            <Button size="icon" variant="ghost" className="h-8 w-8 text-green-600" onClick={handleSaveAdjustment} disabled={isUpdating}>
+                                {isUpdating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                            </Button>
+                            <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive" onClick={() => setIsEditingCount(false)} disabled={isUpdating}>
+                                <X className="h-4 w-4" />
+                            </Button>
+                        </div>
+                    ) : (
+                        <div className="flex items-center gap-2">
+                            <span className="font-bold text-lg">{selectedDetails?.diasTrabajados}</span>
+                            <Button size="icon" variant="ghost" className="h-7 w-7 text-muted-foreground" onClick={handleStartEdit}>
+                                <Edit3 className="h-3.5 w-3.5" />
+                            </Button>
+                        </div>
+                    )}
+                </div>
+            </DialogTitle>
             <DialogDescription>
               {selectedDetails?.nombres} {selectedDetails?.apellidos} - RUT: {selectedDetails?.RUT}
             </DialogDescription>
@@ -156,7 +214,7 @@ export function MarcasTable({ marcas, isLoading, onDeleteMarca }: MarcasTablePro
                       if (!acc[datePart]) acc[datePart] = [];
                       acc[datePart].push({ ...current, time: timePart || horarioStr });
                       return acc;
-                    }, {} as Record<string, { horario: string, estado: string, time: string }[]>)
+                    }, {} as Record<string, { horario: string, estado: string, time: string, esValida?: boolean }[]>)
                   ).map(([dia, marcasDia]) => (
                     <div key={dia} className="border rounded-md overflow-hidden">
                       <div className="bg-muted px-3 py-2 text-sm font-semibold border-b capitalize">
@@ -165,8 +223,11 @@ export function MarcasTable({ marcas, isLoading, onDeleteMarca }: MarcasTablePro
                       <Table>
                         <TableBody>
                             {marcasDia.map((m, i) => (
-                                <TableRow key={i}>
-                                    <TableCell className="text-sm py-2">{m.time}</TableCell>
+                                <TableRow key={i} className={m.esValida ? "bg-green-50/50" : ""}>
+                                    <TableCell className="text-sm py-2 flex items-center gap-2">
+                                        {m.time}
+                                        {m.esValida && <CheckCircle2 className="h-3 w-3 text-green-600" aria-label="Marca validada para vale" />}
+                                    </TableCell>
                                     <TableCell className="text-sm font-medium py-2 text-right">
                                         <span className={m.estado.toLowerCase().includes('ent') ? "text-blue-600" : "text-orange-600"}>
                                             {m.estado}

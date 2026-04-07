@@ -117,50 +117,63 @@ export function calcularJornadasAvanzado(
        return da.getTime() - db.getTime();
     });
     
-    let esperandoEntrada: Date | null = null;
+    let esperandoEntradaIndex: number | null = null;
+    const detallesProcesados: { horario: string; estado: string; esValida: boolean }[] = registros.map(r => {
+      const d = parseHorarioTS(r.horario);
+      return { 
+        horario: d ? format(d, "EEEE dd MMM yyyy|HH:mm", { locale: es }) : String(r.horario), 
+        estado: r.estado,
+        esValida: false 
+      };
+    });
     
-    for(const reg of registros) {
+    for(let i = 0; i < registros.length; i++) {
+      const reg = registros[i];
       const fecha = parseHorarioTS(reg.horario);
       if(!fecha) continue;
       
       const estado = String(reg.estado || "").trim().toLowerCase();
       
       if(estado === "m/ent") {
-         esperandoEntrada = fecha;
-      } else if (estado === "m/sal" && esperandoEntrada) {
-         const horasTrabajadas = (fecha.getTime() - esperandoEntrada.getTime()) / (1000 * 60 * 60);
-         const mismoDia = fecha.toDateString() === esperandoEntrada.toDateString();
+         esperandoEntradaIndex = i;
+      } else if (estado === "m/sal" && esperandoEntradaIndex !== null) {
+         const entradaReg = registros[esperandoEntradaIndex];
+         const entradaFecha = parseHorarioTS(entradaReg.horario)!;
+         const horasTrabajadas = (fecha.getTime() - entradaFecha.getTime()) / (1000 * 60 * 60);
+         const mismoDia = fecha.toDateString() === entradaFecha.toDateString();
          
          if(jornadaTipo === "normal") {
-           // Normal constraint 
            if(!mismoDia && horasTrabajadas < minimoHoras) {
-             errores.push(`${esperandoEntrada.toLocaleDateString("es-CL")} jornada cruzada inválida (${horasTrabajadas.toFixed(1)}h)`);
+             errores.push(`${entradaFecha.toLocaleDateString("es-CL")} jornada cruzada inválida (${horasTrabajadas.toFixed(1)}h)`);
              noMarcajes++;
-             esperandoEntrada = null;
-             continue; // go to next
+             esperandoEntradaIndex = null;
+             continue;
            }
          } else if (jornadaTipo === "turno" || jornadaTipo === "desconocido") {
-           // Turno constraint
            if (horasTrabajadas > 36) {
-             errores.push(`${esperandoEntrada.toLocaleDateString("es-CL")} entrada sin salida válida`);
+             errores.push(`${entradaFecha.toLocaleDateString("es-CL")} entrada sin salida válida`);
              noMarcajes++;
-             esperandoEntrada = null;
+             esperandoEntradaIndex = null;
              continue;
            }
          }
          
          if (horasTrabajadas >= minimoHoras) {
            jornadasValidas++;
+           detallesProcesados[esperandoEntradaIndex].esValida = true;
+           detallesProcesados[i].esValida = true;
          } else {
-           errores.push(`${esperandoEntrada.toLocaleDateString("es-CL")} jornada menor a ${minimoHoras}h (${horasTrabajadas.toFixed(1)}h)`);
+           errores.push(`${entradaFecha.toLocaleDateString("es-CL")} jornada menor a ${minimoHoras}h (${horasTrabajadas.toFixed(1)}h)`);
          }
          
-         esperandoEntrada = null;
+         esperandoEntradaIndex = null;
       }
     }
     
-    if (esperandoEntrada) {
-      errores.push(`${esperandoEntrada.toLocaleDateString("es-CL")} falta salida`);
+    if (esperandoEntradaIndex !== null) {
+      const entradaReg = registros[esperandoEntradaIndex];
+      const entradaFecha = parseHorarioTS(entradaReg.horario);
+      errores.push(`${entradaFecha?.toLocaleDateString("es-CL") || ''} falta salida`);
       noMarcajes++;
     }
     
@@ -171,13 +184,7 @@ export function calcularJornadasAvanzado(
       jornadasValidas,
       errores,
       noMarcajes,
-      detalles: registros.map(r => {
-        const d = parseHorarioTS(r.horario);
-        return { 
-          horario: d ? format(d, "EEEE dd MMM yyyy|HH:mm", { locale: es }) : String(r.horario), 
-          estado: r.estado 
-        };
-      })
+      detalles: detallesProcesados
     });
   }
 

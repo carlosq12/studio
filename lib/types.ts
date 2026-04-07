@@ -239,7 +239,7 @@ export type MarcaVale = {
   montoAsignado?: number;
   observaciones?: string;
   fechaCarga?: any;
-  detalles?: { horario: string; estado: string }[];
+  detalles?: { horario: string; estado: string; esValida?: boolean }[];
 };
 
 export type HistorialCargaVales = {
