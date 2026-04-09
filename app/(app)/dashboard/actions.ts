@@ -1,7 +1,7 @@
 
 'use server';
 
-import { sendEmail } from '@/ai/flows/send-email';
+import { sendEmail } from '@/ai/flows/send-email-v2';
 import { z } from 'zod';
 
 const emailSchema = z.string().email({ message: "Por favor, introduce una dirección de correo válida." });

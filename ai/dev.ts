@@ -2,7 +2,7 @@
 
 import '@/ai/flows/suggest-task-improvements.ts';
 import '@/ai/flows/summarize-employee-data.ts';
-import '@/ai/flows/send-email.ts';
+import '@/ai/flows/send-email-v2.ts';
 import '@/ai/flows/send-birthday-email.ts';
 import '@/ai/flows/send-task-notification.ts';
 import '@/ai/flows/send-funcionario-info.ts';

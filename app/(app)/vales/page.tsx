@@ -42,6 +42,7 @@ export default function ValesPage() {
     const { toast } = useToast();
 
     useEffect(() => {
+        if (!db) return;
         const qFuncionarios = query(collection(db, 'funcionarios_vales'), orderBy('nombres'));
         const unsubFun = onSnapshot(qFuncionarios, (snapshot) => {
             const funData = snapshot.docs.map(doc => ({

@@ -7,7 +7,7 @@
  */
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
-import { sendEmail } from './send-email';
+import { sendEmail } from './send-email-v2';
 
 const SendBirthdayEmailInputSchema = z.object({
   to: z.string().email().describe('La dirección de correo del destinatario.'),

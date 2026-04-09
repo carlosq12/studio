@@ -5,7 +5,7 @@ import { z } from 'zod';
 import { initializeApp, getApps } from 'firebase/app';
 import { getFirestore } from 'firebase/firestore';
 import { firebaseConfig } from '@/firebase/config';
-import { sendEmail } from '@/ai/flows/send-email';
+import { sendEmail } from '@/ai/flows/send-email-v2';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 

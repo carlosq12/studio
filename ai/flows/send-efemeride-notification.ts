@@ -4,7 +4,7 @@
  */
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
-import { sendEmail } from './send-email';
+import { sendEmail } from './send-email-v2';
 
 const SendEfemerideNotificationInputSchema = z.object({
   to: z.string().email().describe('Correo del encargado.'),
