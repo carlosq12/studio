@@ -95,6 +95,12 @@ export function ReplacementDetailsDialog({ replacement, open, onOpenChange }: Re
                 <Section title="Periodo y Motivo" icon={Calendar}>
                     <DetailItem label="Fecha de Inicio" icon={Calendar} value={formatDate(replacement.DESDE)} />
                     <DetailItem label="Fecha de Término" icon={Calendar} value={formatDate(replacement.HASTA)} />
+                    {replacement.ES_PARCIAL && (
+                        <div className="sm:col-span-2 bg-red-50 p-2 rounded border border-red-100 flex items-center gap-3">
+                            <Badge variant="destructive" className="bg-red-600">PARCIAL</Badge>
+                            <DetailItem label="Fecha Parcial Asignada" icon={Calendar} value={formatDate(replacement.FECHA_PARCIAL)} />
+                        </div>
+                    )}
                     <div className="sm:col-span-2">
                         <DetailItem label="Motivo del Reemplazo" icon={Info} value={replacement.MOTIVO} />
                     </div>

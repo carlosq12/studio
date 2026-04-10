@@ -133,6 +133,8 @@ export type Replacement = {
     shift?: string;
     reason?: string;
     status?: string;
+    ES_PARCIAL?: boolean;
+    FECHA_PARCIAL?: any;
 }
 
 export type MonthlyTemplate = {

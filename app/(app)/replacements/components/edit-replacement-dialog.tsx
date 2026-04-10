@@ -71,6 +71,8 @@ const replacementSchema = z.object({
   AÑO: z.string().optional(),
   'NUMERO RES': z.string().optional(),
   archivadorId: z.string().optional(),
+  ES_PARCIAL: z.boolean().optional(),
+  FECHA_PARCIAL: z.date().optional().nullable(),
 });
 
 type ReplacementFormValues = z.infer<typeof replacementSchema>;
@@ -167,6 +169,8 @@ export function EditReplacementDialog({
         AÑO: replacement.AÑO || '',
         'NUMERO RES': replacement['NUMERO RES'] || '',
         archivadorId: replacement.archivadorId || '',
+        ES_PARCIAL: !!replacement.ES_PARCIAL,
+        FECHA_PARCIAL: parseDate(replacement.FECHA_PARCIAL),
       });
     }
   }, [replacement, form]);
@@ -209,6 +213,7 @@ export function EditReplacementDialog({
         DESDE: data.DESDE.toISOString(),
         HASTA: data.HASTA.toISOString(),
         'FECHA DEL AVISO': data['FECHA DEL AVISO']?.toISOString() || '',
+        FECHA_PARCIAL: data.FECHA_PARCIAL?.toISOString() || '',
       };
 
       const result = await updateReplacement(replacementData);
@@ -635,6 +640,33 @@ export function EditReplacementDialog({
                     </FormItem>
                   )}
                 />
+
+                <FormField
+                  control={form.control}
+                  name="ES_PARCIAL"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4 shadow-sm bg-red-50/30 border-red-100">
+                      <div className="space-y-0.5">
+                        <FormLabel className="text-base font-bold text-red-700">Contrato Parcial</FormLabel>
+                        <div className="text-[10px] text-red-600">
+                          Identificar como entrega parcial
+                        </div>
+                      </div>
+                      <FormControl>
+                        <input
+                          type="checkbox"
+                          className="h-5 w-5 rounded border-red-300 text-red-600 focus:ring-red-600"
+                          checked={field.value}
+                          onChange={field.onChange}
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+
+                {form.watch('ES_PARCIAL') && (
+                  <DateField name="FECHA_PARCIAL" label="Fecha Parcial" />
+                )}
               </div>
             </ScrollArea>
             <DialogFooter>

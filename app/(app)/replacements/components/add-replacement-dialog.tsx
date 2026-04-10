@@ -81,6 +81,8 @@ const replacementSchema = z.object({
   'NUMERO RES': z.string().optional(),
   archivadorId: z.string().optional(),
   esMensual: z.boolean(),
+  ES_PARCIAL: z.boolean().optional(),
+  FECHA_PARCIAL: z.date().optional().nullable(),
 });
 
 type ReplacementFormValues = z.infer<typeof replacementSchema>;
@@ -159,6 +161,8 @@ export function AddReplacementDialog({
       'FECHA DE INGRESO DOC': new Date(),
       'FECHA DEL AVISO': null,
       esMensual: false,
+      ES_PARCIAL: false,
+      FECHA_PARCIAL: null,
     },
   });
 
@@ -173,6 +177,8 @@ export function AddReplacementDialog({
         'FECHA DEL AVISO': parseDate(initialData['FECHA DEL AVISO']),
         ESTADO: initialData.ESTADO || 'Pendiente',
         ESTADO_R_NR: initialData.ESTADO_R_NR || 'EN PROCESO',
+        ES_PARCIAL: !!initialData.ES_PARCIAL,
+        FECHA_PARCIAL: parseDate(initialData.FECHA_PARCIAL),
       });
     } else if (!open) {
       form.reset({
@@ -194,6 +200,8 @@ export function AddReplacementDialog({
         'FECHA DE INGRESO DOC': new Date(),
         'FECHA DEL AVISO': null,
         esMensual: false,
+        ES_PARCIAL: false,
+        FECHA_PARCIAL: null,
       });
     }
   }, [initialData, open, form]);
@@ -428,6 +436,64 @@ export function AddReplacementDialog({
                     </FormItem>
                   )}
                 />
+
+                <FormField
+                  control={form.control}
+                  name="ES_PARCIAL"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4 shadow-sm bg-red-50/30 border-red-100">
+                      <div className="space-y-0.5">
+                        <FormLabel className="text-base font-bold text-red-700">Contrato Parcial</FormLabel>
+                        <div className="text-[10px] text-red-600">
+                          Identificar como entrega parcial
+                        </div>
+                      </div>
+                      <FormControl>
+                        <input
+                          type="checkbox"
+                          className="h-5 w-5 rounded border-red-300 text-red-600 focus:ring-red-600"
+                          checked={field.value}
+                          onChange={field.onChange}
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+
+                {form.watch('ES_PARCIAL') && (
+                  <FormField
+                    control={form.control}
+                    name="FECHA_PARCIAL"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-col">
+                        <FormLabel>Fecha Parcial</FormLabel>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <FormControl>
+                              <Button variant="outline" className={cn("w-full pl-3 text-left font-normal", !field.value && "text-muted-foreground")}>
+                                {field.value ? format(field.value, "PPP", { locale: es }) : <span>Seleccionar fecha</span>}
+                                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                              </Button>
+                            </FormControl>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0" align="start">
+                            <Calendar 
+                              mode="single" 
+                              selected={field.value ?? undefined} 
+                              onSelect={field.onChange} 
+                              initialFocus 
+                              locale={es}
+                              captionLayout="dropdown-buttons"
+                              fromYear={new Date().getFullYear() - 5}
+                              toYear={new Date().getFullYear() + 5}
+                            />
+                          </PopoverContent>
+                        </Popover>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
               </div>
               
               <div className="space-y-4 py-4">

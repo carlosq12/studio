@@ -138,6 +138,13 @@ export function ReplacementCard({ replacement, onView, onEdit, onDelete, onCopy,
         <div className="flex flex-col h-full">
             <CardHeader className="p-4 pb-2">
               <div className="flex flex-col gap-1 pr-8">
+                  {replacement.ES_PARCIAL && (
+                    <div className="mb-2">
+                        <Badge variant="destructive" className="bg-red-600 hover:bg-red-700 text-white text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-sm shadow-sm ring-2 ring-red-100 ring-offset-1">
+                            PARCIAL
+                        </Badge>
+                    </div>
+                  )}
                   <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
                       <User className="h-3 w-3" />
                       <span className="truncate">{replacement['NOMBRE REEMPLAZADO']}</span>
@@ -155,7 +162,14 @@ export function ReplacementCard({ replacement, onView, onEdit, onDelete, onCopy,
             <CardContent className="p-4 pt-0 text-xs flex-1">
                 <div className="flex items-center gap-2 mb-3 text-muted-foreground">
                     <CalendarDays className="h-3.5 w-3.5" />
-                    <span>{formatDate(replacement.DESDE)} - {formatDate(replacement.HASTA)}</span>
+                    <div className="flex flex-col">
+                        <span>{formatDate(replacement.DESDE)} - {formatDate(replacement.HASTA)}</span>
+                        {replacement.ES_PARCIAL && replacement.FECHA_PARCIAL && (
+                            <span className="text-[10px] font-bold text-red-600 mt-1">
+                                Fecha Parcial: {formatDate(replacement.FECHA_PARCIAL)}
+                            </span>
+                        )}
+                    </div>
                 </div>
                 
                 <div className="flex items-center gap-3">
