@@ -102,6 +102,7 @@ export function ReplacementCard({ replacement, onView, onEdit, onDelete, onCopy,
     <TooltipProvider>
       <Card className={cn(
         "flex flex-col relative overflow-hidden transition-all duration-300 h-full border border-slate-200 bg-white shadow-sm hover:shadow-md group border-l-4",
+        replacement.ES_PARCIAL ? "border-l-orange-500 bg-orange-50/20" :
         isRejected ? "border-l-red-500 bg-red-50/20" : 
         isResolved ? "border-l-emerald-500 bg-emerald-50/20" : 
         isInProcess ? "border-l-sky-500 bg-sky-50/20" : 
@@ -142,8 +143,8 @@ export function ReplacementCard({ replacement, onView, onEdit, onDelete, onCopy,
                       <User className="h-3 w-3" />
                       <span className="truncate">{replacement['NOMBRE REEMPLAZADO']}</span>
                   </div>
-                  <div className="flex items-center gap-2">
-                      <ArrowRight className={cn("h-3 w-3 rotate-90", isRejected ? "text-red-500" : isResolved ? "text-emerald-500" : isInProcess ? "text-sky-500" : "text-primary")} />
+                   <div className="flex items-center gap-2">
+                      <ArrowRight className={cn("h-3 w-3 rotate-90", replacement.ES_PARCIAL ? "text-orange-500" : isRejected ? "text-red-500" : isResolved ? "text-emerald-500" : isInProcess ? "text-sky-500" : "text-primary")} />
                       <span className="font-bold text-sm truncate text-foreground">{replacement.NOMBRE}</span>
                   </div>
               </div>
@@ -159,7 +160,7 @@ export function ReplacementCard({ replacement, onView, onEdit, onDelete, onCopy,
                     <span>{formatDate(replacement.DESDE)} - {formatDate(replacement.HASTA)}</span>
                     {replacement.ES_PARCIAL && replacement.FECHA_PARCIAL_INICIO && replacement.FECHA_PARCIAL_FIN && (
                         <div className="mt-4 -mx-4">
-                            <div className="bg-gradient-to-r from-rose-500 to-pink-600 text-white p-3 shadow-lg flex flex-col items-center justify-center transform hover:scale-105 transition-transform duration-300">
+                            <div className="bg-gradient-to-r from-orange-500 to-amber-600 text-white p-3 shadow-lg flex flex-col items-center justify-center transform hover:scale-105 transition-transform duration-300">
                                 <span className="text-[10px] uppercase font-black tracking-[0.2em] mb-1 opacity-90">Contrato Realizado</span>
                                 <div className="flex items-center gap-2 font-black text-xs">
                                     <span>{formatDate(replacement.FECHA_PARCIAL_INICIO)}</span>
@@ -193,6 +194,23 @@ export function ReplacementCard({ replacement, onView, onEdit, onDelete, onCopy,
                             </TooltipTrigger>
                             <TooltipContent side="top" className="max-w-xs bg-primary text-white border-none shadow-lg">
                                 <p className="text-xs font-medium p-1">{replacement.OBSERVACION}</p>
+                            </TooltipContent>
+                        </Tooltip>
+                    )}
+
+                    {replacement.ES_PARCIAL && (
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <div className="relative cursor-help group/parcial">
+                                    <CalendarClock className="h-5 w-5 text-orange-600 transition-transform group-hover/parcial:scale-110" />
+                                    <span className="absolute -top-1 -right-1 block h-2 w-2 rounded-full bg-orange-500 ring-2 ring-background animate-pulse"></span>
+                                </div>
+                            </TooltipTrigger>
+                            <TooltipContent side="top" className="max-w-xs bg-orange-600 text-white border-none shadow-lg">
+                                <div className="p-1">
+                                    <p className="text-[10px] uppercase font-bold opacity-80 mb-1">Periodo Parcial</p>
+                                    <p className="text-xs font-bold">{formatDate(replacement.FECHA_PARCIAL_INICIO)} al {formatDate(replacement.FECHA_PARCIAL_FIN)}</p>
+                                </div>
                             </TooltipContent>
                         </Tooltip>
                     )}
