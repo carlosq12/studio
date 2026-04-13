@@ -138,13 +138,6 @@ export function ReplacementCard({ replacement, onView, onEdit, onDelete, onCopy,
         <div className="flex flex-col h-full">
             <CardHeader className="p-4 pb-2">
               <div className="flex flex-col gap-1 pr-8">
-                  {replacement.ES_PARCIAL && (
-                    <div className="mb-2">
-                        <Badge variant="destructive" className="bg-red-600 hover:bg-red-700 text-white text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-sm shadow-sm ring-2 ring-red-100 ring-offset-1">
-                            PARCIAL
-                        </Badge>
-                    </div>
-                  )}
                   <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
                       <User className="h-3 w-3" />
                       <span className="truncate">{replacement['NOMBRE REEMPLAZADO']}</span>
@@ -162,14 +155,21 @@ export function ReplacementCard({ replacement, onView, onEdit, onDelete, onCopy,
             <CardContent className="p-4 pt-0 text-xs flex-1">
                 <div className="flex items-center gap-2 mb-3 text-muted-foreground">
                     <CalendarDays className="h-3.5 w-3.5" />
-                    <div className="flex flex-col">
-                        <span>{formatDate(replacement.DESDE)} - {formatDate(replacement.HASTA)}</span>
-                        {replacement.ES_PARCIAL && replacement.FECHA_PARCIAL && (
-                            <span className="text-[10px] font-bold text-red-600 mt-1">
-                                Fecha Parcial: {formatDate(replacement.FECHA_PARCIAL)}
-                            </span>
-                        )}
-                    </div>
+                <div className="flex flex-col">
+                    <span>{formatDate(replacement.DESDE)} - {formatDate(replacement.HASTA)}</span>
+                    {replacement.ES_PARCIAL && replacement.FECHA_PARCIAL_INICIO && replacement.FECHA_PARCIAL_FIN && (
+                        <div className="mt-4 -mx-4">
+                            <div className="bg-gradient-to-r from-rose-500 to-pink-600 text-white p-3 shadow-lg flex flex-col items-center justify-center transform hover:scale-105 transition-transform duration-300">
+                                <span className="text-[10px] uppercase font-black tracking-[0.2em] mb-1 opacity-90">Contrato Realizado</span>
+                                <div className="flex items-center gap-2 font-black text-xs">
+                                    <span>{formatDate(replacement.FECHA_PARCIAL_INICIO)}</span>
+                                    <ArrowRight className="h-3 w-3" />
+                                    <span>{formatDate(replacement.FECHA_PARCIAL_FIN)}</span>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
                 </div>
                 
                 <div className="flex items-center gap-3">

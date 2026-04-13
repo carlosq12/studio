@@ -72,7 +72,8 @@ const replacementSchema = z.object({
   'NUMERO RES': z.string().optional(),
   archivadorId: z.string().optional(),
   ES_PARCIAL: z.boolean().optional(),
-  FECHA_PARCIAL: z.date().optional().nullable(),
+  FECHA_PARCIAL_INICIO: z.date().optional().nullable(),
+  FECHA_PARCIAL_FIN: z.date().optional().nullable(),
 });
 
 type ReplacementFormValues = z.infer<typeof replacementSchema>;
@@ -170,7 +171,8 @@ export function EditReplacementDialog({
         'NUMERO RES': replacement['NUMERO RES'] || '',
         archivadorId: replacement.archivadorId || '',
         ES_PARCIAL: !!replacement.ES_PARCIAL,
-        FECHA_PARCIAL: parseDate(replacement.FECHA_PARCIAL),
+        FECHA_PARCIAL_INICIO: parseDate(replacement.FECHA_PARCIAL_INICIO),
+        FECHA_PARCIAL_FIN: parseDate(replacement.FECHA_PARCIAL_FIN),
       });
     }
   }, [replacement, form]);
@@ -213,7 +215,8 @@ export function EditReplacementDialog({
         DESDE: data.DESDE.toISOString(),
         HASTA: data.HASTA.toISOString(),
         'FECHA DEL AVISO': data['FECHA DEL AVISO']?.toISOString() || '',
-        FECHA_PARCIAL: data.FECHA_PARCIAL?.toISOString() || '',
+        FECHA_PARCIAL_INICIO: data.FECHA_PARCIAL_INICIO?.toISOString() || '',
+        FECHA_PARCIAL_FIN: data.FECHA_PARCIAL_FIN?.toISOString() || '',
       };
 
       const result = await updateReplacement(replacementData);
@@ -665,7 +668,10 @@ export function EditReplacementDialog({
                 />
 
                 {form.watch('ES_PARCIAL') && (
-                  <DateField name="FECHA_PARCIAL" label="Fecha Parcial" />
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <DateField name="FECHA_PARCIAL_INICIO" label="Inicio Parcial" />
+                    <DateField name="FECHA_PARCIAL_FIN" label="Fin Parcial" />
+                  </div>
                 )}
               </div>
             </ScrollArea>

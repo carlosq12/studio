@@ -135,6 +135,8 @@ export type Replacement = {
     status?: string;
     ES_PARCIAL?: boolean;
     FECHA_PARCIAL?: any;
+    FECHA_PARCIAL_INICIO?: any;
+    FECHA_PARCIAL_FIN?: any;
 }
 
 export type MonthlyTemplate = {

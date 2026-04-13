@@ -82,7 +82,8 @@ const replacementSchema = z.object({
   archivadorId: z.string().optional(),
   esMensual: z.boolean(),
   ES_PARCIAL: z.boolean().optional(),
-  FECHA_PARCIAL: z.date().optional().nullable(),
+  FECHA_PARCIAL_INICIO: z.date().optional().nullable(),
+  FECHA_PARCIAL_FIN: z.date().optional().nullable(),
 });
 
 type ReplacementFormValues = z.infer<typeof replacementSchema>;
@@ -162,7 +163,8 @@ export function AddReplacementDialog({
       'FECHA DEL AVISO': null,
       esMensual: false,
       ES_PARCIAL: false,
-      FECHA_PARCIAL: null,
+      FECHA_PARCIAL_INICIO: null,
+      FECHA_PARCIAL_FIN: null,
     },
   });
 
@@ -178,7 +180,8 @@ export function AddReplacementDialog({
         ESTADO: initialData.ESTADO || 'Pendiente',
         ESTADO_R_NR: initialData.ESTADO_R_NR || 'EN PROCESO',
         ES_PARCIAL: !!initialData.ES_PARCIAL,
-        FECHA_PARCIAL: parseDate(initialData.FECHA_PARCIAL),
+        FECHA_PARCIAL_INICIO: parseDate(initialData.FECHA_PARCIAL_INICIO),
+        FECHA_PARCIAL_FIN: parseDate(initialData.FECHA_PARCIAL_FIN),
       });
     } else if (!open) {
       form.reset({
@@ -201,7 +204,8 @@ export function AddReplacementDialog({
         'FECHA DEL AVISO': null,
         esMensual: false,
         ES_PARCIAL: false,
-        FECHA_PARCIAL: null,
+        FECHA_PARCIAL_INICIO: null,
+        FECHA_PARCIAL_FIN: null,
       });
     }
   }, [initialData, open, form]);
@@ -461,38 +465,72 @@ export function AddReplacementDialog({
                 />
 
                 {form.watch('ES_PARCIAL') && (
-                  <FormField
-                    control={form.control}
-                    name="FECHA_PARCIAL"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-col">
-                        <FormLabel>Fecha Parcial</FormLabel>
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <FormControl>
-                              <Button variant="outline" className={cn("w-full pl-3 text-left font-normal", !field.value && "text-muted-foreground")}>
-                                {field.value ? format(field.value, "PPP", { locale: es }) : <span>Seleccionar fecha</span>}
-                                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                              </Button>
-                            </FormControl>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-auto p-0" align="start">
-                            <Calendar 
-                              mode="single" 
-                              selected={field.value ?? undefined} 
-                              onSelect={field.onChange} 
-                              initialFocus 
-                              locale={es}
-                              captionLayout="dropdown-buttons"
-                              fromYear={new Date().getFullYear() - 5}
-                              toYear={new Date().getFullYear() + 5}
-                            />
-                          </PopoverContent>
-                        </Popover>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="FECHA_PARCIAL_INICIO"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-col">
+                          <FormLabel>Inicio Parcial</FormLabel>
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <FormControl>
+                                <Button variant="outline" className={cn("w-full pl-3 text-left font-normal", !field.value && "text-muted-foreground")}>
+                                  {field.value ? format(field.value, "PPP", { locale: es }) : <span>Seleccionar inicio</span>}
+                                  <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                </Button>
+                              </FormControl>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0" align="start">
+                              <Calendar 
+                                mode="single" 
+                                selected={field.value ?? undefined} 
+                                onSelect={field.onChange} 
+                                initialFocus 
+                                locale={es}
+                                captionLayout="dropdown-buttons"
+                                fromYear={new Date().getFullYear() - 5}
+                                toYear={new Date().getFullYear() + 5}
+                              />
+                            </PopoverContent>
+                          </Popover>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="FECHA_PARCIAL_FIN"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-col">
+                          <FormLabel>Fin Parcial</FormLabel>
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <FormControl>
+                                <Button variant="outline" className={cn("w-full pl-3 text-left font-normal", !field.value && "text-muted-foreground")}>
+                                  {field.value ? format(field.value, "PPP", { locale: es }) : <span>Seleccionar fin</span>}
+                                  <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                </Button>
+                              </FormControl>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0" align="start">
+                              <Calendar 
+                                mode="single" 
+                                selected={field.value ?? undefined} 
+                                onSelect={field.onChange} 
+                                initialFocus 
+                                locale={es}
+                                captionLayout="dropdown-buttons"
+                                fromYear={new Date().getFullYear() - 5}
+                                toYear={new Date().getFullYear() + 5}
+                              />
+                            </PopoverContent>
+                          </Popover>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
                 )}
               </div>
               

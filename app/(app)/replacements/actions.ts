@@ -38,7 +38,7 @@ const replacementSchema = z.object({
 
 const convertToFirestoreData = (data: any) => {
     const firestoreData = { ...data };
-    const dateFields = ['DESDE', 'HASTA', 'FECHA DE INGRESO DOC', 'FECHA DEL AVISO'];
+    const dateFields = ['DESDE', 'HASTA', 'FECHA DE INGRESO DOC', 'FECHA DEL AVISO', 'FECHA_PARCIAL', 'FECHA_PARCIAL_INICIO', 'FECHA_PARCIAL_FIN'];
     
     dateFields.forEach(field => {
         if (firestoreData[field]) {
