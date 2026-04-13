@@ -159,10 +159,10 @@ export function ReplacementCard({ replacement, onView, onEdit, onDelete, onCopy,
                 <div className="flex flex-col">
                     <span>{formatDate(replacement.DESDE)} - {formatDate(replacement.HASTA)}</span>
                     {replacement.ES_PARCIAL && replacement.FECHA_PARCIAL_INICIO && replacement.FECHA_PARCIAL_FIN && (
-                        <div className="mt-4 -mx-4">
-                            <div className="bg-gradient-to-r from-orange-500 to-amber-600 text-white p-3 shadow-lg flex flex-col items-center justify-center transform hover:scale-105 transition-transform duration-300">
-                                <span className="text-[10px] uppercase font-black tracking-[0.2em] mb-1 opacity-90">Contrato Realizado</span>
-                                <div className="flex items-center gap-2 font-black text-xs">
+                        <div className="mt-3">
+                            <div className="bg-gradient-to-r from-orange-500 to-amber-600 text-white p-2 rounded-md shadow-md flex flex-col items-center justify-center border border-white/20">
+                                <span className="text-[9px] uppercase font-black tracking-widest mb-0.5 opacity-90">Contrato Realizado</span>
+                                <div className="flex items-center gap-2 font-black text-[11px]">
                                     <span>{formatDate(replacement.FECHA_PARCIAL_INICIO)}</span>
                                     <ArrowRight className="h-3 w-3" />
                                     <span>{formatDate(replacement.FECHA_PARCIAL_FIN)}</span>
