@@ -34,6 +34,10 @@ const replacementSchema = z.object({
   AÑO: z.string().optional().nullable(),
   'NUMERO RES': z.string().optional().nullable(),
   archivadorId: z.string().optional().nullable(),
+  ES_PARCIAL: z.boolean().optional(),
+  FECHA_PARCIAL: z.any().optional(),
+  FECHA_PARCIAL_INICIO: z.any().optional(),
+  FECHA_PARCIAL_FIN: z.any().optional(),
 });
 
 const convertToFirestoreData = (data: any) => {
