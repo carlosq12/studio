@@ -37,11 +37,11 @@ export function FuncionarioCard({ funcionario, onViewDetails, onEdit, onDelete, 
   const isNotified = !!funcionario.fecha_aviso;
 
   return (
-    <Card className="flex flex-col justify-between animate-in fade-in-50 group relative hover:shadow-lg transition-all duration-300 border-none shadow-md">
+    <TooltipProvider delayDuration={200}>
+      <Card className="flex flex-col justify-between animate-in fade-in-50 group relative hover:shadow-lg transition-all duration-300 border-none shadow-md h-full">
       <CardContent className="p-4 flex flex-col items-center text-center pt-8">
         
         <div className="absolute top-3 right-3">
-            <TooltipProvider>
                 <Tooltip>
                     <TooltipTrigger asChild>
                         <div className={cn(
@@ -65,7 +65,6 @@ export function FuncionarioCard({ funcionario, onViewDetails, onEdit, onDelete, 
                         </p>
                     </TooltipContent>
                 </Tooltip>
-            </TooltipProvider>
         </div>
 
         <Avatar className="w-24 h-24 mb-4 border-4 border-primary/10 group-hover:border-primary/30 transition-all">
@@ -77,7 +76,6 @@ export function FuncionarioCard({ funcionario, onViewDetails, onEdit, onDelete, 
         <Badge variant="secondary" className="font-mono text-[10px] px-3">{funcionario.RUT}</Badge>
       </CardContent>
       <CardHeader className="p-3 border-t bg-primary flex-row items-center justify-center gap-2 rounded-b-lg">
-        <TooltipProvider>
             <Tooltip>
                 <TooltipTrigger asChild>
                     <Button variant="ghost" size="icon" className="h-9 w-9 text-white hover:bg-white/20" onClick={onViewDetails}>
@@ -118,8 +116,8 @@ export function FuncionarioCard({ funcionario, onViewDetails, onEdit, onDelete, 
                 </TooltipTrigger>
                 <TooltipContent><p className="text-foreground">Eliminar</p></TooltipContent>
             </Tooltip>
-        </TooltipProvider>
       </CardHeader>
     </Card>
+    </TooltipProvider>
   );
 }
