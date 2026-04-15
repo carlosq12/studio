@@ -58,11 +58,11 @@ export function FuncionarioCard({ funcionario, onViewDetails, onEdit, onDelete, 
                         </div>
                     </TooltipTrigger>
                     <TooltipContent side="left">
-                        <p className="font-semibold text-xs text-foreground">
+                        <div className="font-semibold text-xs text-popover-foreground">
                             {isNotified 
                                 ? `Información enviada el ${formatFullDate(funcionario.fecha_aviso)}` 
                                 : "Información aún no enviada"}
-                        </p>
+                        </div>
                     </TooltipContent>
                 </Tooltip>
         </div>
@@ -82,7 +82,7 @@ export function FuncionarioCard({ funcionario, onViewDetails, onEdit, onDelete, 
                         <Eye className="h-5 w-5" />
                     </Button>
                 </TooltipTrigger>
-                <TooltipContent><p className="text-foreground">Ver Detalles</p></TooltipContent>
+                <TooltipContent>Ver Detalles</TooltipContent>
             </Tooltip>
             <Tooltip>
                 <TooltipTrigger asChild>
@@ -90,7 +90,7 @@ export function FuncionarioCard({ funcionario, onViewDetails, onEdit, onDelete, 
                         <Edit className="h-5 w-5" />
                     </Button>
                 </TooltipTrigger>
-                <TooltipContent><p className="text-foreground">Editar</p></TooltipContent>
+                <TooltipContent>Editar</TooltipContent>
             </Tooltip>
              <Tooltip>
                 <TooltipTrigger asChild>
@@ -98,7 +98,7 @@ export function FuncionarioCard({ funcionario, onViewDetails, onEdit, onDelete, 
                         <Cake className="h-5 w-5" />
                     </Button>
                 </TooltipTrigger>
-                <TooltipContent><p className="text-foreground">Añadir a Cumpleaños</p></TooltipContent>
+                <TooltipContent>Añadir a Cumpleaños</TooltipContent>
             </Tooltip>
              <Tooltip>
                 <TooltipTrigger asChild>
@@ -106,7 +106,7 @@ export function FuncionarioCard({ funcionario, onViewDetails, onEdit, onDelete, 
                         <Mail className="h-5 w-5" />
                     </Button>
                 </TooltipTrigger>
-                <TooltipContent><p className="text-foreground">Enviar Información</p></TooltipContent>
+                <TooltipContent>Enviar Información</TooltipContent>
             </Tooltip>
             <Tooltip>
                 <TooltipTrigger asChild>
@@ -114,7 +114,7 @@ export function FuncionarioCard({ funcionario, onViewDetails, onEdit, onDelete, 
                         <Trash2 className="h-5 w-5" />
                     </Button>
                 </TooltipTrigger>
-                <TooltipContent><p className="text-foreground">Eliminar</p></TooltipContent>
+                <TooltipContent>Eliminar</TooltipContent>
             </Tooltip>
       </CardHeader>
     </Card>
