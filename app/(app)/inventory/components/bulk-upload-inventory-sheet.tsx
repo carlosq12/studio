@@ -230,7 +230,7 @@ export function BulkUploadInventorySheet() {
         <SheetHeader>
           <SheetTitle>Carga Masiva de Inventario</SheetTitle>
            <SheetDescription>
-            Sube un archivo Excel. El sistema leerá los encabezados de la primera fila. La columna "nombre" es obligatoria.
+            Sube un archivo Excel. El sistema leerá los encabezados de la primera fila. La columna &quot;nombre&quot; es obligatoria..
              <br/> <strong className="font-bold text-foreground mt-2 block">Nombres de columnas esperados:</strong> nombre, descripcion, cantidad, stock, ubicacion, fecha de ingreso.
           </SheetDescription>
         </SheetHeader>

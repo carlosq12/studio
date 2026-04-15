@@ -273,7 +273,7 @@ export function BulkUploadFuncionariosSheet() {
         <SheetHeader>
           <SheetTitle>Carga Masiva de Funcionarios</SheetTitle>
            <SheetDescription>
-            Sube un archivo Excel. El sistema leerá los encabezados de la primera fila. Asegúrate de que los nombres de las columnas coincidan con los de la base de datos (ej. 'FECHA DE INGRESO', 'APELLIDO P', etc.).
+            Sube un archivo Excel. El sistema leerá los encabezados de la primera fila. Asegúrate de que los nombres de las columnas coincidan con los de la base de datos (ej. &apos;FECHA DE INGRESO&apos;, &apos;APELLIDO P&apos;, etc.)..
             <br/> <strong className="font-bold text-foreground mt-2 block">Nombres de columnas esperados:</strong> FECHA_DE_INGRESO, RUT, NOMBRES, APELLIDO P, APELLIDO M, TELEFONO, FECHA_DE_NACIMIENTO, LUGAR_NACIMIENTO, DIRECCION, CORREO, AFP, SALUD, BANCO, TIPO_DE_CUENTA, N_CUENTA, NOMBRE_ISAPRE, ESTADO, N_RELOJ_CONTROL, CARGO.
           </SheetDescription>
         </SheetHeader>

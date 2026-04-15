@@ -29,7 +29,7 @@ const parseDate = (date: any): Date | null => {
 };
 
 export function BirthdayDashboard({ birthdays, onViewList, onSendEmail }: BirthdayDashboardProps) {
-  const now = new Date();
+  const now = useMemo(() => new Date(), []);
   const currentMonth = now.getMonth();
 
   const stats = useMemo(() => {
