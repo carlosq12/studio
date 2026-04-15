@@ -122,3 +122,4 @@ export function FuncionarioCard({ funcionario, onViewDetails, onEdit, onDelete, 
     </TooltipProvider>
   );
 }
+// Clean Sync
