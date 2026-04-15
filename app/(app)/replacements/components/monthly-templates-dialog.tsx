@@ -161,7 +161,7 @@ export function MonthlyTemplatesDialog() {
               <div className="flex flex-col items-center justify-center py-12 text-center text-muted-foreground">
                 <AlertCircle className="h-12 w-12 mb-2 opacity-20" />
                 <p>No tienes plantillas mensuales configuradas.</p>
-                <p className="text-xs">Usa el botón "Convertir a Mensual" en cualquier solicitud para agregarla aquí.</p>
+                <p className="text-xs">Usa el botón &quot;Convertir a Mensual&quot; en cualquier solicitud para agregarla aquí.</p>
               </div>
             )}
           </ScrollArea>

@@ -49,7 +49,7 @@ const parseDate = (date: any): Date | null => {
 };
 
 export function ReplacementsDashboard({ replacements, loading }: ReplacementsDashboardProps) {
-  const now = new Date();
+  const now = useMemo(() => new Date(), []);
   const today = startOfDay(now);
 
   const stats = useMemo(() => {

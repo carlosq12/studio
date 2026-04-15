@@ -149,7 +149,7 @@ export function GanttTaskDetailsDialog({ task, open, onOpenChange, onEditTask }:
               <AlertDialogHeader>
                   <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
                   <AlertDialogDescription>
-                      Esta acción no se puede deshacer. Esto eliminará permanentemente la tarea "{task['nombre tarea']}".
+                      Esta acción no se puede deshacer. Esto eliminará permanentemente la tarea &quot;{task['nombre tarea']}&quot;.
                   </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>

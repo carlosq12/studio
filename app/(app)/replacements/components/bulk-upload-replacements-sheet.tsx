@@ -257,7 +257,7 @@ export function BulkUploadReplacementsSheet() {
         <SheetHeader>
           <SheetTitle>Carga Masiva de Reemplazos</SheetTitle>
            <SheetDescription>
-            Sube un archivo Excel. El sistema leerá los encabezados de la primera fila. Asegúrate de que los nombres de las columnas coincidan con los de la base de datos (ej. 'NOMBRE REEMPLAZADO', 'JEFE SERVICIO', etc.).
+            Sube un archivo Excel. El sistema leerá los encabezados de la primera fila. Asegúrate de que los nombres de las columnas coincidan con los de la base de datos (ej. &apos;NOMBRE REEMPLAZADO&apos;, &apos;JEFE SERVICIO&apos;, etc.).
           </SheetDescription>
         </SheetHeader>
         <div className="py-6 space-y-6">

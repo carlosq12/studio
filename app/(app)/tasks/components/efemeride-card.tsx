@@ -327,7 +327,7 @@ export function EfemerideCard({ efemeride, funcionarios, logs, onEdit, onDelete 
           <DialogContent className="sm:max-w-md">
               <DialogHeader>
                   <DialogTitle>Participantes a Notificar</DialogTitle>
-                  <DialogDescription>Correos vinculados a "{efemeride.nombre}".</DialogDescription>
+                  <DialogDescription>Correos vinculados a &quot;{efemeride.nombre}&quot;.</DialogDescription>
               </DialogHeader>
               <ScrollArea className="max-h-80 mt-4 border rounded-md p-4 bg-slate-50/50">
                   <div className="space-y-4">
