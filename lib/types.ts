@@ -240,6 +240,7 @@ export type MarcaVale = {
   mes: string; // YYYY-MM
   diasTrabajados: number;
   diasAusencia: number;
+  viaticos?: number;
   montoAsignado?: number;
   observaciones?: string;
   fechaCarga?: any;

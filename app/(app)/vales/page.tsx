@@ -10,6 +10,7 @@ import { firebaseConfig } from '@/firebase/config';
 import type { FuncionarioVale, MarcaVale, HistorialCargaVales } from '@/lib/types';
 import { ValesFuncionariosTable } from './components/vales-funcionarios-table';
 import { BulkUploadMarcasSheet } from './components/bulk-upload-marcas-sheet';
+import { BulkUploadViaticosSheet } from "./components/bulk-upload-viaticos-sheet";
 import { MarcasTable } from './components/marcas-table';
 import { PageHeader } from "@/components/page-header";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -153,7 +154,11 @@ export default function ValesPage() {
             <PageHeader 
                 title="Vales de Alimentación" 
                 description="Calcula jornadas válidas, cruza datos de viáticos y gestiona los registros de marcas." 
-            />
+            >
+                <div className="flex items-center gap-2">
+                    <BulkUploadViaticosSheet />
+                </div>
+            </PageHeader>
 
             <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-6 space-y-4">
                 <TabsList className="grid w-full grid-cols-1 md:grid-cols-2 max-w-[600px]">

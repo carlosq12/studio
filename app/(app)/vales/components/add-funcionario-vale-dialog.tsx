@@ -23,6 +23,24 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useCollection, useFirestore, useMemoFirebase } from '@/firebase/provider';
+import { collection, query } from 'firebase/firestore';
+import type { IngresoFuncionario } from '@/lib/types';
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Check, ChevronsUpDown, Search } from "lucide-react";
+import { cn } from "@/lib/utils";
 import type { FuncionarioVale } from '@/lib/types';
 import { addFuncionarioVale, updateFuncionarioVale } from '../actions';
 
@@ -48,6 +66,27 @@ interface AddFuncionarioValeDialogProps {
 export function AddFuncionarioValeDialog({ open, onOpenChange, funcionario }: AddFuncionarioValeDialogProps) {
     const { toast } = useToast();
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [openCombobox, setOpenCombobox] = useState(false);
+
+    const firestore = useFirestore();
+    const funcionariosQuery = useMemoFirebase(() => {
+        if (!firestore) return null;
+        return query(collection(firestore, 'INGRESO_FUNCIONARIOS'));
+    }, [firestore]);
+    const { data: dbFuncionarios, loading } = useCollection<IngresoFuncionario>(funcionariosQuery);
+
+    const handleSelectFuncionario = (func: IngresoFuncionario) => {
+        form.setValue('RUT', func.RUT || '');
+        form.setValue('nombres', func.NOMBRES || '');
+        form.setValue('apellidos', `${func['APELLIDO P'] || ''} ${func['APELLIDO M'] || ''}`.trim());
+        form.setValue('departamento', func.CARGO || ''); 
+        form.setValue('acNo', String(func.N_RELOJ_CONTROL || ''));
+        setOpenCombobox(false);
+        toast({
+            title: "Datos autocompletados",
+            description: "Verifica los datos e indica la jornada.",
+        });
+    };
 
     const form = useForm<FormValues>({
         resolver: zodResolver(funcionarioSchema),
@@ -126,6 +165,52 @@ export function AddFuncionarioValeDialog({ open, onOpenChange, funcionario }: Ad
                         {funcionario ? 'Modifica los datos del funcionario para la entrega de vales.' : 'Registra un nuevo funcionario vinculado al programa de vales.'}
                     </DialogDescription>
                 </DialogHeader>
+                {!funcionario && (
+                    <div className="flex flex-col space-y-2 pb-2 border-b">
+                        <label className="text-sm font-medium">Autocompletar desde Base de Personal (Opcional)</label>
+                        <Popover open={openCombobox} onOpenChange={setOpenCombobox}>
+                            <PopoverTrigger asChild>
+                                <Button
+                                    variant="outline"
+                                    role="combobox"
+                                    aria-expanded={openCombobox}
+                                    className="justify-between"
+                                >
+                                    <span className="flex items-center text-muted-foreground">
+                                        <Search className="mr-2 h-4 w-4" />
+                                        Buscar por nombre o RUT...
+                                    </span>
+                                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-[450px] p-0" align="start">
+                                <Command>
+                                    <CommandInput placeholder="Buscar funcionario..." />
+                                    <CommandList>
+                                        <CommandEmpty>{loading ? 'Cargando...' : 'No se encontró ningún funcionario.'}</CommandEmpty>
+                                        <CommandGroup>
+                                            {dbFuncionarios?.map((func) => (
+                                                <CommandItem
+                                                    key={func.id}
+                                                    value={`${func.RUT} ${func.NOMBRES} ${func['APELLIDO P']} ${func.N_RELOJ_CONTROL}`}
+                                                    onSelect={() => handleSelectFuncionario(func)}
+                                                >
+                                                    <Check
+                                                        className={cn(
+                                                            "mr-2 h-4 w-4",
+                                                            "opacity-0"
+                                                        )}
+                                                    />
+                                                    {func.RUT} - {func.NOMBRES} {func['APELLIDO P']}
+                                                </CommandItem>
+                                            ))}
+                                        </CommandGroup>
+                                    </CommandList>
+                                </Command>
+                            </PopoverContent>
+                        </Popover>
+                    </div>
+                )}
                 <Form {...form}>
                     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                         <FormField
@@ -189,9 +274,15 @@ export function AddFuncionarioValeDialog({ open, onOpenChange, funcionario }: Ad
                                 render={({ field }) => (
                                     <FormItem>
                                         <FormLabel>Jornada / Turno</FormLabel>
-                                        <FormControl>
-                                            <Input placeholder="Ej: T4" {...field} />
-                                        </FormControl>
+                                        <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
+                                            <FormControl>
+                                                <SelectTrigger><SelectValue placeholder="Seleccione..." /></SelectTrigger>
+                                            </FormControl>
+                                            <SelectContent>
+                                                <SelectItem value="Normal">Normal</SelectItem>
+                                                <SelectItem value="Turno">Turno</SelectItem>
+                                            </SelectContent>
+                                        </Select>
                                         <FormMessage />
                                     </FormItem>
                                 )}

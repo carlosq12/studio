@@ -19,6 +19,8 @@ const funcionarioValeSchema = z.object({
   estado: z.string().optional().nullable(),
   departamento: z.string().optional().nullable(),
   cargo: z.string().optional().nullable(),
+  acNo: z.string().optional().nullable(),
+  jornada: z.string().optional().nullable(),
   fechaIngreso: z.any().optional(),
 });
 
@@ -314,5 +316,135 @@ export async function updateMarcaValeCount(marcaId: string, newCount: number, va
     } catch (error: any) {
         console.error('Error al actualizar conteo de vales:', error);
         return { error: error.message || 'No se pudo actualizar el registro.' };
+    }
+}
+
+export async function previewViaticosMasivos(viaticosList: any[], mesStr: string) {
+    try {
+        const viaticosMap = new Map<string, number>();
+        
+        for (const item of viaticosList) {
+            const rutRaw = String(item['RUT'] || item['Rut'] || item['rut'] || '').trim();
+            if (!rutRaw) continue;
+            
+            const rutNorm = rutRaw.replace(/[^0-9Kk]/g, '').toUpperCase();
+            if (!rutNorm) continue;
+            
+            const aDescontarVal = item['A descontar'] !== undefined ? Number(item['A descontar']) : 
+                                  (item['TOTAL DIAS'] !== undefined ? Number(item['TOTAL DIAS']) : 1);
+            
+            if (!isNaN(aDescontarVal) && aDescontarVal > 0) {
+                viaticosMap.set(rutNorm, (viaticosMap.get(rutNorm) || 0) + aDescontarVal);
+            }
+        }
+        
+        if (viaticosMap.size === 0) {
+           return { error: "No se encontraron RUTs válidos ni días a descontar en el archivo." };
+        }
+
+        const q = query(collection(db, 'marcas_vales'), where('mes', '==', mesStr));
+        const snapshot = await getDocs(q);
+        
+        const previewResults: any[] = [];
+        let rutsMatched = 0;
+
+        snapshot.forEach((docSnap) => {
+            const data = docSnap.data() as MarcaVale;
+            if (!data.RUT) return;
+            const rutNorm = String(data.RUT).replace(/[^0-9Kk]/g, '').toUpperCase();
+            
+            if (viaticosMap.has(rutNorm)) {
+                rutsMatched++;
+                const viaticosToDiscount = viaticosMap.get(rutNorm) || 0;
+                
+                let oldVales = data.diasTrabajados || 0;
+                let oldViaticos = data.viaticos || 0;
+                
+                // Real earned without discount
+                const realEarnedVales = oldVales + oldViaticos;
+                const newVales = Math.max(0, realEarnedVales - viaticosToDiscount);
+                
+                previewResults.push({
+                    marcaId: docSnap.id,
+                    rut: data.RUT,
+                    nombres: `${data.nombres} ${data.apellidos || ''}`.trim(),
+                    valesOriginales: realEarnedVales,
+                    viaticosDetectados: viaticosToDiscount,
+                    valesFinales: newVales,
+                    historialId: data.historialId || null
+                });
+            }
+        });
+        
+        if (previewResults.length === 0) {
+             return { error: "Se procesó el archivo, pero ninguno de los RUTs coindice con los vales registrados para este mes." };
+        }
+
+        return { success: true, previews: previewResults };
+
+    } catch (error: any) {
+        console.error("Error al previsualizar viáticos:", error);
+        return { error: 'Error al procesar viáticos: ' + error.message };
+    }
+}
+
+export async function applySelectedViaticosMasivos(selectedDiscounts: any[], valorVale: number = 4000) {
+    if (!selectedDiscounts || selectedDiscounts.length === 0) {
+         return { error: 'No seleccionaste ningún descuento para aplicar.' };
+    }
+    try {
+        const batch = writeBatch(db);
+        let updatedCount = 0;
+        let totalMontoDiff = 0;
+        const historialesInvolucrados = new Set<string>();
+
+        // Enviar todas las lecturas previas necesarias
+        for (const discount of selectedDiscounts) {
+             const marcaRef = doc(db, 'marcas_vales', discount.marcaId);
+             const marcaSnap = await getDoc(marcaRef);
+             
+             if (marcaSnap.exists()) {
+                 const data = marcaSnap.data() as MarcaVale;
+                 
+                 const newVales = discount.valesFinales;
+                 const newViaticos = discount.viaticosDetectados;
+                 
+                 const oldMonto = data.montoAsignado || 0;
+                 const newMonto = newVales * valorVale;
+                 const diff = newMonto - oldMonto;
+                 
+                 batch.update(marcaRef, {
+                      diasTrabajados: newVales,
+                      viaticos: newViaticos,
+                      montoAsignado: newMonto,
+                      observaciones: `Se descontaron ${newViaticos} viáticos. (Revisado Manualmente)`
+                 });
+                 
+                 totalMontoDiff += diff;
+                 updatedCount++;
+                 
+                 if (data.historialId) {
+                     historialesInvolucrados.add(data.historialId);
+                 }
+             }
+        }
+        
+        if (updatedCount > 0) {
+            for (const hId of Array.from(historialesInvolucrados)) {
+                  const hRef = doc(db, 'historial_cargas_vales', hId);
+                  const hSnap = await getDoc(hRef);
+                  if (hSnap.exists()) {
+                      const hData = hSnap.data();
+                      batch.update(hRef, {
+                          montoTotal: Math.max(0, (hData.montoTotal || 0) + totalMontoDiff)
+                      });
+                  }
+            }
+            await batch.commit();
+        }
+        return { success: true, count: updatedCount };
+    } catch (error: any) {
+        console.error("Error al aplicar viáticos seleccionados:", error);
+        return { error: 'Error al guardar los descuentos: ' + error.message };
     }
 }

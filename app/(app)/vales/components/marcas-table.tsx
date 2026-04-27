@@ -143,6 +143,7 @@ export function MarcasTable({ marcas, isLoading, onDeleteMarca }: MarcasTablePro
                 <TableHead>RUT</TableHead>
                 <TableHead className="text-right">Días Trab.</TableHead>
                 <TableHead className="text-right">Ausencias</TableHead>
+                <TableHead className="text-right">Viáticos</TableHead>
                 <TableHead className="text-right">Monto Asignado</TableHead>
                 <TableHead>Fecha Carga</TableHead>
                 <TableHead className="w-[50px]"></TableHead>
@@ -159,12 +160,13 @@ export function MarcasTable({ marcas, isLoading, onDeleteMarca }: MarcasTablePro
                     <TableCell><Skeleton className="h-4 w-full" /></TableCell>
                     <TableCell><Skeleton className="h-4 w-full" /></TableCell>
                     <TableCell><Skeleton className="h-4 w-full" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-full" /></TableCell>
                     <TableCell></TableCell>
                   </TableRow>
                 ))
               ) : filteredMarcas.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={8} className="h-24 text-center">
+                  <TableCell colSpan={9} className="h-24 text-center">
                     No se han registrado marcas de vales aún.
                   </TableCell>
                 </TableRow>
@@ -177,6 +179,9 @@ export function MarcasTable({ marcas, isLoading, onDeleteMarca }: MarcasTablePro
                      <TableCell className="text-right">{m.diasTrabajados}</TableCell>
                      <TableCell className="text-right text-destructive">
                         {m.diasAusencia > 0 ? m.diasAusencia : '-'}
+                     </TableCell>
+                     <TableCell className="text-right text-orange-600 font-medium font-mono">
+                        {(m.viaticos ?? 0) > 0 ? `-${m.viaticos}` : '-'}
                      </TableCell>
                      <TableCell className="text-right font-bold text-green-700">
                         {m.montoAsignado ? `$${m.montoAsignado.toLocaleString('es-CL')}` : '-'}
