@@ -12,10 +12,12 @@ import { ValesFuncionariosTable } from './components/vales-funcionarios-table';
 import { BulkUploadMarcasSheet } from './components/bulk-upload-marcas-sheet';
 import { BulkUploadViaticosSheet } from "./components/bulk-upload-viaticos-sheet";
 import { MarcasTable } from './components/marcas-table';
+import { ViaticosHistoryTable } from './components/viaticos-history-table';
+import { ViaticosDetailsDialog } from './components/viaticos-details-dialog';
 import { PageHeader } from "@/components/page-header";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { Trash, Check, ChevronsUpDown } from 'lucide-react';
+import { Trash, Check, ChevronsUpDown, Eye } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { cn } from "@/lib/utils";
@@ -40,6 +42,7 @@ export default function ValesPage() {
     const [isLoadingHistoriales, setIsLoadingHistoriales] = useState(true);
     const [isDeleting, setIsDeleting] = useState(false);
     const [activeTab, setActiveTab] = useState("marcas");
+    const [isViaticosDetailsOpen, setIsViaticosDetailsOpen] = useState(false);
     const { toast } = useToast();
 
     useEffect(() => {
@@ -161,8 +164,9 @@ export default function ValesPage() {
             </PageHeader>
 
             <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-6 space-y-4">
-                <TabsList className="grid w-full grid-cols-1 md:grid-cols-2 max-w-[600px]">
+                <TabsList className="grid w-full grid-cols-1 md:grid-cols-3 max-w-[800px]">
                     <TabsTrigger value="marcas">Carga de Marcas</TabsTrigger>
+                    <TabsTrigger value="viaticos">Historial Viáticos</TabsTrigger>
                     <TabsTrigger value="funcionarios">DB Funcionarios</TabsTrigger>
                 </TabsList>
 
@@ -210,10 +214,16 @@ export default function ValesPage() {
                                             </SelectContent>
                                         </Select>
                                         {selectedHistorialId && (
-                                            <Button variant="destructive" size="sm" onClick={handleDeleteHistorial} disabled={isDeleting}>
-                                                <Trash className="h-4 w-4 mr-2" />
-                                                {isDeleting ? 'Eliminando...' : 'Eliminar Historial'}
-                                            </Button>
+                                            <>
+                                                <Button variant="outline" size="sm" onClick={() => setIsViaticosDetailsOpen(true)}>
+                                                    <Eye className="h-4 w-4 mr-2" />
+                                                    Ver Viáticos Descontados
+                                                </Button>
+                                                <Button variant="destructive" size="sm" onClick={handleDeleteHistorial} disabled={isDeleting}>
+                                                    <Trash className="h-4 w-4 mr-2" />
+                                                    {isDeleting ? 'Eliminando...' : 'Eliminar Historial'}
+                                                </Button>
+                                            </>
                                         )}
                                     </div>
                                 ) : (
@@ -270,6 +280,20 @@ export default function ValesPage() {
                     </Card>
                 </TabsContent>
 
+                <TabsContent value="viaticos" className="space-y-4 mt-6">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Historial de Carga de Viáticos</CardTitle>
+                            <CardDescription>
+                                Registro de los descuentos de viáticos aplicados masivamente a través del sistema.
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <ViaticosHistoryTable />
+                        </CardContent>
+                    </Card>
+                </TabsContent>
+
                 <TabsContent value="funcionarios" className="space-y-4 mt-6">
                     <Card>
                         <CardHeader>
@@ -284,6 +308,13 @@ export default function ValesPage() {
                     </Card>
                 </TabsContent>
             </Tabs>
+
+            <ViaticosDetailsDialog 
+                open={isViaticosDetailsOpen} 
+                onOpenChange={setIsViaticosDetailsOpen} 
+                historialValesId={selectedHistorialId}
+                title={historiales.find(h => h.id === selectedHistorialId)?.mes || 'Detalle'}
+            />
         </div>
     );
 }

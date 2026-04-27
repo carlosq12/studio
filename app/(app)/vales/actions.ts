@@ -319,9 +319,9 @@ export async function updateMarcaValeCount(marcaId: string, newCount: number, va
     }
 }
 
-export async function previewViaticosMasivos(viaticosList: any[], mesStr: string) {
+export async function previewViaticosMasivos(viaticosList: any[], historialId: string) {
     try {
-        const viaticosMap = new Map<string, number>();
+        const viaticosMap = new Map<string, { count: number, fechas: Set<string>, rawRows: any[] }>();
         
         for (const item of viaticosList) {
             const rutRaw = String(item['RUT'] || item['Rut'] || item['rut'] || '').trim();
@@ -333,8 +333,26 @@ export async function previewViaticosMasivos(viaticosList: any[], mesStr: string
             const aDescontarVal = item['A descontar'] !== undefined ? Number(item['A descontar']) : 
                                   (item['TOTAL DIAS'] !== undefined ? Number(item['TOTAL DIAS']) : 1);
             
+            const rawDate = item['FECHA'] || item['Fecha'] || item['fecha'];
+            let parsedDate = '';
+            if (rawDate) {
+                 if (typeof rawDate === 'number') {
+                     const excelEpoch = new Date(1899, 11, 30);
+                     const dateObj = new Date(excelEpoch.getTime() + rawDate * 86400000);
+                     parsedDate = `${dateObj.getDate().toString().padStart(2, '0')}/${(dateObj.getMonth() + 1).toString().padStart(2, '0')}`;
+                 } else {
+                     parsedDate = String(rawDate).trim();
+                 }
+            }
+            
             if (!isNaN(aDescontarVal) && aDescontarVal > 0) {
-                viaticosMap.set(rutNorm, (viaticosMap.get(rutNorm) || 0) + aDescontarVal);
+                const current = viaticosMap.get(rutNorm) || { count: 0, fechas: new Set<string>(), rawRows: [] };
+                current.count += aDescontarVal;
+                if (parsedDate) {
+                    current.fechas.add(parsedDate);
+                }
+                current.rawRows.push(item);
+                viaticosMap.set(rutNorm, current);
             }
         }
         
@@ -342,7 +360,7 @@ export async function previewViaticosMasivos(viaticosList: any[], mesStr: string
            return { error: "No se encontraron RUTs válidos ni días a descontar en el archivo." };
         }
 
-        const q = query(collection(db, 'marcas_vales'), where('mes', '==', mesStr));
+        const q = query(collection(db, 'marcas_vales'), where('historialId', '==', historialId));
         const snapshot = await getDocs(q);
         
         const previewResults: any[] = [];
@@ -355,7 +373,9 @@ export async function previewViaticosMasivos(viaticosList: any[], mesStr: string
             
             if (viaticosMap.has(rutNorm)) {
                 rutsMatched++;
-                const viaticosToDiscount = viaticosMap.get(rutNorm) || 0;
+                const viaticoData = viaticosMap.get(rutNorm)!;
+                const viaticosToDiscount = viaticoData.count;
+                const fechasStr = Array.from(viaticoData.fechas).join(', ');
                 
                 let oldVales = data.diasTrabajados || 0;
                 let oldViaticos = data.viaticos || 0;
@@ -370,14 +390,16 @@ export async function previewViaticosMasivos(viaticosList: any[], mesStr: string
                     nombres: `${data.nombres} ${data.apellidos || ''}`.trim(),
                     valesOriginales: realEarnedVales,
                     viaticosDetectados: viaticosToDiscount,
+                    fechasViaticos: fechasStr,
                     valesFinales: newVales,
+                    rawRows: viaticoData.rawRows,
                     historialId: data.historialId || null
                 });
             }
         });
         
         if (previewResults.length === 0) {
-             return { error: "Se procesó el archivo, pero ninguno de los RUTs coindice con los vales registrados para este mes." };
+             return { error: "Se procesó el archivo, pero ninguno de los RUTs coincide con los vales registrados para esta carga." };
         }
 
         return { success: true, previews: previewResults };
@@ -388,15 +410,14 @@ export async function previewViaticosMasivos(viaticosList: any[], mesStr: string
     }
 }
 
-export async function applySelectedViaticosMasivos(selectedDiscounts: any[], valorVale: number = 4000) {
+export async function applySelectedViaticosMasivos(selectedDiscounts: any[], valorVale: number = 4000, fileName?: string, selectedHistorialId?: string) {
     if (!selectedDiscounts || selectedDiscounts.length === 0) {
          return { error: 'No seleccionaste ningún descuento para aplicar.' };
     }
     try {
         const batch = writeBatch(db);
         let updatedCount = 0;
-        let totalMontoDiff = 0;
-        const historialesInvolucrados = new Set<string>();
+        const historialDiffs = new Map<string, number>();
 
         // Enviar todas las lecturas previas necesarias
         for (const discount of selectedDiscounts) {
@@ -417,34 +438,63 @@ export async function applySelectedViaticosMasivos(selectedDiscounts: any[], val
                       diasTrabajados: newVales,
                       viaticos: newViaticos,
                       montoAsignado: newMonto,
-                      observaciones: `Se descontaron ${newViaticos} viáticos. (Revisado Manualmente)`
+                      observaciones: `Se descontaron ${newViaticos} viáticos.${discount.fechasViaticos ? ` (Fechas: ${discount.fechasViaticos})` : ''} (Revisado Manualmente)`,
+                      detallesViaticos: discount.rawRows || []
                  });
                  
-                 totalMontoDiff += diff;
                  updatedCount++;
                  
                  if (data.historialId) {
-                     historialesInvolucrados.add(data.historialId);
+                     const currentDiff = historialDiffs.get(data.historialId) || 0;
+                     historialDiffs.set(data.historialId, currentDiff + diff);
                  }
              }
         }
         
         if (updatedCount > 0) {
-            for (const hId of Array.from(historialesInvolucrados)) {
+            for (const [hId, diff] of Array.from(historialDiffs.entries())) {
                   const hRef = doc(db, 'historial_cargas_vales', hId);
                   const hSnap = await getDoc(hRef);
                   if (hSnap.exists()) {
                       const hData = hSnap.data();
                       batch.update(hRef, {
-                          montoTotal: Math.max(0, (hData.montoTotal || 0) + totalMontoDiff)
+                          montoTotal: Math.max(0, (hData.montoTotal || 0) + diff)
                       });
                   }
             }
+            
+            if (selectedHistorialId) {
+                const viaticosHistRef = doc(collection(db, 'historial_cargas_viaticos'));
+                let totalDiff = 0;
+                for (const diff of Array.from(historialDiffs.values())) {
+                    totalDiff += Math.abs(diff); // Use absolute value to represent total discounted
+                }
+                batch.set(viaticosHistRef, {
+                    fechaCarga: Timestamp.now(),
+                    historialValesId: selectedHistorialId,
+                    cantidadRegistros: updatedCount,
+                    montoTotalDescontado: totalDiff,
+                    fileName: fileName || 'Archivo manual'
+                });
+            }
+            
             await batch.commit();
         }
         return { success: true, count: updatedCount };
     } catch (error: any) {
         console.error("Error al aplicar viáticos seleccionados:", error);
         return { error: 'Error al guardar los descuentos: ' + error.message };
+    }
+}
+
+export async function deleteHistorialViaticos(historialViaticosId: string) {
+    try {
+        const batch = writeBatch(db);
+        const ref = doc(db, 'historial_cargas_viaticos', historialViaticosId);
+        batch.delete(ref);
+        await batch.commit();
+        return { success: true };
+    } catch (error: any) {
+        return { error: 'Error al eliminar historial de viáticos: ' + error.message };
     }
 }
