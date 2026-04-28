@@ -171,10 +171,41 @@ export function MarcaDetailsDialog({ selectedDetails, onClose, allowEditing = fa
               </div>
     
               {selectedDetails?.observaciones && (
-                 <div className="bg-orange-50 border border-orange-100 rounded-md p-3 mb-2">
-                     <p className="text-xs text-orange-800">
+                 <div className="bg-orange-50 border border-orange-100 rounded-md p-3 mb-4">
+                     <p className="text-xs text-orange-800 mb-2">
                          <strong>Historial de Descuentos:</strong> {selectedDetails.observaciones}
                      </p>
+                     
+                     {selectedDetails.detallesViaticos && selectedDetails.detallesViaticos.length > 0 && (
+                         <div className="border border-orange-200 rounded-md overflow-hidden bg-white">
+                             <Table>
+                                 <TableHeader className="bg-orange-100/30">
+                                     <TableRow>
+                                         {(selectedDetails.columnasViaticos || Object.keys(selectedDetails.detallesViaticos[0])).map(k => <TableHead key={k} className="text-[10px] h-7 py-0">{k}</TableHead>)}
+                                     </TableRow>
+                                 </TableHeader>
+                                 <TableBody>
+                                     {selectedDetails.detallesViaticos.map((r: any, idx: number) => {
+                                         const keys = selectedDetails.columnasViaticos || Object.keys(selectedDetails.detallesViaticos![0]);
+                                         return (
+                                             <TableRow key={idx} className="border-orange-100">
+                                                 {keys.map((k: string, i: number) => {
+                                                     const v = r[k];
+                                                     let displayValue = v !== undefined && v !== null ? String(v) : '';
+                                                     if (k.toLowerCase().includes('fecha') && typeof v === 'number' && v > 20000 && v < 70000) {
+                                                         const excelEpoch = new Date(1899, 11, 30);
+                                                         const dateObj = new Date(excelEpoch.getTime() + v * 86400000);
+                                                         displayValue = `${dateObj.getDate().toString().padStart(2, '0')}/${(dateObj.getMonth() + 1).toString().padStart(2, '0')}/${dateObj.getFullYear()}`;
+                                                     }
+                                                     return <TableCell key={i} className="text-[10px] py-1">{displayValue}</TableCell>;
+                                                 })}
+                                             </TableRow>
+                                         );
+                                     })}
+                                 </TableBody>
+                             </Table>
+                         </div>
+                     )}
                  </div>
               )}
     
