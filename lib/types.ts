@@ -246,6 +246,7 @@ export type MarcaVale = {
   fechaCarga?: any;
   detalles?: { horario: string; estado: string; esValida?: boolean }[];
   detallesViaticos?: any[];
+  columnasViaticos?: string[];
 };
 
 export type HistorialCargaVales = {

@@ -20,23 +20,27 @@ export function ViaticosRawDetailsDialog({ selectedDetails, onClose }: ViaticosR
                             <Table>
                                 <TableHeader className="bg-muted">
                                     <TableRow>
-                                        {Object.keys(selectedDetails.detallesViaticos[0]).map(k => <TableHead key={k}>{k}</TableHead>)}
+                                        {(selectedDetails.columnasViaticos || Object.keys(selectedDetails.detallesViaticos[0])).map(k => <TableHead key={k}>{k}</TableHead>)}
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
-                                    {selectedDetails.detallesViaticos.map((r: any, idx: number) => (
-                                        <TableRow key={idx}>
-                                            {Object.entries(r).map(([k, v]: [string, any], i: number) => {
-                                                let displayValue = String(v);
-                                                if (k.toLowerCase().includes('fecha') && typeof v === 'number' && v > 20000 && v < 70000) {
-                                                    const excelEpoch = new Date(1899, 11, 30);
-                                                    const dateObj = new Date(excelEpoch.getTime() + v * 86400000);
-                                                    displayValue = `${dateObj.getDate().toString().padStart(2, '0')}/${(dateObj.getMonth() + 1).toString().padStart(2, '0')}/${dateObj.getFullYear()}`;
-                                                }
-                                                return <TableCell key={i}>{displayValue}</TableCell>;
-                                            })}
-                                        </TableRow>
-                                    ))}
+                                    {selectedDetails.detallesViaticos.map((r: any, idx: number) => {
+                                        const keys = selectedDetails.columnasViaticos || Object.keys(selectedDetails.detallesViaticos![0]);
+                                        return (
+                                            <TableRow key={idx}>
+                                                {keys.map((k: string, i: number) => {
+                                                    const v = r[k];
+                                                    let displayValue = v !== undefined && v !== null ? String(v) : '';
+                                                    if (k.toLowerCase().includes('fecha') && typeof v === 'number' && v > 20000 && v < 70000) {
+                                                        const excelEpoch = new Date(1899, 11, 30);
+                                                        const dateObj = new Date(excelEpoch.getTime() + v * 86400000);
+                                                        displayValue = `${dateObj.getDate().toString().padStart(2, '0')}/${(dateObj.getMonth() + 1).toString().padStart(2, '0')}/${dateObj.getFullYear()}`;
+                                                    }
+                                                    return <TableCell key={i}>{displayValue}</TableCell>;
+                                                })}
+                                            </TableRow>
+                                        );
+                                    })}
                                 </TableBody>
                             </Table>
                         </div>

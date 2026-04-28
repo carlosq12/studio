@@ -439,7 +439,8 @@ export async function applySelectedViaticosMasivos(selectedDiscounts: any[], val
                       viaticos: newViaticos,
                       montoAsignado: newMonto,
                       observaciones: `Se descontaron ${newViaticos} viáticos.${discount.fechasViaticos ? ` (Fechas: ${discount.fechasViaticos})` : ''} (Revisado Manualmente)`,
-                      detallesViaticos: discount.rawRows || []
+                      detallesViaticos: discount.rawRows || [],
+                      columnasViaticos: discount.rawRows && discount.rawRows.length > 0 ? Object.keys(discount.rawRows[0]) : []
                  });
                  
                  updatedCount++;
