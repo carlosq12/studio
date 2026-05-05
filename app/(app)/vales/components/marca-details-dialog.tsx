@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import type { MarcaVale } from '@/lib/types';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
+import { Table, TableBody, TableCell, TableRow, TableHeader, TableHead } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { CheckCircle2, Edit3, Save, X, Loader2, Clock } from 'lucide-react';
