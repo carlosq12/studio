@@ -38,6 +38,7 @@ const replacementSchema = z.object({
   FECHA_PARCIAL: z.any().optional(),
   FECHA_PARCIAL_INICIO: z.any().optional(),
   FECHA_PARCIAL_FIN: z.any().optional(),
+  PARCIALES: z.array(z.object({ inicio: z.any().optional(), fin: z.any().optional(), mes: z.string().optional() })).optional(),
 });
 
 const convertToFirestoreData = (data: any) => {
@@ -54,6 +55,22 @@ const convertToFirestoreData = (data: any) => {
             }
         }
     });
+
+    if (firestoreData.PARCIALES && Array.isArray(firestoreData.PARCIALES)) {
+        firestoreData.PARCIALES = firestoreData.PARCIALES.map((p: any) => {
+            const newP = { ...p };
+            if (newP.inicio) {
+                const date = new Date(newP.inicio);
+                if (!isNaN(date.getTime())) newP.inicio = Timestamp.fromDate(date);
+            }
+            if (newP.fin) {
+                const date = new Date(newP.fin);
+                if (!isNaN(date.getTime())) newP.fin = Timestamp.fromDate(date);
+            }
+            return newP;
+        });
+    }
+
     return firestoreData;
 };
 

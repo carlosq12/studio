@@ -68,6 +68,15 @@ export function ReplacementCard({ replacement, onView, onEdit, onDelete, onCopy,
     return archives.find(a => a.id === replacement.archivadorId)?.name;
   }, [archives, replacement.archivadorId]);
 
+  const parcialesToShow = useMemo(() => {
+    if (!replacement.ES_PARCIAL) return [];
+    if (replacement.PARCIALES && replacement.PARCIALES.length > 0) return replacement.PARCIALES;
+    if (replacement.FECHA_PARCIAL_INICIO && replacement.FECHA_PARCIAL_FIN) {
+      return [{ inicio: replacement.FECHA_PARCIAL_INICIO, fin: replacement.FECHA_PARCIAL_FIN }];
+    }
+    return [];
+  }, [replacement]);
+
   const handleStatusUpdate = async () => {
     if (!statusToUpdate) return;
     try {
@@ -158,17 +167,21 @@ export function ReplacementCard({ replacement, onView, onEdit, onDelete, onCopy,
                     <CalendarDays className="h-3.5 w-3.5" />
                 <div className="flex flex-col">
                     <span>{formatDate(replacement.DESDE)} - {formatDate(replacement.HASTA)}</span>
-                    {replacement.ES_PARCIAL && replacement.FECHA_PARCIAL_INICIO && replacement.FECHA_PARCIAL_FIN && (
-                        <div className="mt-3">
-                            <div className="bg-gradient-to-r from-orange-500 to-amber-600 text-white p-2 rounded-md shadow-md flex flex-col items-center justify-center border border-white/20">
-                                <span className="text-[9px] uppercase font-black tracking-widest mb-0.5 opacity-90">Contrato Realizado</span>
-                                <div className="flex items-center gap-2 font-black text-[11px]">
-                                    <span>{formatDate(replacement.FECHA_PARCIAL_INICIO)}</span>
-                                    <ArrowRight className="h-3 w-3" />
-                                    <span>{formatDate(replacement.FECHA_PARCIAL_FIN)}</span>
-                                </div>
+                    {parcialesToShow.length > 0 && (
+                        <ScrollArea className="mt-3 max-h-[140px] pr-3 rounded-md">
+                            <div className="flex flex-col gap-2">
+                                {parcialesToShow.map((p, i) => (
+                                    <div key={i} className="bg-gradient-to-r from-orange-500 to-amber-600 text-white p-2 rounded-md shadow-md flex flex-col items-center justify-center border border-white/20 shrink-0">
+                                        <span className="text-[9px] uppercase font-black tracking-widest mb-0.5 opacity-90">Parcial {i + 1} {p.mes ? `• Pago: ${p.mes}` : ''}</span>
+                                        <div className="flex items-center gap-2 font-black text-[11px]">
+                                            <span>{formatDate(p.inicio)}</span>
+                                            <ArrowRight className="h-3 w-3" />
+                                            <span>{formatDate(p.fin)}</span>
+                                        </div>
+                                    </div>
+                                ))}
                             </div>
-                        </div>
+                        </ScrollArea>
                     )}
                 </div>
                 </div>
@@ -198,7 +211,7 @@ export function ReplacementCard({ replacement, onView, onEdit, onDelete, onCopy,
                         </Tooltip>
                     )}
 
-                    {replacement.ES_PARCIAL && (
+                    {parcialesToShow.length > 0 && (
                         <Tooltip>
                             <TooltipTrigger asChild>
                                 <div className="relative cursor-help group/parcial">
@@ -207,9 +220,11 @@ export function ReplacementCard({ replacement, onView, onEdit, onDelete, onCopy,
                                 </div>
                             </TooltipTrigger>
                             <TooltipContent side="top" className="max-w-xs bg-orange-600 text-white border-none shadow-lg">
-                                <div className="p-1">
-                                    <p className="text-[10px] uppercase font-bold opacity-80 mb-1">Periodo Parcial</p>
-                                    <p className="text-xs font-bold">{formatDate(replacement.FECHA_PARCIAL_INICIO)} al {formatDate(replacement.FECHA_PARCIAL_FIN)}</p>
+                                <div className="p-1 flex flex-col gap-1.5">
+                                    <p className="text-[10px] uppercase font-bold opacity-80 mb-0.5">Fechas Parciales</p>
+                                    {parcialesToShow.map((p, i) => (
+                                        <p key={i} className="text-xs font-bold">{formatDate(p.inicio)} al {formatDate(p.fin)} {p.mes ? `(${p.mes})` : ''}</p>
+                                    ))}
                                 </div>
                             </TooltipContent>
                         </Tooltip>

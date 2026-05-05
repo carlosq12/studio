@@ -120,10 +120,16 @@ export function MarcaDetailsDialog({ selectedDetails, onClose, allowEditing = fa
               <DialogHeader>
                 <DialogTitle className="flex items-center justify-between">
                     <div className="flex flex-col gap-1">
-                        <span>Detalle de Marcas ({selectedDetails?.mes})</span>
+                        <span>Detalle de Marcas ({selectedDetails?.mesPago || selectedDetails?.mes})</span>
                         <span className="text-sm font-normal text-muted-foreground">
                             {selectedDetails?.nombres} {selectedDetails?.apellidos} - RUT: {selectedDetails?.RUT}
                         </span>
+                        {selectedDetails?.calidadContractual && (
+                            <span className="text-xs text-blue-600 font-bold">
+                                Calidad: {selectedDetails.calidadContractual} 
+                                {selectedDetails.calidadContractual === 'C' || selectedDetails.calidadContractual === 'T' ? ' (Fórmula Titular/Contrata)' : ' (Fórmula Reemplazo/EDF)'}
+                            </span>
+                        )}
                     </div>
                     <div className="flex items-center gap-3 bg-muted/50 p-2 px-4 rounded-lg border">
                         <span className="text-sm font-medium">Total Vales: </span>
@@ -162,12 +168,26 @@ export function MarcaDetailsDialog({ selectedDetails, onClose, allowEditing = fa
                 </DialogTitle>
               </DialogHeader>
     
-              <div className="bg-blue-50/50 border border-blue-100 rounded-md p-3 mb-2 flex items-start gap-2">
-                <Clock className="h-4 w-4 text-blue-600 mt-0.5" />
-                <p className="text-xs text-blue-800">
-                    Las marcas resaltadas en <span className="bg-green-100 px-1 rounded">verde</span> indican una jornada válida (&gt;6h u 8h según estamento). 
-                    Revisa el indicador por día para confirmar el conteo.
-                </p>
+              <div className="bg-blue-50/50 border border-blue-100 rounded-md p-3 mb-2 flex flex-col gap-2">
+                <div className="flex items-start gap-2">
+                    <Clock className="h-4 w-4 text-blue-600 mt-0.5" />
+                    <p className="text-xs text-blue-800">
+                        Las marcas resaltadas en <span className="bg-green-100 px-1 rounded">verde</span> indican una jornada válida (&gt;6h u 8h según estamento). 
+                        Revisa el indicador por día para confirmar el conteo.
+                    </p>
+                </div>
+                {selectedDetails?.valesCalculadosReales !== undefined && selectedDetails?.diasHabilesPago !== undefined && selectedDetails?.diasHabilesAsistencia !== undefined && (
+                    <div className="mt-1 border-t border-blue-200/50 pt-2">
+                        <p className="text-[11px] font-semibold text-blue-900 mb-1">Cálculo Automático Original:</p>
+                        <p className="text-[11px] text-blue-800 font-mono bg-white p-1.5 rounded border border-blue-100">
+                            {selectedDetails.calidadContractual === 'C' || selectedDetails.calidadContractual === 'T' ? (
+                                `${selectedDetails.diasHabilesPago} (Mes Pago) - (${selectedDetails.diasHabilesAsistencia} (Mes Asistencia) - ${selectedDetails.diasHabilesAsistencia - (selectedDetails.diasHabilesPago - selectedDetails.valesCalculadosReales)} (Trabajados)) = ${selectedDetails.valesCalculadosReales} Vales`
+                            ) : (
+                                `${selectedDetails.valesCalculadosReales} (Días Trabajados en Asistencia) = ${selectedDetails.valesCalculadosReales} Vales`
+                            )}
+                        </p>
+                    </div>
+                )}
               </div>
     
               {selectedDetails?.observaciones && (

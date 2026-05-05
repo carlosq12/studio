@@ -137,6 +137,7 @@ export type Replacement = {
     FECHA_PARCIAL?: any;
     FECHA_PARCIAL_INICIO?: any;
     FECHA_PARCIAL_FIN?: any;
+    PARCIALES?: { inicio: any; fin: any; mes?: string }[];
 }
 
 export type MonthlyTemplate = {
@@ -228,6 +229,7 @@ export type FuncionarioVale = {
   cargo?: string;
   acNo?: string;
   jornada?: string;
+  calidadContractual?: string;
 };
 
 export type MarcaVale = {
@@ -238,7 +240,7 @@ export type MarcaVale = {
   nombres: string;
   apellidos: string;
   mes: string; // YYYY-MM
-  diasTrabajados: number;
+  diasTrabajados: number; // For compatibility (holds final Vales count)
   diasAusencia: number;
   viaticos?: number;
   montoAsignado?: number;
@@ -247,6 +249,12 @@ export type MarcaVale = {
   detalles?: { horario: string; estado: string; esValida?: boolean }[];
   detallesViaticos?: any[];
   columnasViaticos?: string[];
+  mesAsistencia?: string;
+  mesPago?: string;
+  diasHabilesAsistencia?: number;
+  diasHabilesPago?: number;
+  calidadContractual?: string;
+  valesCalculadosReales?: number;
 };
 
 export type HistorialCargaVales = {

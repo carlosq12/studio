@@ -17,6 +17,9 @@ export function BulkUploadMarcasSheet() {
   const [parsedData, setParsedData] = useState<any[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [mesTarget, setMesTarget] = useState<string>('');
+  const [diasHabilesAsistencia, setDiasHabilesAsistencia] = useState<number>(20);
+  const [mesPago, setMesPago] = useState<string>('');
+  const [diasHabilesPago, setDiasHabilesPago] = useState<number>(20);
   const [valorVale, setValorVale] = useState<number>(4000);
   const { toast } = useToast();
 
@@ -76,14 +79,25 @@ export function BulkUploadMarcasSheet() {
       toast({ variant: 'destructive', title: 'Error', description: 'El archivo está vacío o no se ha leído correctamente.' });
       return;
     }
-    if (!mesTarget) {
-      toast({ variant: 'destructive', title: 'Error', description: 'Por favor, selecciona a qué MES corresponde este archivo de marcas.' });
+    if (!mesTarget || !mesPago) {
+      toast({ variant: 'destructive', title: 'Error', description: 'Por favor, selecciona los meses correspondientes.' });
+      return;
+    }
+    if (diasHabilesAsistencia <= 0 || diasHabilesPago <= 0) {
+      toast({ variant: 'destructive', title: 'Error', description: 'Los días hábiles deben ser mayores a 0.' });
       return;
     }
 
     setIsProcessing(true);
     try {
-      const result = await processMarcasMasivas(parsedData, mesTarget, valorVale);
+      const result = await processMarcasMasivas(
+        parsedData, 
+        mesTarget, 
+        valorVale, 
+        diasHabilesAsistencia, 
+        mesPago, 
+        diasHabilesPago
+      );
       
       if (result.error) {
         throw new Error(result.error);
@@ -140,7 +154,7 @@ export function BulkUploadMarcasSheet() {
 
            <div className="grid grid-cols-2 gap-4">
               <div className="space-y-3">
-                 <Label htmlFor="mesVales">Selecciona el Mes del Registro</Label>
+                 <Label htmlFor="mesVales">Mes de Asistencia (Anterior)</Label>
                  <Input 
                    id="mesVales" 
                    type="month" 
@@ -150,6 +164,38 @@ export function BulkUploadMarcasSheet() {
               </div>
 
               <div className="space-y-3">
+                 <Label htmlFor="diasHabilesAsistencia">Días Hábiles (Asistencia)</Label>
+                 <Input 
+                   id="diasHabilesAsistencia" 
+                   type="number" 
+                   min="1"
+                   value={diasHabilesAsistencia} 
+                   onChange={(e) => setDiasHabilesAsistencia(Number(e.target.value))} 
+                 />
+              </div>
+
+              <div className="space-y-3">
+                 <Label htmlFor="mesPago">Mes a Pagar (Actual)</Label>
+                 <Input 
+                   id="mesPago" 
+                   type="month" 
+                   value={mesPago} 
+                   onChange={(e) => setMesPago(e.target.value)}
+                 />
+              </div>
+
+              <div className="space-y-3">
+                 <Label htmlFor="diasHabilesPago">Días Hábiles (Mes a Pagar)</Label>
+                 <Input 
+                   id="diasHabilesPago" 
+                   type="number" 
+                   min="1"
+                   value={diasHabilesPago} 
+                   onChange={(e) => setDiasHabilesPago(Number(e.target.value))} 
+                 />
+              </div>
+
+              <div className="space-y-3 col-span-2">
                  <Label htmlFor="valorVale">Valor del Vale ($)</Label>
                  <Input 
                    id="valorVale" 
@@ -186,7 +232,7 @@ export function BulkUploadMarcasSheet() {
             <Button 
                 onClick={handleSave} 
                 className="bg-green-600 hover:bg-green-700"
-                disabled={!file || parsedData.length === 0 || isProcessing || !mesTarget}
+                disabled={!file || parsedData.length === 0 || isProcessing || !mesTarget || !mesPago}
             >
               {isProcessing ? (
                 <>

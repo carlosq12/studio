@@ -73,6 +73,15 @@ export function ReplacementDetailsDialog({ replacement, open, onOpenChange }: Re
 
   const estadoRNR = replacement.ESTADO_R_NR || (replacement as any)['ESTADO R/NR'];
 
+  const parcialesToShow = React.useMemo(() => {
+    if (!replacement?.ES_PARCIAL) return [];
+    if (replacement.PARCIALES && replacement.PARCIALES.length > 0) return replacement.PARCIALES;
+    if (replacement.FECHA_PARCIAL_INICIO && replacement.FECHA_PARCIAL_FIN) {
+      return [{ inicio: replacement.FECHA_PARCIAL_INICIO, fin: replacement.FECHA_PARCIAL_FIN }];
+    }
+    return [];
+  }, [replacement]);
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-2xl">
@@ -95,16 +104,27 @@ export function ReplacementDetailsDialog({ replacement, open, onOpenChange }: Re
                 <Section title="Periodo y Motivo" icon={Calendar}>
                     <DetailItem label="Fecha de Inicio" icon={Calendar} value={formatDate(replacement.DESDE)} />
                     <DetailItem label="Fecha de Término" icon={Calendar} value={formatDate(replacement.HASTA)} />
-                    {replacement.ES_PARCIAL && (
-                        <div className="sm:col-span-2 bg-rose-50 p-3 rounded-lg border-2 border-rose-100 shadow-sm">
+                    {parcialesToShow.length > 0 && (
+                        <div className="sm:col-span-2 bg-rose-50 p-3 rounded-lg border-2 border-rose-100 shadow-sm space-y-4">
                             <div className="flex items-center gap-2 mb-2">
                                 <Badge variant="destructive" className="bg-rose-600 animate-pulse">PARCIAL</Badge>
-                                <span className="text-xs font-bold text-rose-700 uppercase">Periodo Realizado</span>
+                                <span className="text-xs font-bold text-rose-700 uppercase">Periodos Realizados</span>
                             </div>
-                            <div className="grid grid-cols-2 gap-4">
-                                <DetailItem label="Desde Parcial" icon={Calendar} value={formatDate(replacement.FECHA_PARCIAL_INICIO)} />
-                                <DetailItem label="Hasta Parcial" icon={Calendar} value={formatDate(replacement.FECHA_PARCIAL_FIN)} />
-                            </div>
+                            <ScrollArea className="max-h-[160px] pr-4">
+                                <div className="space-y-4">
+                                    {parcialesToShow.map((p, i) => (
+                                        <div key={i} className="grid grid-cols-2 gap-4 border-b border-rose-200/50 pb-3 mb-1 last:border-0 last:pb-0 last:mb-0">
+                                            <DetailItem label={`Desde Parcial ${i + 1}`} icon={Calendar} value={formatDate(p.inicio)} />
+                                            <DetailItem label={`Hasta Parcial ${i + 1}`} icon={Calendar} value={formatDate(p.fin)} />
+                                            {p.mes && (
+                                              <div className="col-span-2">
+                                                <DetailItem label="Mes de Pago Asociado" icon={Calendar} value={p.mes} />
+                                              </div>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+                            </ScrollArea>
                         </div>
                     )}
                     <div className="sm:col-span-2">

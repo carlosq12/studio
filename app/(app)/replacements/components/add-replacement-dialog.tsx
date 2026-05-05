@@ -19,8 +19,8 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { PlusCircle, Loader2, CalendarIcon } from 'lucide-react';
-import { useForm } from 'react-hook-form';
+import { PlusCircle, Loader2, CalendarIcon, Plus, Trash2 } from 'lucide-react';
+import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useToast } from '@/hooks/use-toast';
@@ -35,7 +35,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import { format, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { Textarea } from '@/components/ui/textarea';
 import {
   Select,
@@ -84,6 +84,7 @@ const replacementSchema = z.object({
   ES_PARCIAL: z.boolean().optional(),
   FECHA_PARCIAL_INICIO: z.date().optional().nullable(),
   FECHA_PARCIAL_FIN: z.date().optional().nullable(),
+  PARCIALES: z.array(z.object({ inicio: z.date().optional().nullable(), fin: z.date().optional().nullable(), mes: z.string().optional() })).optional(),
 });
 
 type ReplacementFormValues = z.infer<typeof replacementSchema>;
@@ -165,7 +166,13 @@ export function AddReplacementDialog({
       ES_PARCIAL: false,
       FECHA_PARCIAL_INICIO: null,
       FECHA_PARCIAL_FIN: null,
+      PARCIALES: [{ inicio: null, fin: null, mes: '' }],
     },
+  });
+
+  const { fields: parcialFields, append: appendParcial, remove: removeParcial } = useFieldArray({
+    control: form.control,
+    name: "PARCIALES"
   });
 
   useEffect(() => {
@@ -182,6 +189,11 @@ export function AddReplacementDialog({
         ES_PARCIAL: !!initialData.ES_PARCIAL,
         FECHA_PARCIAL_INICIO: parseDate(initialData.FECHA_PARCIAL_INICIO),
         FECHA_PARCIAL_FIN: parseDate(initialData.FECHA_PARCIAL_FIN),
+        PARCIALES: initialData.PARCIALES?.map(p => ({
+          inicio: parseDate(p.inicio),
+          fin: parseDate(p.fin),
+          mes: p.mes || ''
+        })) || [{ inicio: parseDate(initialData.FECHA_PARCIAL_INICIO) || null, fin: parseDate(initialData.FECHA_PARCIAL_FIN) || null, mes: '' }],
       });
     } else if (!open) {
       form.reset({
@@ -206,6 +218,7 @@ export function AddReplacementDialog({
         ES_PARCIAL: false,
         FECHA_PARCIAL_INICIO: null,
         FECHA_PARCIAL_FIN: null,
+        PARCIALES: [{ inicio: null, fin: null, mes: '' }],
       });
     }
   }, [initialData, open, form]);
@@ -465,71 +478,106 @@ export function AddReplacementDialog({
                 />
 
                 {form.watch('ES_PARCIAL') && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="FECHA_PARCIAL_INICIO"
-                      render={({ field }) => (
-                        <FormItem className="flex flex-col">
-                          <FormLabel>Inicio Parcial</FormLabel>
-                          <Popover>
-                            <PopoverTrigger asChild>
-                              <FormControl>
-                                <Button variant="outline" className={cn("w-full pl-3 text-left font-normal", !field.value && "text-muted-foreground")}>
-                                  {field.value ? format(field.value, "PPP", { locale: es }) : <span>Seleccionar inicio</span>}
-                                  <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                  <div className="col-span-1 md:col-span-2 lg:col-span-3">
+                      <div className="flex items-center justify-between mb-2">
+                        <FormLabel className="text-red-700 font-semibold">Fechas Parciales</FormLabel>
+                        <Button type="button" variant="outline" size="sm" onClick={() => appendParcial({ inicio: null, fin: null })} className="h-8 text-xs">
+                          <Plus className="mr-1 h-3 w-3" /> Añadir Parcial
+                        </Button>
+                      </div>
+                      <ScrollArea className="w-full whitespace-nowrap pb-4 rounded-md border p-4 bg-red-50/30">
+                        <div className="flex w-max space-x-4">
+                          {parcialFields.map((field, index) => (
+                            <div key={field.id} className="flex flex-col gap-3 p-4 border rounded-lg bg-white shadow-sm min-w-[250px] relative group">
+                              <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <Button type="button" variant="ghost" size="icon" className="h-6 w-6 text-red-500 hover:text-red-700 hover:bg-red-50" onClick={() => removeParcial(index)} disabled={parcialFields.length === 1}>
+                                  <Trash2 className="h-4 w-4" />
                                 </Button>
-                              </FormControl>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0" align="start">
-                              <Calendar 
-                                mode="single" 
-                                selected={field.value ?? undefined} 
-                                onSelect={field.onChange} 
-                                initialFocus 
-                                locale={es}
-                                captionLayout="dropdown-buttons"
-                                fromYear={new Date().getFullYear() - 5}
-                                toYear={new Date().getFullYear() + 5}
+                              </div>
+                              <FormField
+                                control={form.control}
+                                name={`PARCIALES.${index}.inicio`}
+                                render={({ field }) => (
+                                  <FormItem className="flex flex-col">
+                                    <FormLabel className="text-xs">Inicio Parcial {index + 1}</FormLabel>
+                                    <Popover>
+                                      <PopoverTrigger asChild>
+                                        <FormControl>
+                                          <Button variant="outline" className={cn("w-full pl-3 text-left font-normal text-xs h-8", !field.value && "text-muted-foreground")}>
+                                            {field.value ? format(field.value, "PPP", { locale: es }) : <span>Seleccionar inicio</span>}
+                                            <CalendarIcon className="ml-auto h-3 w-3 opacity-50" />
+                                          </Button>
+                                        </FormControl>
+                                      </PopoverTrigger>
+                                      <PopoverContent className="w-auto p-0" align="start">
+                                        <Calendar 
+                                          mode="single" 
+                                          selected={field.value ?? undefined} 
+                                          onSelect={field.onChange} 
+                                          initialFocus 
+                                          locale={es}
+                                          captionLayout="dropdown-buttons"
+                                          fromYear={new Date().getFullYear() - 5}
+                                          toYear={new Date().getFullYear() + 5}
+                                        />
+                                      </PopoverContent>
+                                    </Popover>
+                                  </FormItem>
+                                )}
                               />
-                            </PopoverContent>
-                          </Popover>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="FECHA_PARCIAL_FIN"
-                      render={({ field }) => (
-                        <FormItem className="flex flex-col">
-                          <FormLabel>Fin Parcial</FormLabel>
-                          <Popover>
-                            <PopoverTrigger asChild>
-                              <FormControl>
-                                <Button variant="outline" className={cn("w-full pl-3 text-left font-normal", !field.value && "text-muted-foreground")}>
-                                  {field.value ? format(field.value, "PPP", { locale: es }) : <span>Seleccionar fin</span>}
-                                  <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                                </Button>
-                              </FormControl>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0" align="start">
-                              <Calendar 
-                                mode="single" 
-                                selected={field.value ?? undefined} 
-                                onSelect={field.onChange} 
-                                initialFocus 
-                                locale={es}
-                                captionLayout="dropdown-buttons"
-                                fromYear={new Date().getFullYear() - 5}
-                                toYear={new Date().getFullYear() + 5}
+                              <FormField
+                                control={form.control}
+                                name={`PARCIALES.${index}.fin`}
+                                render={({ field }) => (
+                                  <FormItem className="flex flex-col">
+                                    <FormLabel className="text-xs">Fin Parcial {index + 1}</FormLabel>
+                                    <Popover>
+                                      <PopoverTrigger asChild>
+                                        <FormControl>
+                                          <Button variant="outline" className={cn("w-full pl-3 text-left font-normal text-xs h-8", !field.value && "text-muted-foreground")}>
+                                            {field.value ? format(field.value, "PPP", { locale: es }) : <span>Seleccionar fin</span>}
+                                            <CalendarIcon className="ml-auto h-3 w-3 opacity-50" />
+                                          </Button>
+                                        </FormControl>
+                                      </PopoverTrigger>
+                                      <PopoverContent className="w-auto p-0" align="start">
+                                        <Calendar 
+                                          mode="single" 
+                                          selected={field.value ?? undefined} 
+                                          onSelect={field.onChange} 
+                                          initialFocus 
+                                          locale={es}
+                                          captionLayout="dropdown-buttons"
+                                          fromYear={new Date().getFullYear() - 5}
+                                          toYear={new Date().getFullYear() + 5}
+                                        />
+                                      </PopoverContent>
+                                    </Popover>
+                                  </FormItem>
+                                )}
                               />
-                            </PopoverContent>
-                          </Popover>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                              <FormField
+                                control={form.control}
+                                name={`PARCIALES.${index}.mes`}
+                                render={({ field }) => (
+                                  <FormItem className="flex flex-col">
+                                    <FormLabel className="text-xs">Mes a Pagar</FormLabel>
+                                    <Select onValueChange={field.onChange} value={field.value || ""}>
+                                      <FormControl>
+                                        <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Mes" /></SelectTrigger>
+                                      </FormControl>
+                                      <SelectContent>
+                                        {meses.map(m => <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>)}
+                                      </SelectContent>
+                                    </Select>
+                                  </FormItem>
+                                )}
+                              />
+                            </div>
+                          ))}
+                        </div>
+                        <ScrollBar orientation="horizontal" />
+                      </ScrollArea>
                   </div>
                 )}
               </div>

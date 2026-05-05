@@ -18,8 +18,8 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Loader2, CalendarIcon } from 'lucide-react';
-import { useForm } from 'react-hook-form';
+import { Loader2, CalendarIcon, Plus, Trash2 } from 'lucide-react';
+import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useToast } from '@/hooks/use-toast';
@@ -34,7 +34,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import { format, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { Textarea } from '@/components/ui/textarea';
 import type { Replacement, IngresoFuncionario } from '@/lib/types';
 import { Timestamp } from 'firebase/firestore';
@@ -74,6 +74,7 @@ const replacementSchema = z.object({
   ES_PARCIAL: z.boolean().optional(),
   FECHA_PARCIAL_INICIO: z.date().optional().nullable(),
   FECHA_PARCIAL_FIN: z.date().optional().nullable(),
+  PARCIALES: z.array(z.object({ inicio: z.date().optional().nullable(), fin: z.date().optional().nullable(), mes: z.string().optional() })).optional(),
 });
 
 type ReplacementFormValues = z.infer<typeof replacementSchema>;
@@ -134,6 +135,11 @@ export function EditReplacementDialog({
     resolver: zodResolver(replacementSchema),
   });
 
+  const { fields: parcialFields, append: appendParcial, remove: removeParcial } = useFieldArray({
+    control: form.control,
+    name: "PARCIALES"
+  });
+
   const parseDate = (date: any): Date | null => {
     if (!date) return null;
     if (date instanceof Timestamp) return date.toDate();
@@ -173,6 +179,11 @@ export function EditReplacementDialog({
         ES_PARCIAL: !!replacement.ES_PARCIAL,
         FECHA_PARCIAL_INICIO: parseDate(replacement.FECHA_PARCIAL_INICIO),
         FECHA_PARCIAL_FIN: parseDate(replacement.FECHA_PARCIAL_FIN),
+        PARCIALES: replacement.PARCIALES?.map(p => ({
+          inicio: parseDate(p.inicio),
+          fin: parseDate(p.fin),
+          mes: p.mes || ''
+        })) || [{ inicio: parseDate(replacement.FECHA_PARCIAL_INICIO) || null, fin: parseDate(replacement.FECHA_PARCIAL_FIN) || null, mes: '' }],
       });
     }
   }, [replacement, form]);
@@ -217,6 +228,11 @@ export function EditReplacementDialog({
         'FECHA DEL AVISO': data['FECHA DEL AVISO']?.toISOString() || '',
         FECHA_PARCIAL_INICIO: data.FECHA_PARCIAL_INICIO?.toISOString() || '',
         FECHA_PARCIAL_FIN: data.FECHA_PARCIAL_FIN?.toISOString() || '',
+        PARCIALES: data.PARCIALES?.map(p => ({
+          inicio: p.inicio?.toISOString() || null,
+          fin: p.fin?.toISOString() || null,
+          mes: p.mes || ''
+        })) || [],
       };
 
       const result = await updateReplacement(replacementData);
@@ -245,7 +261,7 @@ export function EditReplacementDialog({
     name,
     label,
   }: {
-    name: keyof ReplacementFormValues;
+    name: string;
     label: string;
   }) => (
     <FormField
@@ -668,9 +684,46 @@ export function EditReplacementDialog({
                 />
 
                 {form.watch('ES_PARCIAL') && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <DateField name="FECHA_PARCIAL_INICIO" label="Inicio Parcial" />
-                    <DateField name="FECHA_PARCIAL_FIN" label="Fin Parcial" />
+                  <div className="col-span-1 md:col-span-2 lg:col-span-3">
+                      <div className="flex items-center justify-between mb-2">
+                        <FormLabel className="text-red-700 font-semibold">Fechas Parciales</FormLabel>
+                        <Button type="button" variant="outline" size="sm" onClick={() => appendParcial({ inicio: null, fin: null, mes: '' })} className="h-8 text-xs">
+                          <Plus className="mr-1 h-3 w-3" /> Añadir Parcial
+                        </Button>
+                      </div>
+                      <ScrollArea className="w-full whitespace-nowrap pb-4 rounded-md border p-4 bg-red-50/30">
+                        <div className="flex w-max space-x-4">
+                          {parcialFields.map((field, index) => (
+                            <div key={field.id} className="flex flex-col gap-3 p-4 border rounded-lg bg-white shadow-sm min-w-[250px] relative group">
+                              <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <Button type="button" variant="ghost" size="icon" className="h-6 w-6 text-red-500 hover:text-red-700 hover:bg-red-50" onClick={() => removeParcial(index)} disabled={parcialFields.length === 1}>
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
+                              <DateField name={`PARCIALES.${index}.inicio`} label={`Inicio Parcial ${index + 1}`} />
+                              <DateField name={`PARCIALES.${index}.fin`} label={`Fin Parcial ${index + 1}`} />
+                              <FormField
+                                control={form.control}
+                                name={`PARCIALES.${index}.mes`}
+                                render={({ field }) => (
+                                  <FormItem className="flex flex-col">
+                                    <FormLabel className="text-xs">Mes a Pagar</FormLabel>
+                                    <Select onValueChange={field.onChange} value={field.value || ""}>
+                                      <FormControl>
+                                        <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Mes" /></SelectTrigger>
+                                      </FormControl>
+                                      <SelectContent>
+                                        {meses.map(m => <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>)}
+                                      </SelectContent>
+                                    </Select>
+                                  </FormItem>
+                                )}
+                              />
+                            </div>
+                          ))}
+                        </div>
+                        <ScrollBar orientation="horizontal" />
+                      </ScrollArea>
                   </div>
                 )}
               </div>

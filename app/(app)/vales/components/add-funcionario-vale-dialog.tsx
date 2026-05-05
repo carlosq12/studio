@@ -53,6 +53,7 @@ const funcionarioSchema = z.object({
   acNo: z.string().optional(),
   jornada: z.string().optional(),
   estado: z.string().optional(),
+  calidadContractual: z.string().optional(),
 });
 
 type FormValues = z.infer<typeof funcionarioSchema>;
@@ -99,6 +100,7 @@ export function AddFuncionarioValeDialog({ open, onOpenChange, funcionario }: Ad
             acNo: "",
             jornada: "",
             estado: "Activo",
+            calidadContractual: "",
         },
     });
 
@@ -113,6 +115,7 @@ export function AddFuncionarioValeDialog({ open, onOpenChange, funcionario }: Ad
                 acNo: funcionario.acNo || "",
                 jornada: funcionario.jornada || "",
                 estado: funcionario.estado || "Activo",
+                calidadContractual: funcionario.calidadContractual || "",
             });
         } else if (!open) {
             form.reset({
@@ -124,6 +127,7 @@ export function AddFuncionarioValeDialog({ open, onOpenChange, funcionario }: Ad
                 acNo: "",
                 jornada: "",
                 estado: "Activo",
+                calidadContractual: "",
             });
         }
     }, [funcionario, open, form]);
@@ -274,7 +278,7 @@ export function AddFuncionarioValeDialog({ open, onOpenChange, funcionario }: Ad
                                 render={({ field }) => (
                                     <FormItem>
                                         <FormLabel>Jornada / Turno</FormLabel>
-                                        <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
+                                        <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value ? field.value : undefined}>
                                             <FormControl>
                                                 <SelectTrigger><SelectValue placeholder="Seleccione..." /></SelectTrigger>
                                             </FormControl>
@@ -321,6 +325,30 @@ export function AddFuncionarioValeDialog({ open, onOpenChange, funcionario }: Ad
                                     </FormItem>
                                 )}
                             />
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                            <FormField
+                                control={form.control}
+                                name="calidadContractual"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Calidad Contractual</FormLabel>
+                                        <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value ? field.value : undefined}>
+                                            <FormControl>
+                                                <SelectTrigger><SelectValue placeholder="Seleccione..." /></SelectTrigger>
+                                            </FormControl>
+                                            <SelectContent>
+                                                <SelectItem value="T">Titular (T)</SelectItem>
+                                                <SelectItem value="C">Contrata (C)</SelectItem>
+                                                <SelectItem value="R">Reemplazo (R)</SelectItem>
+                                                <SelectItem value="EDF">EDF</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                            <div></div>
                         </div>
                         <div className="flex justify-end gap-2 pt-4">
                             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>

@@ -21,6 +21,7 @@ const funcionarioValeSchema = z.object({
   cargo: z.string().optional().nullable(),
   acNo: z.string().optional().nullable(),
   jornada: z.string().optional().nullable(),
+  calidadContractual: z.string().optional().nullable(),
   fechaIngreso: z.any().optional(),
 });
 
@@ -73,7 +74,14 @@ export async function deleteFuncionarioVale(id: string) {
   }
 }
 
-export async function processMarcasMasivas(marcas: any[], mesStr: string, valorVale: number = 4000) {
+export async function processMarcasMasivas(
+  marcas: any[], 
+  mesAsistencia: string, 
+  valorVale: number = 4000,
+  diasHabilesAsistencia: number = 20,
+  mesPago: string = '',
+  diasHabilesPago: number = 20
+) {
     // 1. Obtener todos los funcionarios actuales
     const funcionariosSnapshot = await getDocs(collection(db, 'funcionarios_vales'));
     const funcionariosMap = new Map<string, FuncionarioVale>(); // acNo -> Funcionario
@@ -132,7 +140,17 @@ export async function processMarcasMasivas(marcas: any[], mesStr: string, valorV
         const funcionarioMatch = funcionariosMap.get(result.acNo);
 
         if (funcionarioMatch) {
-            // El funcionario fue localizado en BD, guardar la marca validada!
+            let valesAPagar = 0;
+            const calidad = (funcionarioMatch.calidadContractual || 'C').toUpperCase();
+            const diasTrabajadosReales = result.jornadasValidas;
+
+            if (calidad === 'R' || calidad === 'EDF') {
+                valesAPagar = diasTrabajadosReales;
+            } else {
+                const ausencias = Math.max(0, diasHabilesAsistencia - diasTrabajadosReales);
+                valesAPagar = Math.max(0, diasHabilesPago - ausencias);
+            }
+
             const marcaRef = doc(collection(db, 'marcas_vales'));
             const marcaData: Partial<MarcaVale> = {
                 historialId: historialRef.id,
@@ -140,18 +158,23 @@ export async function processMarcasMasivas(marcas: any[], mesStr: string, valorV
                 RUT: funcionarioMatch.RUT,
                 nombres: funcionarioMatch.nombres,
                 apellidos: funcionarioMatch.apellidos,
-                mes: mesStr, // Ej. "2023-10"
-                diasTrabajados: result.jornadasValidas,
+                mes: mesAsistencia, // Backward compat
+                mesAsistencia,
+                mesPago,
+                diasHabilesAsistencia,
+                diasHabilesPago,
+                calidadContractual: calidad,
+                valesCalculadosReales: valesAPagar,
+                diasTrabajados: valesAPagar, // Stores final vales count
                 diasAusencia: result.noMarcajes,
-                montoAsignado: result.jornadasValidas * valorVale,
+                montoAsignado: valesAPagar * valorVale,
                 fechaCarga: Timestamp.now(),
                 detalles: result.detalles || []
             };
             batch.set(marcaRef, marcaData);
             guardados++;
-            montoTotal += result.jornadasValidas * valorVale;
+            montoTotal += valesAPagar * valorVale;
         } else {
-            // No existe este funcionario en el DB, avisaremos
             noEncontrados.push(`${result.acNo} - ${result.nombre}`);
         }
     }
@@ -159,7 +182,7 @@ export async function processMarcasMasivas(marcas: any[], mesStr: string, valorV
     try {
         if (guardados > 0) {
             batch.set(historialRef, {
-                mes: mesStr,
+                mes: mesAsistencia,
                 fechaCarga: Timestamp.now(),
                 cantidadRegistros: guardados,
                 montoTotal: montoTotal

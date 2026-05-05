@@ -133,6 +133,7 @@ export function ValesFuncionariosTable({ funcionarios, isLoading, onViewMarcas }
                 <TableHead>Jornada</TableHead>
                 <TableHead>AC-No.</TableHead>
                 <TableHead>Departamento</TableHead>
+                <TableHead>Calidad</TableHead>
                 <TableHead>Estado</TableHead>
                 <TableHead className="text-right">Acciones</TableHead>
               </TableRow>
@@ -173,6 +174,11 @@ export function ValesFuncionariosTable({ funcionarios, isLoading, onViewMarcas }
                     <TableCell>{f.jornada || '-'}</TableCell>
                     <TableCell>{f.acNo || '-'}</TableCell>
                     <TableCell>{f.departamento || '-'}</TableCell>
+                    <TableCell>
+                      {f.calidadContractual ? (
+                        <Badge variant="outline" className="font-mono bg-slate-50">{f.calidadContractual}</Badge>
+                      ) : '-'}
+                    </TableCell>
                     <TableCell>
                       <Badge variant={f.estado === 'Activo' ? 'default' : 'secondary'}>
                         {f.estado || 'Activo'}
