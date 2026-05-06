@@ -141,9 +141,10 @@ export async function processMarcasMasivas(
 
         if (funcionarioMatch) {
             let valesAPagar = 0;
-            const calidad = (funcionarioMatch.calidadContractual || 'C').toUpperCase();
+            const calidad = (funcionarioMatch.calidadContractual || 'C').trim().toUpperCase();
             const diasTrabajadosReales = result.jornadasValidas;
 
+            // R (Reemplazo), EDF (Reemplazo), TU (Titular/Otros) no aplican fórmula
             if (calidad === 'R' || calidad === 'EDF' || calidad === 'TU') {
                 valesAPagar = diasTrabajadosReales;
             } else {
@@ -166,6 +167,7 @@ export async function processMarcasMasivas(
                 calidadContractual: calidad,
                 valesCalculadosReales: valesAPagar,
                 diasTrabajados: valesAPagar, // Stores final vales count
+                diasPresenciales: diasTrabajadosReales,
                 diasAusencia: result.noMarcajes,
                 montoAsignado: valesAPagar * valorVale,
                 fechaCarga: Timestamp.now(),
@@ -319,6 +321,7 @@ export async function updateMarcaValeCount(marcaId: string, newCount: number, va
         batch.update(marcaRef, {
             diasTrabajados: newCount,
             montoAsignado: newMonto,
+            diasPresenciales: (marcaData as any).diasPresenciales || 0, // Preserve or update if called from recalculate
             observaciones: `Ajuste manual: de ${marcaData.diasTrabajados} a ${newCount} vales.`
         });
         
@@ -339,6 +342,105 @@ export async function updateMarcaValeCount(marcaId: string, newCount: number, va
     } catch (error: any) {
         console.error('Error al actualizar conteo de vales:', error);
         return { error: error.message || 'No se pudo actualizar el registro.' };
+    }
+}
+
+export async function recalculateMarcaVale(marcaId: string, valorVale: number = 4000, forceRealDays?: number) {
+    try {
+        const marcaRef = doc(db, 'marcas_vales', marcaId);
+        const marcaSnap = await getDoc(marcaRef);
+        
+        if (!marcaSnap.exists()) return { error: 'El registro no existe.' };
+        const marcaData = marcaSnap.data() as MarcaVale;
+
+        // 1. Obtener calidad actual del funcionario (fresca de la DB)
+        let calidad = (marcaData.calidadContractual || 'C').trim().toUpperCase();
+        
+        try {
+            if (marcaData.funcionarioId) {
+                const funcSnap = await getDoc(doc(db, 'funcionarios_vales', marcaData.funcionarioId));
+                if (funcSnap.exists()) {
+                    calidad = (funcSnap.data().calidadContractual || 'C').trim().toUpperCase();
+                }
+            } else {
+                const funcQuery = query(collection(db, 'funcionarios_vales'), where('RUT', '==', marcaData.RUT));
+                const funcSnap = await getDocs(funcQuery);
+                if (!funcSnap.empty) {
+                    calidad = (funcSnap.docs[0].data().calidadContractual || 'C').trim().toUpperCase();
+                }
+            }
+        } catch (e) {
+            console.error("Error al buscar calidad del funcionario:", e);
+        }
+
+        // 2. Contar días trabajados reales (o usar el forzado)
+        let diasTrabajadosReales = 0;
+        
+        if (forceRealDays !== undefined) {
+            diasTrabajadosReales = forceRealDays;
+        } else if (marcaData.detalles) {
+            // Contamos cuántos días únicos tienen al menos una marca válida
+            const diasConMarcasValidas = new Set<string>();
+            marcaData.detalles.forEach((d: any) => {
+                if (d.esValida) {
+                    const datePart = d.horario.split('|')[0];
+                    diasConMarcasValidas.add(datePart);
+                }
+            });
+            diasTrabajadosReales = diasConMarcasValidas.size;
+        }
+
+        // 3. Aplicar fórmula según calidad contractual detectada
+        let valesAPagar = 0;
+        const diasHabilesAsistencia = marcaData.diasHabilesAsistencia || 0;
+        const diasHabilesPago = marcaData.diasHabilesPago || 0;
+
+        // R (Reemplazo), EDF (Reemplazo), TU (Titular/Otros) no aplican fórmula
+        if (calidad === 'R' || calidad === 'EDF' || calidad === 'TU') {
+            valesAPagar = diasTrabajadosReales;
+        } else {
+            const ausencias = Math.max(0, diasHabilesAsistencia - diasTrabajadosReales);
+            valesAPagar = Math.max(0, diasHabilesPago - ausencias);
+        }
+
+        // 4. Actualizar el registro con el nuevo cálculo
+        const res = await updateMarcaValeCount(marcaId, valesAPagar, valorVale);
+        if (res.success) {
+            // También actualizamos el campo descriptivo
+            await updateDoc(marcaRef, { diasPresenciales: diasTrabajadosReales });
+            // Retornamos también la nueva calidad por si cambió
+            return { success: true, nuevaCalidad: calidad, nuevoConteo: valesAPagar, diasPresenciales: diasTrabajadosReales };
+        }
+        return { success: false, error: res.error };
+
+    } catch (error: any) {
+        console.error('Error al recalcular:', error);
+        return { success: false, error: error.message };
+    }
+}
+
+export async function setDiaValidez(marcaId: string, indices: number[], esValido: boolean) {
+    try {
+        const marcaRef = doc(db, 'marcas_vales', marcaId);
+        const marcaSnap = await getDoc(marcaRef);
+        if (!marcaSnap.exists()) return { success: false, error: 'El registro no existe.' };
+        
+        const marcaData = marcaSnap.data() as MarcaVale;
+        const detalles = [...(marcaData.detalles || [])];
+        
+        indices.forEach(idx => {
+            if (detalles[idx]) {
+                detalles[idx].esValida = esValido;
+            }
+        });
+        
+        await updateDoc(marcaRef, { detalles });
+        
+        // Recalculamos el total automáticamente basado en las nuevas marcas válidas
+        return await recalculateMarcaVale(marcaId);
+    } catch (error: any) {
+        console.error('Error al actualizar validez del día:', error);
+        return { success: false, error: error.message };
     }
 }
 

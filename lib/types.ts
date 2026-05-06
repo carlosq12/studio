@@ -255,6 +255,7 @@ export type MarcaVale = {
   diasHabilesPago?: number;
   calidadContractual?: string;
   valesCalculadosReales?: number;
+  diasPresenciales?: number;
 };
 
 export type HistorialCargaVales = {
@@ -279,6 +280,7 @@ export type UsuarioFuncionario = {
   uid: string;
   rut: string;
   email: string;
+  password?: string;
   estado: 'Pendiente' | 'Aprobado' | 'Rechazado';
   fechaRegistro: any;
   nombres?: string;

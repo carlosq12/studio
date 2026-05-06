@@ -31,7 +31,7 @@ export function MarcasTable({ marcas, isLoading, onDeleteMarca }: MarcasTablePro
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedDetails, setSelectedDetails] = useState<MarcaVale | null>(null);
   const handleUpdateSuccess = (updatedMarca: MarcaVale) => {
-      setSelectedDetails(prev => prev ? { ...prev, diasTrabajados: updatedMarca.diasTrabajados } : null);
+      setSelectedDetails(prev => prev ? { ...prev, ...updatedMarca } : null);
   };
 
   const filteredMarcas = marcas.filter(m => 

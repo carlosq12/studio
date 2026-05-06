@@ -79,7 +79,7 @@ export async function loginUserDB(email: string, passwordHash: string) {
         }
         
         // Usamos el primer resultado que coincida
-        let matchedDoc = null;
+        let matchedDoc: any = null;
         for (const doc of userSnap.docs) {
             const data = doc.data();
             if (data.password === passwordHash) {

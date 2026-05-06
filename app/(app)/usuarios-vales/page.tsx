@@ -15,15 +15,32 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Check, X, Loader2, RefreshCcw } from 'lucide-react';
+import { Check, X, Loader2, RefreshCcw, Edit, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { changeUserStatus } from './actions';
+import { changeUserStatus, deleteUser } from './actions';
+import { EditUsuarioDialog } from './components/edit-usuario-dialog';
 
 export default function UsuariosValesPage() {
     const { toast } = useToast();
     const [isUpdating, setIsUpdating] = useState<string | null>(null);
+    const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+    const [editingUser, setEditingUser] = useState<UsuarioFuncionario | null>(null);
+
+    const handleDelete = async (uid: string) => {
+        if (confirm('¿Estás seguro de que deseas eliminar este usuario de vales? Esta acción no se puede deshacer.')) {
+            setIsUpdating(uid);
+            const res = await deleteUser(uid);
+            setIsUpdating(null);
+            
+            if (res.success) {
+                toast({ title: 'Usuario eliminado' });
+            } else {
+                toast({ variant: 'destructive', title: 'Error', description: res.error });
+            }
+        }
+    };
 
     const firestore = useFirestore();
     const usuariosQuery = useMemoFirebase(() => {
@@ -54,10 +71,15 @@ export default function UsuariosValesPage() {
 
     return (
         <main className="p-4 sm:p-6 lg:p-8">
-            <PageHeader 
-                title="Aprobaciones de Usuarios (Vales)" 
-                description="Gestiona qué funcionarios tienen acceso a revisar sus vales de forma online. Debes aprobarlos para que puedan hacer login." 
-            />
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <PageHeader 
+                    title="Aprobaciones de Usuarios (Vales)" 
+                    description="Gestiona qué funcionarios tienen acceso a revisar sus vales de forma online. Debes aprobarlos para que puedan hacer login." 
+                />
+                <Button onClick={() => window.open('/mis-vales/login', '_blank')} className="bg-blue-600 hover:bg-blue-700 shrink-0">
+                    Abrir Portal de Funcionarios
+                </Button>
+            </div>
 
             <div className="mt-8 bg-white border rounded-lg shadow-sm overflow-hidden">
                 <Table>
@@ -122,6 +144,12 @@ export default function UsuariosValesPage() {
                                                         <RefreshCcw className="h-3 w-3" />
                                                     </Button>
                                                 )}
+                                                <Button size="icon" variant="ghost" className="h-8 w-8" title="Editar Usuario" onClick={() => { setEditingUser(user); setIsEditDialogOpen(true); }}>
+                                                    <Edit className="h-4 w-4" />
+                                                </Button>
+                                                <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive hover:text-destructive" title="Eliminar Usuario" onClick={() => handleDelete(user.id)}>
+                                                    <Trash2 className="h-4 w-4" />
+                                                </Button>
                                             </>
                                         )}
                                     </TableCell>
@@ -131,6 +159,12 @@ export default function UsuariosValesPage() {
                     </TableBody>
                 </Table>
             </div>
+            
+            <EditUsuarioDialog 
+                open={isEditDialogOpen} 
+                onOpenChange={setIsEditDialogOpen} 
+                usuario={editingUser} 
+            />
         </main>
     );
 }
