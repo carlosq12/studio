@@ -127,7 +127,7 @@ export function MarcaDetailsDialog({ selectedDetails, onClose, allowEditing = fa
                         {selectedDetails?.calidadContractual && (
                             <span className="text-xs text-blue-600 font-bold">
                                 Calidad: {selectedDetails.calidadContractual} 
-                                {selectedDetails.calidadContractual === 'C' || selectedDetails.calidadContractual === 'T' ? ' (Fórmula Titular/Contrata)' : ' (Fórmula Reemplazo/EDF)'}
+                                {['C', 'T'].includes(selectedDetails.calidadContractual) ? ' (Aplica Fórmula Descuentos)' : ' (No aplica fórmula - Pago Real)'}
                             </span>
                         )}
                     </div>
@@ -180,7 +180,7 @@ export function MarcaDetailsDialog({ selectedDetails, onClose, allowEditing = fa
                     <div className="mt-1 border-t border-blue-200/50 pt-2">
                         <p className="text-[11px] font-semibold text-blue-900 mb-1">Cálculo Automático Original:</p>
                         <p className="text-[11px] text-blue-800 font-mono bg-white p-1.5 rounded border border-blue-100">
-                            {selectedDetails.calidadContractual === 'C' || selectedDetails.calidadContractual === 'T' ? (
+                            {['C', 'T'].includes(selectedDetails.calidadContractual || 'C') ? (
                                 `${selectedDetails.diasHabilesPago} (Mes Pago) - (${selectedDetails.diasHabilesAsistencia} (Mes Asistencia) - ${selectedDetails.diasHabilesAsistencia - (selectedDetails.diasHabilesPago - selectedDetails.valesCalculadosReales)} (Trabajados)) = ${selectedDetails.valesCalculadosReales} Vales`
                             ) : (
                                 `${selectedDetails.valesCalculadosReales} (Días Trabajados en Asistencia) = ${selectedDetails.valesCalculadosReales} Vales`

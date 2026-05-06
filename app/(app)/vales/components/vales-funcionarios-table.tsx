@@ -176,7 +176,14 @@ export function ValesFuncionariosTable({ funcionarios, isLoading, onViewMarcas }
                     <TableCell>{f.departamento || '-'}</TableCell>
                     <TableCell>
                       {f.calidadContractual ? (
-                        <Badge variant="outline" className="font-mono bg-slate-50">{f.calidadContractual}</Badge>
+                        <div className="flex flex-col gap-1 items-start">
+                          <Badge variant="outline" className="font-mono bg-slate-50">{f.calidadContractual}</Badge>
+                          {['C', 'T'].includes(f.calidadContractual) ? (
+                              <span className="text-[10px] text-blue-600 font-medium">Aplica Fórmula</span>
+                          ) : (
+                              <span className="text-[10px] text-muted-foreground">No aplica fórm.</span>
+                          )}
+                        </div>
                       ) : '-'}
                     </TableCell>
                     <TableCell>

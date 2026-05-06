@@ -342,6 +342,7 @@ export function AddFuncionarioValeDialog({ open, onOpenChange, funcionario }: Ad
                                                 <SelectItem value="C">Contrata (C)</SelectItem>
                                                 <SelectItem value="R">Reemplazo (R)</SelectItem>
                                                 <SelectItem value="EDF">EDF</SelectItem>
+                                                <SelectItem value="TU">Turnante (TU)</SelectItem>
                                             </SelectContent>
                                         </Select>
                                         <FormMessage />

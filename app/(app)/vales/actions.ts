@@ -144,7 +144,7 @@ export async function processMarcasMasivas(
             const calidad = (funcionarioMatch.calidadContractual || 'C').toUpperCase();
             const diasTrabajadosReales = result.jornadasValidas;
 
-            if (calidad === 'R' || calidad === 'EDF') {
+            if (calidad === 'R' || calidad === 'EDF' || calidad === 'TU') {
                 valesAPagar = diasTrabajadosReales;
             } else {
                 const ausencias = Math.max(0, diasHabilesAsistencia - diasTrabajadosReales);

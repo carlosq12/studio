@@ -273,3 +273,14 @@ export type HistorialCargaViaticos = {
   montoTotalDescontado: number;
   fileName?: string;
 };
+
+export type UsuarioFuncionario = {
+  id: string; // The Firebase Auth UID
+  uid: string;
+  rut: string;
+  email: string;
+  estado: 'Pendiente' | 'Aprobado' | 'Rechazado';
+  fechaRegistro: any;
+  nombres?: string;
+  apellidos?: string;
+};

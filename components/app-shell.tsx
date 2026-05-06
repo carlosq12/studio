@@ -25,7 +25,8 @@ import {
   BrainCircuit,
   BriefcaseBusiness,
   Boxes,
-  Utensils
+  Utensils,
+  UserCheck
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 
@@ -39,6 +40,7 @@ const navItems = [
   { href: '/replacements', icon: UsersRound, label: 'Reemplazo' },
   { href: '/intelligent-assignment', icon: BrainCircuit, label: 'Asignación Inteligente' },
   { href: '/vales', icon: Utensils, label: 'Vales Alimentación' },
+  { href: '/usuarios-vales', icon: UserCheck, label: 'Aprobaciones Vales' },
 ];
 
 export function AppShell({ children }: { children: React.ReactNode }) {
