@@ -20,6 +20,11 @@ import { es } from 'date-fns/locale';
 
 const app = getApps().find(app => app.name === 'server-actions-vales') || initializeApp(firebaseConfig, 'server-actions-vales');
 const db = getFirestore(app);
+ 
+// Normalizar RUT
+function cleanRut(rut: string) {
+    return rut.replace(/[^0-9Kk]/g, '').toUpperCase();
+}
 
 // Eschemas de Validación Zod
 const funcionarioValeSchema = z.object({
@@ -483,25 +488,14 @@ export async function previewViaticosMasivos(viaticosList: any[], targetHistoria
         }
         
         // Mapa de RUT -> MarcaValeDoc (destino)
-        const results: any[] = [];
-        snap.forEach(doc => {
+        const targetMap = new Map<string, any>();
+        targetSnap.docs.forEach(doc => {
             const data = doc.data();
-            if (data.RUT && cleanRut(data.RUT) === cleanInputRut) {
-                // Coerce numeric fields to proper numbers
-                const viaticosNum = data.viaticos !== undefined ? Number(data.viaticos) : 0;
-                const diasTrabajadosNum = data.diasTrabajados !== undefined ? Number(data.diasTrabajados) : 0;
-                const montoAsignadoNum = data.montoAsignado !== undefined ? Number(data.montoAsignado) : 0;
-                results.push({
-                    id: doc.id,
-                    ...data,
-                    viaticos: viaticosNum,
-                    diasTrabajados: diasTrabajadosNum,
-                    montoAsignado: montoAsignadoNum,
-                    // Ensure month fields exist for selector logic
-                    mesPago: data.mesPago || data.mes || data.mesAsistencia || ''
-                });
-            }
-        });const monthsMap: Record<string, string> = {
+            const rut = data.RUT ? cleanRut(data.RUT) : '';
+            if (rut) targetMap.set(rut, { id: doc.id, ...data });
+        });
+
+        const monthsMap: Record<string, string> = {
             'ene': '01', 'feb': '02', 'mar': '03', 'abr': '04', 'may': '05', 'jun': '06',
             'jul': '07', 'ago': '08', 'sep': '09', 'oct': '10', 'nov': '11', 'dic': '12'
         };
