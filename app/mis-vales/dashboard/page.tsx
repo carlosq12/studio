@@ -87,7 +87,10 @@ export default function DashboardPage() {
         filteredVales.forEach(v => {
             v.detallesViaticos?.forEach((d: any) => {
                 const keys = Object.keys(d);
-                const resKey = keys.find(k => k.toLowerCase().includes('resolucion') || k.toLowerCase().includes('res'));
+                const resKey = keys.find(k => 
+                    (k.toLowerCase().includes('resolucion') || k.toLowerCase().includes('res')) && 
+                    !k.toLowerCase().includes('fecha')
+                ) || keys.find(k => k.toLowerCase().includes('resolucion') || k.toLowerCase().includes('res'));
                 const startKey = keys.find(k => k.toLowerCase().includes('inicio') || k.toLowerCase().includes('desde'));
                 const endKey = keys.find(k => k.toLowerCase().includes('termino') || k.toLowerCase().includes('hasta'));
                 
@@ -96,7 +99,7 @@ export default function DashboardPage() {
                     if (typeof val === 'number' && val > 20000 && val < 70000) {
                         const epoch = new Date(1899, 11, 30);
                         const dateObj = new Date(epoch.getTime() + val * 86400000);
-                        return `${dateObj.getDate().toString().padStart(2,'0')}/${(dateObj.getMonth()+1).toString().padStart(2,'0')}`;
+                        return `${dateObj.getDate().toString().padStart(2,'0')}/${(dateObj.getMonth()+1).toString().padStart(2,'0')}/${dateObj.getFullYear()}`;
                     }
                     return String(val || '');
                 };
