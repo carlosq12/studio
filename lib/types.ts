@@ -106,51 +106,51 @@ export type InventarioEquipo = {
 };
 
 export type Replacement = {
-    id: string;
-    'FECHA DE INGRESO DOC'?: any;
-    NOMBRE?: string;
-    MES?: string;
-    CARGO?: string;
-    FUNCIONES?: string;
-    UNIDAD?: string;
-    DESDE?: any;
-    HASTA?: any;
-    'NOMBRE REEMPLAZADO'?: string;
-    MOTIVO?: string;
-    OBSERVACION?: string;
-    IMAGEN?: string;
-    ESTADO?: string;
-    'JEFE SERVICIO'?: string;
-    CORREO?: string;
-    ESTADO_R_NR?: string;
-    'FECHA DEL AVISO'?: any;
-    AÑO?: string;
-    'NUMERO RES'?: string;
-    archivadorId?: string;
-    originalEmployeeId?: string;
-    replacementEmployeeId?: string;
-    date?: string;
-    shift?: string;
-    reason?: string;
-    status?: string;
-    ES_PARCIAL?: boolean;
-    FECHA_PARCIAL?: any;
-    FECHA_PARCIAL_INICIO?: any;
-    FECHA_PARCIAL_FIN?: any;
-    PARCIALES?: { inicio: any; fin: any; mes?: string }[];
+  id: string;
+  'FECHA DE INGRESO DOC'?: any;
+  NOMBRE?: string;
+  MES?: string;
+  CARGO?: string;
+  FUNCIONES?: string;
+  UNIDAD?: string;
+  DESDE?: any;
+  HASTA?: any;
+  'NOMBRE REEMPLAZADO'?: string;
+  MOTIVO?: string;
+  OBSERVACION?: string;
+  IMAGEN?: string;
+  ESTADO?: string;
+  'JEFE SERVICIO'?: string;
+  CORREO?: string;
+  ESTADO_R_NR?: string;
+  'FECHA DEL AVISO'?: any;
+  AÑO?: string;
+  'NUMERO RES'?: string;
+  archivadorId?: string;
+  originalEmployeeId?: string;
+  replacementEmployeeId?: string;
+  date?: string;
+  shift?: string;
+  reason?: string;
+  status?: string;
+  ES_PARCIAL?: boolean;
+  FECHA_PARCIAL?: any;
+  FECHA_PARCIAL_INICIO?: any;
+  FECHA_PARCIAL_FIN?: any;
+  PARCIALES?: { inicio: any; fin: any; mes?: string }[];
 }
 
 export type MonthlyTemplate = {
-    id: string;
-    NOMBRE: string;
-    'NOMBRE REEMPLAZADO': string;
-    CARGO?: string;
-    UNIDAD?: string;
-    MOTIVO?: string;
-    FUNCIONES?: string;
-    'JEFE SERVICIO'?: string;
-    CORREO?: string;
-    lastGeneratedMonth?: string;
+  id: string;
+  NOMBRE: string;
+  'NOMBRE REEMPLAZADO': string;
+  CARGO?: string;
+  UNIDAD?: string;
+  MOTIVO?: string;
+  FUNCIONES?: string;
+  'JEFE SERVICIO'?: string;
+  CORREO?: string;
+  lastGeneratedMonth?: string;
 };
 
 export type IngresoFuncionario = {
@@ -188,12 +188,12 @@ export type Archivador = {
 };
 
 export type IPLog = {
-    id: string;
-    employeeId: string;
-    employeeName: string;
-    device: string;
-    ipAddress: string;
-    lastSeen: string;
+  id: string;
+  employeeId: string;
+  employeeName: string;
+  device: string;
+  ipAddress: string;
+  lastSeen: string;
 }
 
 export type Efemeride = {
