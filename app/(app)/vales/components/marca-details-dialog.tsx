@@ -427,7 +427,7 @@ export function MarcaDetailsDialog({ selectedDetails, onClose, allowEditing = fa
                                         {selectedDetails?.observaciones ? (
                                             <div className="p-4 space-y-3">
                                                 <div className="bg-orange-50/40 p-2.5 rounded-xl border border-orange-100 text-[11px] text-orange-900 font-bold italic leading-tight text-left">
-                                                    "{selectedDetails.observaciones}"
+                                                    &ldquo;{selectedDetails.observaciones}&rdquo;
                                                 </div>
                                                 
                                                 {selectedDetails.detallesViaticos && selectedDetails.detallesViaticos.length > 0 && (

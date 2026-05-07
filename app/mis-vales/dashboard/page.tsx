@@ -217,7 +217,7 @@ export default function DashboardPage() {
                                                         <span className="text-[9px] font-black uppercase text-orange-600 tracking-wider">Ajuste de Viáticos</span>
                                                     </div>
                                                     <p className="text-[10px] text-orange-900 font-medium italic leading-tight">
-                                                        "{vale.observaciones}"
+                                                        &ldquo;{vale.observaciones}&rdquo;
                                                     </p>
                                                 </div>
                                             )}
