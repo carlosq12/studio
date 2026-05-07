@@ -7,6 +7,16 @@ import { getFirestore } from 'firebase/firestore';
 import { firebaseConfig } from '@/firebase/config';
 import type { FuncionarioVale, MarcaVale } from '@/lib/types';
 import { calcularJornadasAvanzado, MarcacionRow, FuncionarioInfo } from './utils/calculos';
+import { 
+  format, 
+  parse, 
+  eachDayOfInterval, 
+  isWithinInterval, 
+  isSameDay, 
+  isValid,
+  startOfMonth
+} from 'date-fns';
+import { es } from 'date-fns/locale';
 
 const app = getApps().find(app => app.name === 'server-actions-vales') || initializeApp(firebaseConfig, 'server-actions-vales');
 const db = getFirestore(app);
@@ -444,87 +454,134 @@ export async function setDiaValidez(marcaId: string, indices: number[], esValido
     }
 }
 
-export async function previewViaticosMasivos(viaticosList: any[], historialId: string) {
+function parseExcelDate(val: any): Date | null {
+    if (!val) return null;
+    if (val instanceof Date) return val;
+    if (typeof val === 'number') {
+        const excelEpoch = new Date(1899, 11, 30);
+        return new Date(excelEpoch.getTime() + val * 86400000);
+    }
+    const s = String(val).trim();
+    // Intentar formatos comunes: DD/MM/YYYY o YYYY-MM-DD
+    const formats = ['dd/MM/yyyy', 'yyyy-MM-dd', 'dd-MM-yyyy'];
+    for (const f of formats) {
+        const p = parse(s, f, new Date());
+        if (isValid(p)) return p;
+    }
+    return null;
+}
+
+export async function previewViaticosMasivos(viaticosList: any[], targetHistorialId: string) {
     try {
-        const viaticosMap = new Map<string, { count: number, fechas: Set<string>, rawRows: any[] }>();
+        const previewResults: any[] = [];
         
+        // 1. Obtener todos los registros del historial de destino
+        const qTarget = query(collection(db, 'marcas_vales'), where('historialId', '==', targetHistorialId));
+        const targetSnap = await getDocs(qTarget);
+        if (targetSnap.empty) {
+            return { error: "No hay registros de vales en el historial seleccionado." };
+        }
+        
+        // Mapa de RUT -> MarcaValeDoc (destino)
+        const targetMap = new Map<string, any>();
+        targetSnap.forEach(d => {
+            const data = d.data();
+            const rutNorm = String(data.RUT).replace(/[^0-9Kk]/g, '').toUpperCase();
+            targetMap.set(rutNorm, { id: d.id, ...data });
+        });
+
+        const monthsMap: Record<string, string> = {
+            'ene': '01', 'feb': '02', 'mar': '03', 'abr': '04', 'may': '05', 'jun': '06',
+            'jul': '07', 'ago': '08', 'sep': '09', 'oct': '10', 'nov': '11', 'dic': '12'
+        };
+
+        // 2. Agrupar el Excel por RUT
+        const groupedByRut = new Map<string, any[]>();
+        viaticosList.forEach(item => {
+            const rutRaw = String(item['RUT'] || item['Rut'] || item['rut'] || '').trim();
+            if (!rutRaw) return;
+            const rutNorm = rutRaw.replace(/[^0-9Kk]/g, '').toUpperCase();
+            if (!groupedByRut.has(rutNorm)) groupedByRut.set(rutNorm, []);
+            groupedByRut.get(rutNorm)!.push(item);
+        });
+
+        // 3. Procesar cada fila del Excel
         for (const item of viaticosList) {
             const rutRaw = String(item['RUT'] || item['Rut'] || item['rut'] || '').trim();
             if (!rutRaw) continue;
             
             const rutNorm = rutRaw.replace(/[^0-9Kk]/g, '').toUpperCase();
-            if (!rutNorm) continue;
+            const targetMarca = targetMap.get(rutNorm);
             
-            const aDescontarVal = item['A descontar'] !== undefined ? Number(item['A descontar']) : 
-                                  (item['TOTAL DIAS'] !== undefined ? Number(item['TOTAL DIAS']) : 1);
-            
-            const rawDate = item['FECHA'] || item['Fecha'] || item['fecha'];
-            let parsedDate = '';
-            if (rawDate) {
-                 if (typeof rawDate === 'number') {
-                     const excelEpoch = new Date(1899, 11, 30);
-                     const dateObj = new Date(excelEpoch.getTime() + rawDate * 86400000);
-                     parsedDate = `${dateObj.getDate().toString().padStart(2, '0')}/${(dateObj.getMonth() + 1).toString().padStart(2, '0')}`;
-                 } else {
-                     parsedDate = String(rawDate).trim();
-                 }
-            }
-            
-            if (!isNaN(aDescontarVal) && aDescontarVal > 0) {
-                const current = viaticosMap.get(rutNorm) || { count: 0, fechas: new Set<string>(), rawRows: [] };
-                current.count += aDescontarVal;
-                if (parsedDate) {
-                    current.fechas.add(parsedDate);
-                }
-                current.rawRows.push(item);
-                viaticosMap.set(rutNorm, current);
-            }
-        }
-        
-        if (viaticosMap.size === 0) {
-           return { error: "No se encontraron RUTs válidos ni días a descontar en el archivo." };
-        }
+            if (!targetMarca) continue; // Si no está en el mes de destino, no podemos descontar
 
-        const q = query(collection(db, 'marcas_vales'), where('historialId', '==', historialId));
-        const snapshot = await getDocs(q);
-        
-        const previewResults: any[] = [];
-        let rutsMatched = 0;
+            const resNo = String(item['NUMERO_RESOLUCION'] || item['NUMERO RES'] || item['Resolucion'] || 'S/N').trim();
+            const start = parseExcelDate(item['FECHA_INICIO'] || item['FECHA INICIO'] || item['DESDE']);
+            const end = parseExcelDate(item['FECHA_TERMINO'] || item['FECHA TERMINO'] || item['HASTA']);
 
-        snapshot.forEach((docSnap) => {
-            const data = docSnap.data() as MarcaVale;
-            if (!data.RUT) return;
-            const rutNorm = String(data.RUT).replace(/[^0-9Kk]/g, '').toUpperCase();
-            
-            if (viaticosMap.has(rutNorm)) {
-                rutsMatched++;
-                const viaticoData = viaticosMap.get(rutNorm)!;
-                const viaticosToDiscount = viaticoData.count;
-                const fechasStr = Array.from(viaticoData.fechas).join(', ');
-                
-                let oldVales = data.diasTrabajados || 0;
-                let oldViaticos = data.viaticos || 0;
-                
-                // Real earned without discount
-                const realEarnedVales = oldVales + oldViaticos;
-                const newVales = Math.max(0, realEarnedVales - viaticosToDiscount);
-                
-                previewResults.push({
-                    marcaId: docSnap.id,
-                    rut: data.RUT,
-                    nombres: `${data.nombres} ${data.apellidos || ''}`.trim(),
-                    valesOriginales: realEarnedVales,
-                    viaticosDetectados: viaticosToDiscount,
-                    fechasViaticos: fechasStr,
-                    valesFinales: newVales,
-                    rawRows: viaticoData.rawRows,
-                    historialId: data.historialId || null
+            if (!start || !end) continue;
+
+            // Obtener TODAS las marcas históricas para este funcionario una sola vez
+            // Usamos el RUT original del documento para que la consulta de Firestore funcione (por los puntos/guiones)
+            const rutParaConsulta = targetMarca.RUT || rutNorm;
+            let allMarcas = [];
+            const qAll = query(collection(db, 'marcas_vales'), where('RUT', '==', rutParaConsulta));
+            const allSnap = await getDocs(qAll);
+            allMarcas = allSnap.docs.map(d => d.data() as MarcaVale);
+
+            if (allMarcas.length === 0) {
+                console.log(`[Análisis] No se encontró historial para el RUT original: ${rutParaConsulta}. Probando con RUT normalizado...`);
+                const qNorm = query(collection(db, 'marcas_vales'), where('RUT', '==', rutNorm));
+                const snapNorm = await getDocs(qNorm);
+                allMarcas = snapNorm.docs.map(d => d.data() as MarcaVale);
+            }
+
+            const daysInRange = eachDayOfInterval({ start, end });
+            let countForThisRes = 0;
+            const validatedDays: string[] = [];
+
+            daysInRange.forEach(day => {
+                const dayStr = format(day, 'yyyy-MM-dd');
+                const hasValidMark = allMarcas.some(m => {
+                    return m.detalles?.some(d => {
+                        if (!d.esValida) return false;
+                        const parts = d.horario.split('|')[0].trim().toLowerCase();
+                        const match = parts.match(/(\d{1,2})\s+(\w{3})\s+(\d{4})/);
+                        if (match) {
+                            const dNum = match[1].padStart(2, '0');
+                            const mNum = monthsMap[match[2]];
+                            if (mNum && `${match[3]}-${mNum}-${dNum}` === dayStr) return true;
+                        }
+                        return parts.includes(dayStr);
+                    });
                 });
-            }
-        });
-        
+
+                if (hasValidMark) {
+                    countForThisRes++;
+                    validatedDays.push(format(day, 'dd/MM'));
+                }
+            });
+
+            // Agregamos a la previa aunque count sea 0, para que el usuario vea que se procesó
+            const realEarnedVales = (targetMarca.diasTrabajados || 0) + (targetMarca.viaticos || 0);
+            
+            previewResults.push({
+                marcaId: targetMarca.id,
+                rut: rutNorm,
+                nombres: `${targetMarca.nombres} ${targetMarca.apellidos || ''}`.trim(),
+                resolucion: resNo,
+                rango: `${format(start, 'dd/MM')} al ${format(end, 'dd/MM')}`,
+                diasRango: daysInRange.length,
+                viaticosDetectados: countForThisRes,
+                valesOriginales: realEarnedVales,
+                valesFinales: Math.max(0, realEarnedVales - countForThisRes),
+                fechasValidadas: validatedDays.join(', '),
+                rawRows: [item]
+            });
+        }
+
         if (previewResults.length === 0) {
-             return { error: "Se procesó el archivo, pero ninguno de los RUTs coincide con los vales registrados para esta carga." };
+            return { error: "Ningún funcionario del Excel coincide con el historial de destino seleccionado." };
         }
 
         return { success: true, previews: previewResults };
@@ -535,7 +592,7 @@ export async function previewViaticosMasivos(viaticosList: any[], historialId: s
     }
 }
 
-export async function applySelectedViaticosMasivos(selectedDiscounts: any[], valorVale: number = 4000, fileName?: string, selectedHistorialId?: string) {
+export async function applySelectedViaticosMasivos(selectedDiscounts: any[], valorVale: number = 4000) {
     if (!selectedDiscounts || selectedDiscounts.length === 0) {
          return { error: 'No seleccionaste ningún descuento para aplicar.' };
     }
@@ -544,28 +601,46 @@ export async function applySelectedViaticosMasivos(selectedDiscounts: any[], val
         let updatedCount = 0;
         const historialDiffs = new Map<string, number>();
 
-        // Enviar todas las lecturas previas necesarias
-        for (const discount of selectedDiscounts) {
-             const marcaRef = doc(db, 'marcas_vales', discount.marcaId);
+        // Agrupar por marcaId para consolidar múltiples resoluciones
+        const consolidado = new Map<string, { 
+            totalADescontar: number, 
+            detalles: string[],
+            rawRows: any[] 
+        }>();
+
+        selectedDiscounts.forEach(d => {
+            const current = consolidado.get(d.marcaId) || { totalADescontar: 0, detalles: [], rawRows: [] };
+            current.totalADescontar += d.viaticosDetectados;
+            current.detalles.push(`Res ${d.resolucion}: ${d.viaticosDetectados} días (${d.fechasValidadas || 'sin marcas'})`);
+            current.rawRows.push(...(d.rawRows || []));
+            consolidado.set(d.marcaId, current);
+        });
+
+        for (const [marcaId, updateData] of Array.from(consolidado.entries())) {
+             const marcaRef = doc(db, 'marcas_vales', marcaId);
              const marcaSnap = await getDoc(marcaRef);
              
              if (marcaSnap.exists()) {
                  const data = marcaSnap.data() as MarcaVale;
                  
-                 const newVales = discount.valesFinales;
-                 const newViaticos = discount.viaticosDetectados;
+                 // Calculamos totales reales (Días Trabajados + Viáticos que ya tenía)
+                 const totalRealGanados = (data.diasTrabajados || 0) + (data.viaticos || 0);
+                 
+                 // El nuevo total de viáticos será lo que ya tenía + lo nuevo (sin pasarse del total ganado)
+                 const totalNuevosViaticos = Math.min(totalRealGanados, (data.viaticos || 0) + updateData.totalADescontar);
+                 const totalNuevosVales = Math.max(0, totalRealGanados - totalNuevosViaticos);
                  
                  const oldMonto = data.montoAsignado || 0;
-                 const newMonto = newVales * valorVale;
+                 const newMonto = totalNuevosVales * valorVale;
                  const diff = newMonto - oldMonto;
                  
                  batch.update(marcaRef, {
-                      diasTrabajados: newVales,
-                      viaticos: newViaticos,
+                      diasTrabajados: totalNuevosVales,
+                      viaticos: totalNuevosViaticos,
                       montoAsignado: newMonto,
-                      observaciones: `Se descontaron ${newViaticos} viáticos.${discount.fechasViaticos ? ` (Fechas: ${discount.fechasViaticos})` : ''} (Revisado Manualmente)`,
-                      detallesViaticos: discount.rawRows || [],
-                      columnasViaticos: discount.rawRows && discount.rawRows.length > 0 ? Object.keys(discount.rawRows[0]) : []
+                      observaciones: `${data.observaciones || ''}\n[Carga Masiva]: ${updateData.detalles.join(' | ')}`.trim(),
+                      detallesViaticos: updateData.rawRows,
+                      columnasViaticos: updateData.rawRows.length > 0 ? Object.keys(updateData.rawRows[0]) : []
                  });
                  
                  updatedCount++;
@@ -588,28 +663,12 @@ export async function applySelectedViaticosMasivos(selectedDiscounts: any[], val
                       });
                   }
             }
-            
-            if (selectedHistorialId) {
-                const viaticosHistRef = doc(collection(db, 'historial_cargas_viaticos'));
-                let totalDiff = 0;
-                for (const diff of Array.from(historialDiffs.values())) {
-                    totalDiff += Math.abs(diff); // Use absolute value to represent total discounted
-                }
-                batch.set(viaticosHistRef, {
-                    fechaCarga: Timestamp.now(),
-                    historialValesId: selectedHistorialId,
-                    cantidadRegistros: updatedCount,
-                    montoTotalDescontado: totalDiff,
-                    fileName: fileName || 'Archivo manual'
-                });
-            }
-            
             await batch.commit();
         }
         return { success: true, count: updatedCount };
     } catch (error: any) {
-        console.error("Error al aplicar viáticos seleccionados:", error);
-        return { error: 'Error al guardar los descuentos: ' + error.message };
+        console.error("Error al aplicar viáticos:", error);
+        return { error: 'Error al aplicar descuentos: ' + error.message };
     }
 }
 

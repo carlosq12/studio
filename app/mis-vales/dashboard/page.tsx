@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, LogOut, CalendarCheck, FileQuestion, Info } from 'lucide-react';
+import { Loader2, LogOut, CalendarCheck, FileQuestion, Info, TrendingDown, AlertCircle } from 'lucide-react';
 import { fetchMisVales } from '../actions';
 import { MarcaDetailsDialog } from '@/app/(app)/vales/components/marca-details-dialog';
 
@@ -210,6 +210,17 @@ export default function DashboardPage() {
                                         </div>
                                         
                                         <div className="w-full space-y-2 mt-2">
+                                            {vale.viaticos > 0 && vale.observaciones && (
+                                                <div className="bg-orange-50/50 border border-orange-100 rounded-xl p-2.5 mb-2 group-hover:bg-orange-50 transition-colors">
+                                                    <div className="flex items-center gap-1.5 mb-1">
+                                                        <Info className="h-3 w-3 text-orange-500" />
+                                                        <span className="text-[9px] font-black uppercase text-orange-600 tracking-wider">Ajuste de Viáticos</span>
+                                                    </div>
+                                                    <p className="text-[10px] text-orange-900 font-medium italic leading-tight">
+                                                        "{vale.observaciones}"
+                                                    </p>
+                                                </div>
+                                            )}
                                             <div className="flex justify-between text-xs text-slate-500">
                                                 <span>Días Trabajados:</span>
                                                 <span className="font-bold text-slate-700">{vale.diasPresenciales || vale.diasTrabajados} / {vale.diasHabilesAsistencia || 20}</span>
@@ -237,6 +248,89 @@ export default function DashboardPage() {
                     </div>
                 </div>
             </div>
+            {/* VIÁTICOS PANEL — solo si hay descuentos */}
+            {vales.some(v => (v.viaticos ?? 0) > 0) && (
+                <div className="flex flex-col gap-4">
+                    <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+                        <TrendingDown className="h-5 w-5 text-orange-500" />
+                        Descuentos por Viáticos
+                    </h3>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {vales.filter(v => (v.viaticos ?? 0) > 0).map((vale) => (
+                            <div key={vale.id} className="group relative bg-white border border-orange-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-md hover:border-orange-300 transition-all duration-300">
+                                {/* Header naranja */}
+                                <div className="bg-gradient-to-r from-orange-500 to-orange-600 px-4 py-3 flex items-center justify-between">
+                                    <div>
+                                        <span className="text-[9px] font-black uppercase text-orange-100 tracking-widest">Mes Afectado</span>
+                                        <p className="text-white font-black text-sm leading-tight">{vale.mesPago || vale.mes}</p>
+                                    </div>
+                                    <div className="bg-white/20 backdrop-blur-sm rounded-xl px-3 py-1.5 text-center">
+                                        <span className="text-[9px] font-black text-orange-100 uppercase block">Descuento</span>
+                                        <span className="text-2xl font-black text-white leading-none">-{vale.viaticos}</span>
+                                    </div>
+                                </div>
+
+                                {/* Body */}
+                                <div className="p-4 space-y-3">
+                                    {/* Vales antes / después */}
+                                    <div className="flex items-center gap-2">
+                                        <div className="flex-1 bg-slate-50 border border-slate-100 rounded-xl p-2 text-center">
+                                            <span className="text-[8px] font-black uppercase text-slate-400 tracking-wider block">Original</span>
+                                            <span className="text-xl font-black text-slate-600">{vale.diasTrabajados + vale.viaticos}</span>
+                                        </div>
+                                        <div className="text-orange-400 font-black text-lg">→</div>
+                                        <div className="flex-1 bg-green-50 border border-green-100 rounded-xl p-2 text-center">
+                                            <span className="text-[8px] font-black uppercase text-green-600 tracking-wider block">Final</span>
+                                            <span className="text-xl font-black text-green-700">{vale.diasTrabajados}</span>
+                                        </div>
+                                    </div>
+
+                                    {/* Motivo */}
+                                    {vale.observaciones && (
+                                        <div className="bg-orange-50/60 border border-orange-100 rounded-xl p-3 flex items-start gap-2">
+                                            <AlertCircle className="h-3.5 w-3.5 text-orange-500 mt-0.5 shrink-0" />
+                                            <p className="text-[10px] text-orange-900 font-medium italic leading-snug">
+                                                {vale.observaciones}
+                                            </p>
+                                        </div>
+                                    )}
+
+                                    {/* Fechas del Excel si existen */}
+                                    {vale.detallesViaticos && vale.detallesViaticos.length > 0 && (
+                                        <div className="space-y-1.5">
+                                            <span className="text-[8px] font-black uppercase text-slate-400 tracking-widest">Fechas descontadas</span>
+                                            <div className="flex flex-wrap gap-1">
+                                                {vale.detallesViaticos.slice(0, 6).map((d: any, i: number) => {
+                                                    const keys = Object.keys(d);
+                                                    const fechaKey = keys.find(k => k.toLowerCase().includes('fecha'));
+                                                    const fechaVal = fechaKey ? d[fechaKey] : null;
+                                                    let fechaStr = fechaKey && fechaVal ? String(fechaVal) : '';
+                                                    if (fechaKey && typeof fechaVal === 'number' && fechaVal > 20000 && fechaVal < 70000) {
+                                                        const epoch = new Date(1899, 11, 30);
+                                                        const dateObj = new Date(epoch.getTime() + fechaVal * 86400000);
+                                                        fechaStr = `${dateObj.getDate().toString().padStart(2,'0')}/${(dateObj.getMonth()+1).toString().padStart(2,'0')}`;
+                                                    }
+                                                    return fechaStr ? (
+                                                        <span key={i} className="bg-orange-100 text-orange-700 text-[9px] font-bold px-2 py-0.5 rounded-full">
+                                                            {fechaStr}
+                                                        </span>
+                                                    ) : null;
+                                                })}
+                                                {vale.detallesViaticos.length > 6 && (
+                                                    <span className="bg-slate-100 text-slate-500 text-[9px] font-bold px-2 py-0.5 rounded-full">
+                                                        +{vale.detallesViaticos.length - 6} más
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
 
             {selectedMarca && (
                 <MarcaDetailsDialog 

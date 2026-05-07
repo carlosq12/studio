@@ -46,7 +46,7 @@ export function BulkUploadViaticosSheet() {
   
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [previews, setPreviews] = useState<any[]>([]);
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [selectedIndices, setSelectedIndices] = useState<Set<number>>(new Set());
   
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [selectedPreview, setSelectedPreview] = useState<any>(null);
@@ -81,7 +81,7 @@ export function BulkUploadViaticosSheet() {
       setFile(null);
       setSelectedHistorialId('');
       setPreviews([]);
-      setSelectedIds(new Set());
+      setSelectedIndices(new Set());
   }
 
   const handleAnalyze = async () => {
@@ -90,7 +90,7 @@ export function BulkUploadViaticosSheet() {
       return;
     }
     if (!selectedHistorialId) {
-      toast({ title: 'Error', description: 'Por favor selecciona la carga de vales.', variant: 'destructive' });
+      toast({ title: 'Error', description: 'Por favor selecciona el mes de destino.', variant: 'destructive' });
       return;
     }
 
@@ -116,11 +116,11 @@ export function BulkUploadViaticosSheet() {
 
       const data = result.previews || [];
       setPreviews(data);
-      setSelectedIds(new Set(data.map(p => p.marcaId)));
+      setSelectedIndices(new Set(data.map((_: any, i: number) => i)));
       
       toast({
         title: 'Análisis Completado',
-        description: `Se detectaron ${data.length} coincidencias para descontar.`,
+        description: `Se detectaron ${data.length} funcionarios con viáticos válidos en el rango.`,
       });
       
     } catch (error: any) {
@@ -135,21 +135,21 @@ export function BulkUploadViaticosSheet() {
   };
 
   const handleApply = async () => {
-       if (selectedIds.size === 0) {
-           toast({ title: 'Atención', description: 'No has seleccionado ningún funcionario para aplicar descuentos.' });
+       if (selectedIndices.size === 0) {
+           toast({ title: 'Atención', description: 'No has seleccionado ningún descuento para aplicar.' });
            return;
        }
 
        setIsApplying(true);
        try {
-           const itemsToApply = previews.filter(p => selectedIds.has(p.marcaId));
+           const itemsToApply = previews.filter((_, i) => selectedIndices.has(i));
            
-           const result = await applySelectedViaticosMasivos(itemsToApply, 4000, file?.name, selectedHistorialId);
+           const result = await applySelectedViaticosMasivos(itemsToApply, 4000);
            if (result.error) throw new Error(result.error);
 
            toast({
                title: '¡Viáticos Aplicados!',
-               description: `Se han actualizado ${result.count} registros exitosamente.`,
+               description: `Se han actualizado ${result.count} registros en el historial seleccionado.`,
            });
 
            setIsOpen(false);
@@ -167,11 +167,11 @@ export function BulkUploadViaticosSheet() {
        }
   }
 
-  const toggleSelect = (id: string) => {
-      const newSet = new Set(selectedIds);
-      if (newSet.has(id)) newSet.delete(id);
-      else newSet.add(id);
-      setSelectedIds(newSet);
+  const toggleSelect = (index: number) => {
+      const newSet = new Set(selectedIndices);
+      if (newSet.has(index)) newSet.delete(index);
+      else newSet.add(index);
+      setSelectedIndices(newSet);
   }
 
   const openDetails = (row: any) => {
@@ -185,24 +185,24 @@ export function BulkUploadViaticosSheet() {
       <SheetTrigger asChild>
         <Button variant="outline" className="text-orange-600 border-orange-200 hover:bg-orange-50">
           <Plane className="mr-2 h-4 w-4" />
-          Subir Viáticos
+          Subir Viáticos (Rangos)
         </Button>
       </SheetTrigger>
-      <SheetContent className="sm:max-w-2xl w-full">
+      <SheetContent className="sm:max-w-3xl w-full">
         <SheetHeader>
-          <SheetTitle>Carga Revisada de Viáticos</SheetTitle>
+          <SheetTitle>Carga de Viáticos por Resoluciones</SheetTitle>
           <SheetDescription>
-             Sube el archivo Excel para previsualizar y confirmar a qué funcionarios se les descontará de sus vales.
+             Busca marcas válidas en cualquier mes pero descuenta los vales en el mes seleccionado.
           </SheetDescription>
         </SheetHeader>
 
         {previews.length === 0 ? (
             <div className="grid gap-4 py-6">
                 <div className="grid grid-cols-4 items-center gap-4">
-                    <Label className="text-right font-medium">Historial a afectar</Label>
+                    <Label className="text-right font-medium">Mes a descontar</Label>
                     <Select value={selectedHistorialId} onValueChange={setSelectedHistorialId} disabled={isLoadingHistoriales}>
                         <SelectTrigger className="col-span-3">
-                            <SelectValue placeholder="Seleccionar carga..." />
+                            <SelectValue placeholder="Seleccionar mes de destino..." />
                         </SelectTrigger>
                         <SelectContent>
                             {historiales.length === 0 && <SelectItem value="empty" disabled>No hay historiales</SelectItem>}
@@ -224,21 +224,21 @@ export function BulkUploadViaticosSheet() {
                         className="col-span-3"
                     />
                 </div>
-                <div className="text-sm border rounded-md p-4 bg-muted/30 ml-auto mr-auto w-full max-w-sm mt-4">
-                    <p className="font-semibold text-orange-700 mb-2">Formato esperado:</p>
+                <div className="text-sm border rounded-md p-4 bg-muted/30 ml-auto mr-auto w-full max-w-md mt-4">
+                    <p className="font-semibold text-orange-700 mb-2">Columnas esperadas:</p>
                     <ul className="list-disc pl-5 space-y-1 text-muted-foreground text-xs">
-                        <li>Columna obligatoria: <b>RUT</b></li>
-                        <li>Las filas duplicadas por RUT se contarán como múltiples viáticos.</li>
-                        <li>Si tienes una columna <b>TOTAL DIAS</b> o <b>A descontar</b>, se tomará ese valor directamente.</li>
+                        <li><b>RUT:</b> Identificador del funcionario.</li>
+                        <li><b>FECHA_INICIO / FECHA_TERMINO:</b> Rango del viático.</li>
+                        <li className="pt-2 italic">Se validará asistencia en cualquier mes, pero el descuento se hará en el mes seleccionado arriba.</li>
                     </ul>
                 </div>
                 
                 <div className="flex justify-end mt-4">
                     <Button onClick={handleAnalyze} disabled={isAnalyzing || !file || !selectedHistorialId}>
                         {isAnalyzing ? (
-                            <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Analizando...</>
+                            <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Buscando Marcas...</>
                         ) : (
-                            <><Search className="mr-2 h-4 w-4" /> Analizar Archivo</>
+                            <><Search className="mr-2 h-4 w-4" /> Analizar Resoluciones</>
                         )}
                     </Button>
                 </div>
@@ -248,59 +248,63 @@ export function BulkUploadViaticosSheet() {
                 <h3 className="font-semibold text-lg flex items-center justify-between">
                     <span>Previsualización de Descuentos</span>
                     <span className="text-sm font-normal text-muted-foreground bg-muted px-2 py-1 rounded">
-                        {selectedIds.size} seleccionados
+                        {selectedIndices.size} seleccionados
                     </span>
                 </h3>
                 
                 <div className="flex-1 border rounded-md overflow-hidden bg-background">
-                    <ScrollArea className="h-[400px]">
+                    <ScrollArea className="h-[450px]">
                         <Table>
                             <TableHeader className="bg-muted">
                                 <TableRow>
-                                    <TableHead className="w-[50px] text-center">
+                                    <TableHead className="w-[40px] text-center">
                                          <Checkbox 
-                                            checked={selectedIds.size === previews.length && previews.length > 0}
+                                            checked={selectedIndices.size === previews.length && previews.length > 0}
                                             onCheckedChange={(checked) => {
-                                                if (checked) setSelectedIds(new Set(previews.map(p => p.marcaId)));
-                                                else setSelectedIds(new Set());
+                                                if (checked) setSelectedIndices(new Set(previews.map((_, i) => i)));
+                                                else setSelectedIndices(new Set());
                                             }}
                                          />
                                     </TableHead>
-                                    <TableHead>RUT</TableHead>
-                                    <TableHead>Funcionario</TableHead>
-                                    <TableHead className="text-center">Vales<br/>Orig.</TableHead>
-                                    <TableHead className="text-center font-bold text-orange-600">Viáticos<br/>Detectados</TableHead>
-                                    <TableHead className="text-center font-bold text-green-700">Vales<br/>Finales</TableHead>
-                                    <TableHead className="w-[50px]"></TableHead>
+                                    <TableHead className="text-xs">Funcionario</TableHead>
+                                    <TableHead className="text-center text-xs">Vales<br/>Orig.</TableHead>
+                                    <TableHead className="text-center text-xs font-bold text-orange-600">Viáticos<br/>Rango</TableHead>
+                                    <TableHead className="text-center text-xs font-bold text-green-700">Vales<br/>Finales</TableHead>
+                                    <TableHead className="text-xs">Detalle Validado</TableHead>
+                                    <TableHead className="w-[40px]"></TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {previews.map((row) => (
-                                    <TableRow key={row.marcaId} className={selectedIds.has(row.marcaId) ? "bg-muted/20" : "opacity-60 grayscale"}>
+                                {previews.map((row, idx) => (
+                                    <TableRow key={idx} className={selectedIndices.has(idx) ? "bg-muted/20" : "opacity-60 grayscale"}>
                                         <TableCell className="text-center">
                                             <Checkbox 
-                                                checked={selectedIds.has(row.marcaId)}
-                                                onCheckedChange={() => toggleSelect(row.marcaId)}
+                                                checked={selectedIndices.has(idx)}
+                                                onCheckedChange={() => toggleSelect(idx)}
                                             />
                                         </TableCell>
-                                        <TableCell className="font-medium text-xs">{row.rut}</TableCell>
-                                        <TableCell className="text-xs">{row.nombres}</TableCell>
-                                        <TableCell className="text-center text-muted-foreground">{row.valesOriginales}</TableCell>
-                                        <TableCell className="text-center font-bold text-orange-600">
-                                            -{row.viaticosDetectados}
-                                            {row.fechasViaticos && (
-                                                <div className="text-[10px] font-normal text-muted-foreground mt-1">({row.fechasViaticos})</div>
-                                            )}
+                                        <TableCell>
+                                            <div className="font-bold text-[10px]">{row.rut}</div>
+                                            <div className="text-[9px] truncate max-w-[100px]">{row.nombres}</div>
                                         </TableCell>
-                                        <TableCell className="text-center font-bold text-green-700">
-                                            {selectedIds.has(row.marcaId) ? row.valesFinales : row.valesOriginales}
+                                        <TableCell className="text-center text-[10px] text-muted-foreground">
+                                            {row.valesOriginales}
+                                        </TableCell>
+                                        <TableCell className="text-center font-bold text-orange-600 text-[10px]">
+                                            -{row.viaticosDetectados}
+                                        </TableCell>
+                                        <TableCell className="text-center font-bold text-green-700 text-[10px]">
+                                            {selectedIndices.has(idx) ? row.valesFinales : row.valesOriginales}
+                                        </TableCell>
+                                        <TableCell>
+                                            <div className="text-[8px] text-muted-foreground leading-tight">
+                                                {row.fechasViaticos}
+                                            </div>
                                         </TableCell>
                                         <TableCell className="text-center">
-                                            {row.rawRows && row.rawRows.length > 0 && (
-                                                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => openDetails(row)}>
-                                                    <Eye className="h-4 w-4 text-blue-600" />
-                                                </Button>
-                                            )}
+                                            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => openDetails(row)}>
+                                                <Eye className="h-3 w-3 text-blue-600" />
+                                            </Button>
                                         </TableCell>
                                     </TableRow>
                                 ))}
@@ -311,13 +315,13 @@ export function BulkUploadViaticosSheet() {
 
                 <div className="flex justify-between pt-4">
                     <Button variant="outline" onClick={() => setPreviews([])} disabled={isApplying}>
-                        Cancelar Previa
+                        Cancelar
                     </Button>
-                    <Button onClick={handleApply} disabled={isApplying || selectedIds.size === 0} className="bg-orange-600 hover:bg-orange-700 text-white">
+                    <Button onClick={handleApply} disabled={isApplying || selectedIndices.size === 0} className="bg-orange-600 hover:bg-orange-700 text-white">
                         {isApplying ? (
-                            <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Guardando...</>
+                            <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Aplicando...</>
                         ) : (
-                            <><CheckCircle className="mr-2 h-4 w-4" /> Aplicar {selectedIds.size} Descuentos</>
+                            <><CheckCircle className="mr-2 h-4 w-4" /> Aplicar {selectedIndices.size} Resoluciones</>
                         )}
                     </Button>
                 </div>
@@ -329,37 +333,37 @@ export function BulkUploadViaticosSheet() {
     <Dialog open={detailsOpen} onOpenChange={setDetailsOpen}>
       <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
-              <DialogTitle>Detalle de Viáticos en Excel: {selectedPreview?.nombres}</DialogTitle>
+              <DialogTitle className="text-sm">Detalle de Resolución: {selectedPreview?.nombres}</DialogTitle>
           </DialogHeader>
-          <div className="mt-4">
-              {selectedPreview?.rawRows && selectedPreview.rawRows.length > 0 ? (
-                  <div className="border rounded-md overflow-hidden">
-                      <Table>
-                          <TableHeader className="bg-muted">
-                              <TableRow>
-                                  {Object.keys(selectedPreview.rawRows[0]).map(k => <TableHead key={k}>{k}</TableHead>)}
-                              </TableRow>
-                          </TableHeader>
-                          <TableBody>
-                              {selectedPreview.rawRows.map((r: any, idx: number) => (
-                                  <TableRow key={idx}>
-                                      {Object.entries(r).map(([k, v]: [string, any], i: number) => {
-                                          let displayValue = String(v);
-                                          if (k.toLowerCase().includes('fecha') && typeof v === 'number' && v > 20000 && v < 70000) {
-                                              const excelEpoch = new Date(1899, 11, 30);
-                                              const dateObj = new Date(excelEpoch.getTime() + v * 86400000);
-                                              displayValue = `${dateObj.getDate().toString().padStart(2, '0')}/${(dateObj.getMonth() + 1).toString().padStart(2, '0')}/${dateObj.getFullYear()}`;
-                                          }
-                                          return <TableCell key={i}>{displayValue}</TableCell>;
-                                      })}
-                                  </TableRow>
-                              ))}
-                          </TableBody>
-                      </Table>
+          <div className="mt-4 space-y-6">
+              <div className="border rounded-md p-4 bg-muted/20">
+                  <h4 className="font-bold text-xs mb-2 uppercase text-muted-foreground">Marcas Encontradas en Historia</h4>
+                  <div className="flex flex-wrap gap-2">
+                      {selectedPreview?.fechasValidadas ? (
+                          selectedPreview.fechasValidadas.split(', ').map((d: string) => (
+                              <span key={d} className="text-[10px] bg-green-50 text-green-700 px-2 py-0.5 rounded border border-green-100 font-medium">
+                                  {d}
+                              </span>
+                          ))
+                      ) : (
+                          <span className="text-xs text-orange-600 italic">No se encontraron marcas para este rango.</span>
+                      )}
                   </div>
-              ) : (
-                  <p className="text-sm text-muted-foreground">No hay detalles disponibles.</p>
-              )}
+              </div>
+
+              <div className="border rounded-md overflow-hidden">
+                  <h4 className="font-bold text-xs p-3 bg-muted border-b uppercase text-muted-foreground">Datos del Excel</h4>
+                  <Table>
+                      <TableBody>
+                          {selectedPreview?.rawRows?.[0] && Object.entries(selectedPreview.rawRows[0]).map(([k, v]: [string, any]) => (
+                              <TableRow key={k}>
+                                  <TableCell className="font-bold text-[10px] bg-muted/30 w-1/3">{k}</TableCell>
+                                  <TableCell className="text-[10px]">{String(v)}</TableCell>
+                              </TableRow>
+                          ))}
+                      </TableBody>
+                  </Table>
+              </div>
           </div>
       </DialogContent>
     </Dialog>
