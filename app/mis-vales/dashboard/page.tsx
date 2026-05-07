@@ -146,7 +146,7 @@ export default function DashboardPage() {
             </div>
 
             {/* MAIN GRID: Calendar | Historial | Viáticos (si aplica) */}
-            <div className={`grid grid-cols-1 gap-8 ${filteredVales.some(v => (v.viaticos ?? 0) > 0) ? 'lg:grid-cols-3' : 'lg:grid-cols-3'}`}>
+            <div className={`grid grid-cols-1 gap-8 ${vales.some(v => (v.viaticos ?? 0) > 0) ? 'lg:grid-cols-3' : 'lg:grid-cols-2'}`}>
                 {/* CALENDAR SECTION */}
                 <div className="lg:col-span-1 flex flex-col gap-4">
 
@@ -320,16 +320,23 @@ export default function DashboardPage() {
                     </div>
                 </div>
 
-                {/* VIÁTICOS PANEL — 3ra columna, solo si hay descuentos */}
-                {filteredVales.some(v => (v.viaticos ?? 0) > 0) && (
+                {/* VIÁTICOS PANEL — 3ra columna, visible si hay viaticos en CUALQUIER mes */}
+                {vales.some(v => (v.viaticos ?? 0) > 0) && (
                     <div className="lg:col-span-1 flex flex-col gap-4">
                         <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
                             <TrendingDown className="h-5 w-5 text-orange-500" />
                             Descuentos por Viáticos
                         </h3>
 
+                        {filteredVales.filter(v => Number(v.viaticos ?? 0) > 0).length === 0 ? (
+                            <div className="bg-slate-50 border border-dashed border-slate-200 rounded-2xl p-8 flex flex-col items-center gap-2 text-center">
+                                <TrendingDown className="h-8 w-8 text-slate-200" />
+                                <p className="text-sm font-bold text-slate-400">Sin descuentos</p>
+                                <p className="text-[11px] text-slate-400">No hay viáticos descontados en {formatMonth(selectedMonth)}.</p>
+                            </div>
+                        ) : (
                         <div className="flex flex-col gap-4">
-                            {filteredVales.filter(v => (v.viaticos ?? 0) > 0).map((vale) => (
+                            {filteredVales.filter(v => Number(v.viaticos ?? 0) > 0).map((vale) => (
                                 <div key={vale.id} className="group relative bg-white border border-orange-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-md hover:border-orange-300 transition-all duration-300">
                                     {/* Header naranja */}
                                     <div className="bg-gradient-to-r from-orange-500 to-orange-600 px-4 py-3 flex items-center justify-between">
@@ -349,7 +356,7 @@ export default function DashboardPage() {
                                         <div className="flex items-center gap-2">
                                             <div className="flex-1 bg-slate-50 border border-slate-100 rounded-xl p-2 text-center">
                                                 <span className="text-[8px] font-black uppercase text-slate-400 tracking-wider block">Original</span>
-                                                <span className="text-xl font-black text-slate-600">{vale.diasTrabajados + vale.viaticos}</span>
+                                                <span className="text-xl font-black text-slate-600">{Number(vale.diasTrabajados) + Number(vale.viaticos)}</span>
                                             </div>
                                             <div className="text-orange-400 font-black text-lg">→</div>
                                             <div className="flex-1 bg-green-50 border border-green-100 rounded-xl p-2 text-center">
@@ -401,6 +408,7 @@ export default function DashboardPage() {
                                 </div>
                             ))}
                         </div>
+                        )}
                     </div>
                 )}
             </div>
