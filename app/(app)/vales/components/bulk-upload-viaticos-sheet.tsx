@@ -69,7 +69,7 @@ export function BulkUploadViaticosSheet() {
         setIsLoadingHistoriales(false);
     });
     return () => unsubHistoriales();
-  }, [isOpen]);
+  }, [isOpen, selectedHistorialId]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {

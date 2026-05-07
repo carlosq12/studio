@@ -69,10 +69,6 @@ const formatDate = (date: any): string => {
 }
 
 export function ReplacementDetailsDialog({ replacement, open, onOpenChange }: ReplacementDetailsDialogProps) {
-  if (!replacement) return null;
-
-  const estadoRNR = replacement.ESTADO_R_NR || (replacement as any)['ESTADO R/NR'];
-
   const parcialesToShow = React.useMemo(() => {
     if (!replacement?.ES_PARCIAL) return [];
     if (replacement.PARCIALES && replacement.PARCIALES.length > 0) return replacement.PARCIALES;
@@ -81,6 +77,10 @@ export function ReplacementDetailsDialog({ replacement, open, onOpenChange }: Re
     }
     return [];
   }, [replacement]);
+
+  if (!replacement) return null;
+
+  const estadoRNR = replacement.ESTADO_R_NR || (replacement as any)['ESTADO R/NR'];
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
