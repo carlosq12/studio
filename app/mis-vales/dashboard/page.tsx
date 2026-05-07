@@ -113,6 +113,30 @@ export default function DashboardPage() {
         return details;
     }, [filteredVales]);
 
+    const totalDiasBeneficio = useMemo(() => {
+        let total = 0;
+        filteredVales.forEach(v => {
+            v.detallesViaticos?.forEach((d: any) => {
+                const keys = Object.keys(d);
+                const startKey = keys.find(k => k.toLowerCase().includes('inicio') || k.toLowerCase().includes('desde'));
+                const endKey = keys.find(k => k.toLowerCase().includes('termino') || k.toLowerCase().includes('hasta'));
+                
+                if (startKey && endKey) {
+                    const s = d[startKey];
+                    const e = d[endKey];
+                    if (typeof s === 'number' && typeof e === 'number') {
+                        total += Math.max(0, Math.floor(e - s)) + 1;
+                    } else {
+                        total += 1;
+                    }
+                } else {
+                    total += 1;
+                }
+            });
+        });
+        return total;
+    }, [filteredVales]);
+
     const currentMonthIdx = availableMonths.indexOf(selectedMonth);
     const canGoPrev = currentMonthIdx < availableMonths.length - 1;
     const canGoNext = currentMonthIdx > 0;
@@ -346,7 +370,7 @@ export default function DashboardPage() {
                                         <div className="space-y-0.5">
                                             <p className="text-[10px] font-black text-orange-600/70 uppercase tracking-widest leading-none">Beneficio Asignado</p>
                                             <div className="flex items-baseline gap-1">
-                                                <span className="text-3xl font-black text-orange-700">{totalViaticos}</span>
+                                                <span className="text-3xl font-black text-orange-700">{totalDiasBeneficio}</span>
                                                 <span className="text-sm font-bold text-orange-600/80">días</span>
                                             </div>
                                         </div>
@@ -360,8 +384,8 @@ export default function DashboardPage() {
                                             <div className="p-3 bg-white/80 border border-orange-100 rounded-xl">
                                                 <p className="text-[10px] text-orange-800 font-medium leading-relaxed italic">
                                                     {totalViaticos > 0 
-                                                      ? `Has recibido ${totalViaticos} días de viático en ${formatMonth(selectedMonth)}. Estos días son excluidos del cálculo de vales.`
-                                                      : `Se registran ${viaticosDetail.length} resoluciones de viático en este período, aunque no generaron descuentos en tus vales.`
+                                                      ? `Has recibido ${totalDiasBeneficio} días de viático en ${formatMonth(selectedMonth)}. Se han descontado ${totalViaticos} días de tu cálculo de vales.`
+                                                      : `Has recibido ${totalDiasBeneficio} días de viático en ${formatMonth(selectedMonth)}, aunque no generaron descuentos en tus vales actuales.`
                                                     }
                                                 </p>
                                             </div>
