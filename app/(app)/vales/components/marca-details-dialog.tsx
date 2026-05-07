@@ -146,8 +146,8 @@ export function MarcaDetailsDialog({ selectedDetails, onClose, allowEditing = fa
           if (!acc[datePart]) acc[datePart] = { marcas: [], valesCount: 0 };
           acc[datePart].marcas.push({ ...current, time: timePart || horarioStr, originalIndex: sorted.indexOf(current) });
           
-          if (current.esValida) {
-              acc[datePart].valesCount = 1;
+          if (current.esValida && current.estado.toLowerCase().includes('ent')) {
+              acc[datePart].valesCount++;
           }
           
           return acc;
@@ -158,14 +158,8 @@ export function MarcaDetailsDialog({ selectedDetails, onClose, allowEditing = fa
 
     const realDaysCount = useMemo(() => {
         if (!selectedDetails?.detalles) return selectedDetails?.diasTrabajados || 0;
-        const diasConMarcasValidas = new Set<string>();
-        selectedDetails.detalles.forEach((d: any) => {
-            if (d.esValida) {
-                const datePart = d.horario.split('|')[0];
-                diasConMarcasValidas.add(datePart);
-            }
-        });
-        return diasConMarcasValidas.size;
+        const totalMarcasValidas = selectedDetails.detalles.filter((d: any) => d.esValida).length;
+        return Math.floor(totalMarcasValidas / 2);
     }, [selectedDetails]);
 
     const handleRecalculate = async () => {

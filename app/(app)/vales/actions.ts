@@ -394,15 +394,11 @@ export async function recalculateMarcaVale(marcaId: string, valorVale: number = 
         if (forceRealDays !== undefined) {
             diasTrabajadosReales = forceRealDays;
         } else if (marcaData.detalles) {
-            // Contamos cuántos días únicos tienen al menos una marca válida
-            const diasConMarcasValidas = new Set<string>();
-            marcaData.detalles.forEach((d: any) => {
-                if (d.esValida) {
-                    const datePart = d.horario.split('|')[0];
-                    diasConMarcasValidas.add(datePart);
-                }
-            });
-            diasTrabajadosReales = diasConMarcasValidas.size;
+            // Un vale corresponde a una jornada completa (Entrada + Salida).
+            // El motor de cálculo marca ambos registros (Entrada y Salida) como esValida: true.
+            // Por lo tanto, el total de días reales es el total de marcas válidas dividido por 2.
+            const totalMarcasValidas = marcaData.detalles.filter((d: any) => d.esValida).length;
+            diasTrabajadosReales = Math.floor(totalMarcasValidas / 2);
         }
 
         // 3. Aplicar fórmula según calidad contractual detectada
