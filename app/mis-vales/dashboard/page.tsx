@@ -145,45 +145,50 @@ export default function DashboardPage() {
                 <div className="absolute bottom-[-20%] left-[-5%] w-48 h-48 bg-blue-400/20 rounded-full blur-2xl pointer-events-none" />
             </div>
 
-            {/* MAIN GRID: Calendar | Historial | Viáticos (si aplica) */}
-            <div className={`grid grid-cols-1 gap-8 ${vales.some(v => (v.viaticos ?? 0) > 0) ? 'lg:grid-cols-3' : 'lg:grid-cols-2'}`}>
+            {/* GLOBAL MONTH SELECTOR */}
+            {availableMonths.length > 0 && (
+                <div className="max-w-md mx-auto w-full">
+                    <div className="flex items-center justify-between bg-white/80 backdrop-blur-md border border-slate-200 rounded-2xl p-4 shadow-lg shadow-blue-50/50">
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-10 w-10 rounded-xl text-slate-400 hover:text-blue-600 hover:bg-blue-50 disabled:opacity-30 transition-all"
+                            onClick={() => setSelectedMonth(availableMonths[currentMonthIdx + 1])}
+                            disabled={!canGoPrev}
+                        >
+                            <ChevronLeft className="h-6 w-6" />
+                        </Button>
+
+                        <div className="flex flex-col items-center gap-1">
+                            <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Seleccionar Período</span>
+                            <div className="flex items-center gap-2">
+                                <span className="text-xl font-black text-slate-800 leading-tight">
+                                    {formatMonth(selectedMonth)}
+                                </span>
+                                <Badge variant="secondary" className="bg-blue-50 text-blue-600 border-blue-100 text-[10px] font-bold">
+                                    {currentMonthIdx + 1} / {availableMonths.length}
+                                </Badge>
+                            </div>
+                        </div>
+
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-10 w-10 rounded-xl text-slate-400 hover:text-blue-600 hover:bg-blue-50 disabled:opacity-30 transition-all"
+                            onClick={() => setSelectedMonth(availableMonths[currentMonthIdx - 1])}
+                            disabled={!canGoNext}
+                        >
+                            <ChevronRight className="h-6 w-6" />
+                        </Button>
+                    </div>
+                </div>
+            )}
+
+            {/* MAIN GRID: Calendar | Historial + Viáticos */}
+            <div className={`grid grid-cols-1 gap-8 ${'lg:grid-cols-2'}`}>
                 {/* CALENDAR SECTION */}
                 <div className="lg:col-span-1 flex flex-col gap-4">
 
-                    {/* MONTH SELECTOR */}
-                    {availableMonths.length > 0 && (
-                        <div className="flex items-center justify-between bg-white border border-slate-200 rounded-2xl p-3 shadow-sm">
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8 rounded-xl text-slate-400 hover:text-blue-600 hover:bg-blue-50 disabled:opacity-30"
-                                onClick={() => setSelectedMonth(availableMonths[currentMonthIdx + 1])}
-                                disabled={!canGoPrev}
-                            >
-                                <ChevronLeft className="h-4 w-4" />
-                            </Button>
-
-                            <div className="flex flex-col items-center gap-0.5">
-                                <span className="text-[9px] font-black uppercase text-slate-400 tracking-widest">Período</span>
-                                <span className="text-base font-black text-slate-800 leading-tight">
-                                    {formatMonth(selectedMonth)}
-                                </span>
-                                {availableMonths.length > 1 && (
-                                    <span className="text-[9px] text-slate-400">{currentMonthIdx + 1} de {availableMonths.length}</span>
-                                )}
-                            </div>
-
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8 rounded-xl text-slate-400 hover:text-blue-600 hover:bg-blue-50 disabled:opacity-30"
-                                onClick={() => setSelectedMonth(availableMonths[currentMonthIdx - 1])}
-                                disabled={!canGoNext}
-                            >
-                                <ChevronRight className="h-4 w-4" />
-                            </Button>
-                        </div>
-                    )}
 
                     <div className="flex items-center justify-between">
                         <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
@@ -318,11 +323,9 @@ export default function DashboardPage() {
                             ))
                         )}
                     </div>
-                </div>
 
-                {/* VIÁTICOS PANEL — 3ra columna, visible si hay viaticos en CUALQUIER mes */}
-                {vales.some(v => (v.viaticos ?? 0) > 0) && (
-                    <div className="lg:col-span-1 flex flex-col gap-4">
+                    {/* VIÁTICOS PANEL — siempre visible, debajo del historial */}
+                    <div className="flex flex-col gap-4 mt-8">
                         <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
                             <TrendingDown className="h-5 w-5 text-orange-500" />
                             Descuentos por Viáticos
@@ -335,82 +338,84 @@ export default function DashboardPage() {
                                 <p className="text-[11px] text-slate-400">No hay viáticos descontados en {formatMonth(selectedMonth)}.</p>
                             </div>
                         ) : (
-                        <div className="flex flex-col gap-4">
-                            {filteredVales.filter(v => Number(v.viaticos ?? 0) > 0).map((vale) => (
-                                <div key={vale.id} className="group relative bg-white border border-orange-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-md hover:border-orange-300 transition-all duration-300">
-                                    {/* Header naranja */}
-                                    <div className="bg-gradient-to-r from-orange-500 to-orange-600 px-4 py-3 flex items-center justify-between">
-                                        <div>
-                                            <span className="text-[9px] font-black uppercase text-orange-100 tracking-widest">Mes Afectado</span>
-                                            <p className="text-white font-black text-sm leading-tight">{vale.mesPago || vale.mes}</p>
-                                        </div>
-                                        <div className="bg-white/20 backdrop-blur-sm rounded-xl px-3 py-1.5 text-center">
-                                            <span className="text-[9px] font-black text-orange-100 uppercase block">Descuento</span>
-                                            <span className="text-2xl font-black text-white leading-none">-{vale.viaticos}</span>
-                                        </div>
-                                    </div>
-
-                                    {/* Body */}
-                                    <div className="p-4 space-y-3">
-                                        {/* Vales antes / después */}
-                                        <div className="flex items-center gap-2">
-                                            <div className="flex-1 bg-slate-50 border border-slate-100 rounded-xl p-2 text-center">
-                                                <span className="text-[8px] font-black uppercase text-slate-400 tracking-wider block">Original</span>
-                                                <span className="text-xl font-black text-slate-600">{Number(vale.diasTrabajados) + Number(vale.viaticos)}</span>
+                            <div className="flex flex-col gap-4">
+                                {filteredVales.filter(v => Number(v.viaticos ?? 0) > 0).map((vale) => (
+                                    <div key={vale.id} className="group relative bg-white border border-orange-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-md hover:border-orange-300 transition-all duration-300">
+                                        {/* Header naranja */}
+                                        <div className="bg-gradient-to-r from-orange-500 to-orange-600 px-4 py-3 flex items-center justify-between">
+                                            <div>
+                                                <span className="text-[9px] font-black uppercase text-orange-100 tracking-widest">Mes Afectado</span>
+                                                <p className="text-white font-black text-sm leading-tight">{vale.mesPago || vale.mes}</p>
                                             </div>
-                                            <div className="text-orange-400 font-black text-lg">→</div>
-                                            <div className="flex-1 bg-green-50 border border-green-100 rounded-xl p-2 text-center">
-                                                <span className="text-[8px] font-black uppercase text-green-600 tracking-wider block">Final</span>
-                                                <span className="text-xl font-black text-green-700">{vale.diasTrabajados}</span>
+                                            <div className="bg-white/20 backdrop-blur-sm rounded-xl px-3 py-1.5 text-center">
+                                                <span className="text-[9px] font-black text-orange-100 uppercase block">Descuento</span>
+                                                <span className="text-2xl font-black text-white leading-none">-{vale.viaticos}</span>
                                             </div>
                                         </div>
 
-                                        {/* Motivo */}
-                                        {vale.observaciones && (
-                                            <div className="bg-orange-50/60 border border-orange-100 rounded-xl p-3 flex items-start gap-2">
-                                                <AlertCircle className="h-3.5 w-3.5 text-orange-500 mt-0.5 shrink-0" />
-                                                <p className="text-[10px] text-orange-900 font-medium italic leading-snug">
-                                                    {vale.observaciones}
-                                                </p>
-                                            </div>
-                                        )}
-
-                                        {/* Fechas del Excel si existen */}
-                                        {vale.detallesViaticos && vale.detallesViaticos.length > 0 && (
-                                            <div className="space-y-1.5">
-                                                <span className="text-[8px] font-black uppercase text-slate-400 tracking-widest">Fechas descontadas</span>
-                                                <div className="flex flex-wrap gap-1">
-                                                    {vale.detallesViaticos.slice(0, 8).map((d: any, i: number) => {
-                                                        const keys = Object.keys(d);
-                                                        const fechaKey = keys.find(k => k.toLowerCase().includes('fecha'));
-                                                        const fechaVal = fechaKey ? d[fechaKey] : null;
-                                                        let fechaStr = fechaKey && fechaVal ? String(fechaVal) : '';
-                                                        if (fechaKey && typeof fechaVal === 'number' && fechaVal > 20000 && fechaVal < 70000) {
-                                                            const epoch = new Date(1899, 11, 30);
-                                                            const dateObj = new Date(epoch.getTime() + fechaVal * 86400000);
-                                                            fechaStr = `${dateObj.getDate().toString().padStart(2,'0')}/${(dateObj.getMonth()+1).toString().padStart(2,'0')}`;
-                                                        }
-                                                        return fechaStr ? (
-                                                            <span key={i} className="bg-orange-100 text-orange-700 text-[9px] font-bold px-2 py-0.5 rounded-full">
-                                                                {fechaStr}
-                                                            </span>
-                                                        ) : null;
-                                                    })}
-                                                    {vale.detallesViaticos.length > 8 && (
-                                                        <span className="bg-slate-100 text-slate-500 text-[9px] font-bold px-2 py-0.5 rounded-full">
-                                                            +{vale.detallesViaticos.length - 8} más
-                                                        </span>
-                                                    )}
+                                        {/* Body */}
+                                        <div className="p-4 space-y-3">
+                                            {/* Vales antes / después */}
+                                            <div className="flex items-center gap-2">
+                                                <div className="flex-1 bg-slate-50 border border-slate-100 rounded-xl p-2 text-center">
+                                                    <span className="text-[8px] font-black uppercase text-slate-400 tracking-wider block">Original</span>
+                                                    <span className="text-xl font-black text-slate-600">{Number(vale.diasTrabajados) + Number(vale.viaticos)}</span>
+                                                </div>
+                                                <div className="text-orange-400 font-black text-lg">→</div>
+                                                <div className="flex-1 bg-green-50 border border-green-100 rounded-xl p-2 text-center">
+                                                    <span className="text-[8px] font-black uppercase text-green-600 tracking-wider block">Final</span>
+                                                    <span className="text-xl font-black text-green-700">{vale.diasTrabajados}</span>
                                                 </div>
                                             </div>
-                                        )}
+
+                                            {/* Motivo */}
+                                            {vale.observaciones && (
+                                                <div className="bg-orange-50/60 border border-orange-100 rounded-xl p-3 flex items-start gap-2">
+                                                    <AlertCircle className="h-3.5 w-3.5 text-orange-500 mt-0.5 shrink-0" />
+                                                    <p className="text-[10px] text-orange-900 font-medium italic leading-snug">
+                                                        “{vale.observaciones}”
+                                                    </p>
+                                                </div>
+                                            )}
+
+                                            {/* Fechas del Excel si existen */}
+                                            {vale.detallesViaticos && vale.detallesViaticos.length > 0 && (
+                                                <div className="space-y-1.5">
+                                                    <span className="text-[8px] font-black uppercase text-slate-400 tracking-widest">Fechas descontadas</span>
+                                                    <div className="flex flex-wrap gap-1">
+                                                        {vale.detallesViaticos.slice(0, 8).map((d: any, i: number) => {
+                                                            const keys = Object.keys(d);
+                                                            const fechaKey = keys.find(k => k.toLowerCase().includes('fecha'));
+                                                            const fechaVal = fechaKey ? d[fechaKey] : null;
+                                                            let fechaStr = fechaKey && fechaVal ? String(fechaVal) : '';
+                                                            if (fechaKey && typeof fechaVal === 'number' && fechaVal > 20000 && fechaVal < 70000) {
+                                                                const epoch = new Date(1899, 11, 30);
+                                                                const dateObj = new Date(epoch.getTime() + fechaVal * 86400000);
+                                                                fechaStr = `${dateObj.getDate().toString().padStart(2,'0')}/${(dateObj.getMonth()+1).toString().padStart(2,'0')}`;
+                                                            }
+                                                            return fechaStr ? (
+                                                                <span key={i} className="bg-orange-100 text-orange-700 text-[9px] font-bold px-2 py-0.5 rounded-full">
+                                                                    {fechaStr}
+                                                                </span>
+                                                            ) : null;
+                                                        })}
+                                                        {vale.detallesViaticos.length > 8 && (
+                                                            <span className="bg-slate-100 text-slate-500 text-[9px] font-bold px-2 py-0.5 rounded-full">
+                                                                +{vale.detallesViaticos.length - 8} más
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
-                                </div>
-                            ))}
-                        </div>
+                                ))}
+                            </div>
                         )}
                     </div>
-                )}
+                </div>
+
+
             </div>
 
             {selectedMarca && (

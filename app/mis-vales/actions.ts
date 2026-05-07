@@ -109,7 +109,15 @@ export async function fetchMisVales(rut: string) {
         snap.forEach(doc => {
             const data = doc.data();
             if (data.RUT && cleanRut(data.RUT) === cleanInputRut) {
-                results.push({ id: doc.id, ...data });
+                // Forzar conversión a Number para evitar errores en la UI
+                results.push({ 
+                    id: doc.id, 
+                    ...data,
+                    viaticos: Number(data.viaticos ?? 0),
+                    diasTrabajados: Number(data.diasTrabajados ?? 0),
+                    // Aseguramos consistencia en campos de mes para el filtro
+                    mes: String(data.mes || data.mesPago || data.mesAsistencia || '')
+                });
             }
         });
 
