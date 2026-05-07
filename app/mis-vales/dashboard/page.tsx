@@ -352,25 +352,25 @@ export default function DashboardPage() {
                                         </div>
                                     </div>
                                     
-                                    {totalViaticos > 0 ? (
+                                    {viaticosDetail.length > 0 ? (
                                         <div className="space-y-3">
                                             <div className="p-3 bg-white/80 border border-orange-100 rounded-xl">
                                                 <p className="text-[10px] text-orange-800 font-medium leading-relaxed italic">
-                                                    Has recibido {totalViaticos} días de viático en {formatMonth(selectedMonth)}. 
-                                                    Estos días son excluidos del cálculo de vales de colación.
+                                                    {totalViaticos > 0 
+                                                      ? `Has recibido ${totalViaticos} días de viático en ${formatMonth(selectedMonth)}. Estos días son excluidos del cálculo de vales.`
+                                                      : `Se registran ${viaticosDetail.length} resoluciones de viático en este período, aunque no generaron descuentos en tus vales.`
+                                                    }
                                                 </p>
                                             </div>
                                             
-                                            {viaticosDetail.length > 0 && (
-                                                <div className="flex flex-col gap-2">
-                                                    {viaticosDetail.map((item, i) => (
-                                                        <div key={i} className="flex items-center justify-between bg-white border border-orange-50 rounded-lg p-2 shadow-sm">
-                                                            <span className="text-[9px] font-black text-orange-700">Res. {item.res}</span>
-                                                            <span className="text-[9px] font-bold text-orange-400">{item.range}</span>
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            )}
+                                            <div className="flex flex-col gap-2">
+                                                {viaticosDetail.map((item, i) => (
+                                                    <div key={i} className="flex items-center justify-between bg-white border border-orange-50 rounded-lg p-2 shadow-sm">
+                                                        <span className="text-[9px] font-black text-orange-700">Res. {item.res}</span>
+                                                        <span className="text-[9px] font-bold text-orange-400">{item.range}</span>
+                                                    </div>
+                                                ))}
+                                            </div>
                                         </div>
                                     ) : (
                                         <p className="text-[10px] text-slate-400 italic">No se registran viáticos asignados en este período.</p>
