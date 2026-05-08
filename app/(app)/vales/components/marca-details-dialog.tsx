@@ -11,7 +11,7 @@ import { Plus, Minus, RefreshCcw, Save, Loader2, Edit3, Clock, CheckCircle2 } fr
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
+import { Table, TableBody, TableCell, TableRow, TableHeader, TableHead } from '@/components/ui/table';
 import { useState, useEffect, useMemo } from 'react';
 
 // Add a style block for the custom scrollbar
@@ -427,7 +427,29 @@ export function MarcaDetailsDialog({ selectedDetails, onClose, allowEditing = fa
                                                 {selectedDetails.detallesViaticos && selectedDetails.detallesViaticos.length > 0 && (
                                                     <div className="border border-slate-50 rounded-xl overflow-hidden bg-white shadow-inner">
                                                         <ScrollArea className="h-[220px] auditor-scrollbar">
-                                                            <Table>
+                                                            <div className="min-w-max">
+                                                                <Table>
+                                                                {selectedDetails.detallesViaticos.length > 0 && (
+                                                                    <TableHeader className="bg-slate-50/80 sticky top-0 z-10">
+                                                                        <TableRow className="border-slate-100 hover:bg-transparent">
+                                                                            {(selectedDetails.columnasViaticos || Object.keys(selectedDetails.detallesViaticos[0])).map((k: string, i: number) => {
+                                                                                let label = k;
+                                                                                const upper = k.toUpperCase();
+                                                                                if (upper.includes('NUMERO_RESOLUCION') || upper === 'RESOLUCION') label = 'Res';
+                                                                                else if (upper.includes('FECHA_RESOLUCION')) label = 'Fech.Res';
+                                                                                else if (upper.includes('INICIO')) label = 'Inicio';
+                                                                                else if (upper.includes('TERMINO')) label = 'Termino';
+                                                                                else if (upper.includes('FECHA_')) label = k.split('_').pop() || k;
+                                                                                
+                                                                                return (
+                                                                                    <TableHead key={i} className="text-[9px] font-black uppercase text-slate-400 py-2 h-auto tracking-wider whitespace-nowrap">
+                                                                                        {label}
+                                                                                    </TableHead>
+                                                                                );
+                                                                            })}
+                                                                        </TableRow>
+                                                                    </TableHeader>
+                                                                )}
                                                                 <TableBody>
                                                                     {selectedDetails.detallesViaticos.map((r: any, idx: number) => {
                                                                         const keys = selectedDetails.columnasViaticos || Object.keys(selectedDetails.detallesViaticos![0]);
@@ -441,13 +463,14 @@ export function MarcaDetailsDialog({ selectedDetails, onClose, allowEditing = fa
                                                                                         const dateObj = new Date(excelEpoch.getTime() + v * 86400000);
                                                                                         displayValue = `${dateObj.getDate().toString().padStart(2, '0')}/${(dateObj.getMonth() + 1).toString().padStart(2, '0')}/${dateObj.getFullYear()}`;
                                                                                     }
-                                                                                    return <TableCell key={i} className="text-[10px] py-1.5 font-bold text-slate-700">{displayValue}</TableCell>;
+                                                                                    return <TableCell key={i} className="text-[10px] py-1.5 font-bold text-slate-700 whitespace-nowrap">{displayValue}</TableCell>;
                                                                                 })}
                                                                             </TableRow>
                                                                         );
                                                                     })}
                                                                 </TableBody>
-                                                            </Table>
+                                                                </Table>
+                                                            </div>
                                                         </ScrollArea>
                                                     </div>
                                                 )}

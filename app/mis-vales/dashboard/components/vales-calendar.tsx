@@ -126,9 +126,9 @@ export function ValesCalendar({ marcas, monthStr }: ValesCalendarProps) {
       </div>
 
       <div className="p-4">
-        <div className="grid grid-cols-7 mb-2">
+        <div className="grid grid-cols-7 mb-1 sm:mb-2">
           {['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'].map(d => (
-            <div key={d} className="text-center text-[10px] font-bold uppercase text-slate-400 py-1">
+            <div key={d} className="text-center text-[8px] sm:text-[10px] font-black uppercase text-slate-400 py-1">
               {d}
             </div>
           ))}
@@ -148,13 +148,13 @@ export function ValesCalendar({ marcas, monthStr }: ValesCalendarProps) {
                   <button 
                     disabled={!hasMarks}
                     className={cn(
-                      "min-h-[60px] p-2 bg-white flex flex-col items-center justify-start relative transition-all group",
+                      "min-h-[45px] sm:min-h-[60px] p-1 sm:p-2 bg-white flex flex-col items-center justify-start relative transition-all group",
                       !isCurrentMonth && "bg-slate-50/50 text-slate-300",
                       hasMarks ? "hover:bg-slate-50 cursor-pointer" : "cursor-default"
                     )}
                   >
                     <span className={cn(
-                      "text-xs font-medium mb-1",
+                      "text-[10px] sm:text-xs font-bold mb-1",
                       isCurrentMonth && "text-slate-700"
                     )}>
                       {format(day, 'd')}
@@ -162,7 +162,7 @@ export function ValesCalendar({ marcas, monthStr }: ValesCalendarProps) {
                     
                     {hasMarks && (
                       <div className={cn(
-                        "h-2 w-2 rounded-full shadow-[0_0_8px_rgba(34,197,94,0.3)] transition-all group-hover:scale-125",
+                        "h-1.5 w-1.5 sm:h-2 sm:w-2 rounded-full shadow-[0_0_8px_rgba(34,197,94,0.3)] transition-all group-hover:scale-125",
                         hasValidMarks ? "bg-green-500" : "bg-slate-300"
                       )} />
                     )}

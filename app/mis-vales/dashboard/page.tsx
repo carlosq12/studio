@@ -167,34 +167,34 @@ export default function DashboardPage() {
     return (
         <div className="flex-1 flex flex-col gap-8 pb-12 mt-2">
             {/* HERO SECTION */}
-            <div className="relative overflow-hidden bg-gradient-to-br from-blue-700 via-blue-600 to-indigo-800 rounded-2xl p-6 sm:p-10 text-white shadow-xl shadow-blue-200">
+            <div className="relative overflow-hidden bg-gradient-to-br from-blue-700 via-blue-600 to-indigo-800 rounded-2xl p-5 sm:p-10 text-white shadow-xl shadow-blue-200">
                 <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-                    <div className="space-y-2">
-                        <Badge variant="outline" className="text-blue-100 border-blue-400 bg-blue-500/20 backdrop-blur-sm px-3 py-1 text-xs font-bold uppercase tracking-wider">
+                    <div className="space-y-1 sm:space-y-2">
+                        <Badge variant="outline" className="text-blue-100 border-blue-400 bg-blue-500/20 backdrop-blur-sm px-3 py-1 text-[10px] sm:text-xs font-bold uppercase tracking-wider">
                           Portal del Funcionario
                         </Badge>
-                        <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight">
+                        <h2 className="text-2xl sm:text-4xl font-extrabold tracking-tight">
                           Hola, {userData?.nombres.split(' ')[0]} 👋
                         </h2>
-                        <p className="text-blue-100 text-lg opacity-90">
-                          RUT: {userData?.rut} | Aquí puedes revisar tus beneficios mensuales.
+                        <p className="text-blue-100 text-sm sm:text-lg opacity-90">
+                          RUT: {userData?.rut}
                         </p>
                     </div>
                     
-                    <div className="flex flex-col gap-3 w-full md:w-auto">
+                    <div className="flex flex-row md:flex-col gap-3 w-full md:w-auto">
                         {latestVale && (
-                            <div className="bg-white/10 backdrop-blur-md rounded-xl p-4 border border-white/20 flex flex-col items-center min-w-[180px]">
-                                <span className="text-xs font-bold uppercase text-blue-100/70 mb-1">Últimos Vales</span>
-                                <span className="text-4xl font-black">{latestVale.diasTrabajados}</span>
-                                <span className="text-xs font-medium text-blue-200">{latestVale.mes}</span>
+                            <div className="flex-1 md:flex-none bg-white/10 backdrop-blur-md rounded-xl p-3 sm:p-4 border border-white/20 flex flex-col items-center min-w-[120px] sm:min-w-[180px]">
+                                <span className="text-[9px] sm:text-xs font-bold uppercase text-blue-100/70 mb-1">Últimos Vales</span>
+                                <span className="text-2xl sm:text-4xl font-black">{latestVale.diasTrabajados}</span>
+                                <span className="text-[9px] sm:text-xs font-medium text-blue-200">{latestVale.mes}</span>
                             </div>
                         )}
                         <Button 
                           variant="ghost" 
                           onClick={handleLogout} 
-                          className="text-white hover:bg-white/10 hover:text-white border border-white/20"
+                          className="flex-1 md:flex-none text-white hover:bg-white/10 hover:text-white border border-white/20 h-auto py-2 sm:py-4"
                         >
-                            <LogOut className="h-4 w-4 mr-2" /> Cerrar Sesión
+                            <LogOut className="h-4 w-4 mr-2" /> <span className="text-xs sm:text-sm">Salir</span>
                         </Button>
                     </div>
                 </div>
@@ -218,13 +218,13 @@ export default function DashboardPage() {
                             <ChevronLeft className="h-6 w-6" />
                         </Button>
 
-                        <div className="flex flex-col items-center gap-1">
-                            <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Seleccionar Período</span>
+                        <div className="flex flex-col items-center gap-0.5">
+                            <span className="text-[9px] font-black uppercase text-slate-400 tracking-widest">Período</span>
                             <div className="flex items-center gap-2">
-                                <span className="text-xl font-black text-slate-800 leading-tight">
+                                <span className="text-lg sm:text-xl font-black text-slate-800 leading-tight">
                                     {formatMonth(selectedMonth)}
                                 </span>
-                                <Badge variant="secondary" className="bg-blue-50 text-blue-600 border-blue-100 text-[10px] font-bold">
+                                <Badge variant="secondary" className="bg-blue-50 text-blue-600 border-blue-100 text-[9px] font-bold px-1.5 py-0">
                                     {currentMonthIdx + 1} / {availableMonths.length}
                                 </Badge>
                             </div>
