@@ -60,6 +60,7 @@ export function MarcasTable({ marcas, isLoading, onDeleteMarca }: MarcasTablePro
                 <TableHead>Funcionario</TableHead>
                 <TableHead>RUT</TableHead>
                 <TableHead className="text-right">Días Trab.</TableHead>
+                <TableHead className="text-right">Días Grem.</TableHead>
                 <TableHead className="text-right">Ausencias</TableHead>
                 <TableHead className="text-right">Viáticos</TableHead>
                 <TableHead className="text-right">Monto Asignado</TableHead>
@@ -79,12 +80,13 @@ export function MarcasTable({ marcas, isLoading, onDeleteMarca }: MarcasTablePro
                     <TableCell><Skeleton className="h-4 w-full" /></TableCell>
                     <TableCell><Skeleton className="h-4 w-full" /></TableCell>
                     <TableCell><Skeleton className="h-4 w-full" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-full" /></TableCell>
                     <TableCell></TableCell>
                   </TableRow>
                 ))
               ) : filteredMarcas.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={9} className="h-24 text-center">
+                  <TableCell colSpan={10} className="h-24 text-center">
                     No se han registrado marcas de vales aún.
                   </TableCell>
                 </TableRow>
@@ -95,6 +97,16 @@ export function MarcasTable({ marcas, isLoading, onDeleteMarca }: MarcasTablePro
                      <TableCell>{m.nombres} {m.apellidos || ''}</TableCell>
                      <TableCell className="font-medium">{m.RUT}</TableCell>
                      <TableCell className="text-right">{m.diasTrabajados}</TableCell>
+                     <TableCell className="text-right text-blue-600">
+                         {(m.diasGremiales ?? 0) > 0 ? (
+                           <div className="flex flex-col items-end">
+                             <span className="font-bold">+{m.diasGremiales}</span>
+                             <span className="text-[9px] text-slate-400 font-medium leading-none">
+                               {m.diasGremialesMasivos || 0}M + {(m.fechasGremiales?.length || 0)}F
+                             </span>
+                           </div>
+                         ) : '-'}
+                      </TableCell>
                      <TableCell className="text-right text-destructive">
                         {m.diasAusencia > 0 ? m.diasAusencia : '-'}
                      </TableCell>

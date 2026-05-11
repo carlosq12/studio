@@ -329,13 +329,27 @@ export default function DashboardPage() {
                                             
                                             <div className="w-full space-y-3 px-2">
                                                 <div className="flex justify-between text-xs text-slate-500">
-                                                    <span className="font-medium">Días con marca válida:</span>
-                                                    <span className="font-black text-slate-800">{vale.diasPresenciales || vale.diasTrabajados} / {vale.diasHabilesAsistencia || 20}</span>
+                                                    <span className="font-medium">Días presenciales:</span>
+                                                    <span className="font-black text-slate-800">{vale.diasPresenciales || 0} / {vale.diasHabilesAsistencia || 20}</span>
                                                 </div>
+
+                                                {Number(vale.diasGremiales || 0) > 0 && (
+                                                    <div className="flex justify-between text-[11px] text-blue-700 bg-blue-50 px-2 py-1.5 rounded-lg border border-blue-100">
+                                                        <div className="flex flex-col">
+                                                            <span className="font-bold">Beneficio Gremial</span>
+                                                            {vale.diasGremialesMasivos > 0 && <span className="text-[9px] opacity-70">+{vale.diasGremialesMasivos} Masivos</span>}
+                                                            {(vale.fechasGremiales?.length || 0) > 0 && <span className="text-[9px] opacity-70">+{vale.fechasGremiales.length} por Fecha</span>}
+                                                        </div>
+                                                        <span className="font-black text-lg">+{vale.diasGremiales}</span>
+                                                    </div>
+                                                )}
+
                                                 <Separator className="bg-slate-100" />
                                                 <div className="flex justify-between items-center text-[10px]">
                                                     <span className="text-slate-400 font-medium italic">
-                                                      {['C', 'T'].includes(vale.calidadContractual) ? 'Aplica fórmula de descuentos' : 'Pago según marcas reales'}
+                                                      {['C', 'T', 'EDF', 'R', 'TU'].includes(vale.calidadContractual) ? 
+                                                        (vale.calidadContractual === 'C' || vale.calidadContractual === 'T' ? 'Aplica fórmula según días hábiles' : 'Pago por asistencia efectiva')
+                                                        : 'Cálculo de beneficio estándar'}
                                                     </span>
                                                 </div>
                                             </div>

@@ -11,7 +11,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, Search, Edit, Trash2, CalendarSearch } from 'lucide-react';
+import { PlusCircle, Search, Edit, Trash2, CalendarSearch, Users2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -22,16 +22,20 @@ import { es } from 'date-fns/locale';
 import { AddFuncionarioValeDialog } from './add-funcionario-vale-dialog';
 import { deleteFuncionarioVale, deleteFuncionariosValesMasivos } from '../actions';
 import { BulkUploadFuncionariosValesSheet } from './bulk-upload-funcionarios-vales-sheet';
+import { GremialesDialog } from './gremiales-dialog';
+import type { HistorialCargaVales } from '@/lib/types';
 
 interface ValesFuncionariosTableProps {
   funcionarios: FuncionarioVale[];
   isLoading: boolean;
   onViewMarcas?: (id: string) => void;
+  historiales?: HistorialCargaVales[];
 }
 
-export function ValesFuncionariosTable({ funcionarios, isLoading, onViewMarcas }: ValesFuncionariosTableProps) {
+export function ValesFuncionariosTable({ funcionarios, isLoading, onViewMarcas, historiales = [] }: ValesFuncionariosTableProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isGremialesOpen, setIsGremialesOpen] = useState(false);
   const [editingFuncionario, setEditingFuncionario] = useState<FuncionarioVale | null>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [isDeletingMasivo, setIsDeletingMasivo] = useState(false);
@@ -108,6 +112,10 @@ export function ValesFuncionariosTable({ funcionarios, isLoading, onViewMarcas }
             </Button>
           )}
           <BulkUploadFuncionariosValesSheet />
+          <Button variant="outline" className="border-blue-200 text-blue-700 hover:bg-blue-50" onClick={() => setIsGremialesOpen(true)}>
+            <Users2 className="mr-2 h-4 w-4" />
+            Gremiales
+          </Button>
           <Button onClick={() => { setEditingFuncionario(null); setIsAddDialogOpen(true); }}>
             <PlusCircle className="mr-2 h-4 w-4" />
             Agregar Funcionario
@@ -216,6 +224,12 @@ export function ValesFuncionariosTable({ funcionarios, isLoading, onViewMarcas }
         open={isAddDialogOpen} 
         onOpenChange={setIsAddDialogOpen} 
         funcionario={editingFuncionario} 
+      />
+
+      <GremialesDialog 
+        open={isGremialesOpen} 
+        onOpenChange={setIsGremialesOpen} 
+        historiales={historiales} 
       />
     </div>
   );

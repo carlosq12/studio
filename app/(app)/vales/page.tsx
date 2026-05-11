@@ -303,7 +303,12 @@ export default function ValesPage() {
                             </CardDescription>
                         </CardHeader>
                         <CardContent>
-                            <ValesFuncionariosTable funcionarios={funcionarios} isLoading={isLoadingFuncionarios} onViewMarcas={handleViewMarcasOf} />
+                            <ValesFuncionariosTable 
+                                funcionarios={funcionarios} 
+                                isLoading={isLoadingFuncionarios} 
+                                onViewMarcas={handleViewMarcasOf} 
+                                historiales={historiales}
+                            />
                         </CardContent>
                     </Card>
                 </TabsContent>

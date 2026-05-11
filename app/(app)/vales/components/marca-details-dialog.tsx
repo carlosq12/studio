@@ -341,6 +341,13 @@ export function MarcaDetailsDialog({ selectedDetails, onClose, allowEditing = fa
                                             <span className="text-2xl font-black text-red-600 leading-none">{(selectedDetails?.diasHabilesAsistencia || 0) - realDaysCount}</span>
                                             <span className="text-[9px] text-slate-400">días sin asistencia</span>
                                         </div>
+                                        <div className="bg-blue-50 border border-blue-100 rounded-xl p-3 flex flex-col gap-0.5 shadow-sm">
+                                            <span className="text-[8px] font-black uppercase text-blue-600 tracking-wider">Días Gremiales</span>
+                                            <span className="text-2xl font-black text-blue-700 leading-none">+{selectedDetails?.diasGremiales || 0}</span>
+                                            <span className="text-[9px] text-blue-400 font-bold leading-none">
+                                                {selectedDetails?.diasGremialesMasivos || 0} Masivos + {(selectedDetails?.fechasGremiales?.length || 0)} por Fecha
+                                            </span>
+                                        </div>
                                         <div className="bg-green-600 rounded-xl p-3 flex flex-col gap-0.5 shadow-sm">
                                             <span className="text-[8px] font-black uppercase text-white/70 tracking-wider">Vales Asignados</span>
                                             <span className="text-2xl font-black text-white leading-none">{selectedDetails?.diasTrabajados || 0}</span>

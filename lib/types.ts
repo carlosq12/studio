@@ -230,6 +230,7 @@ export type FuncionarioVale = {
   acNo?: string;
   jornada?: string;
   calidadContractual?: string;
+  esGremialista?: boolean;
 };
 
 export type MarcaVale = {
@@ -256,6 +257,9 @@ export type MarcaVale = {
   calidadContractual?: string;
   valesCalculadosReales?: number;
   diasPresenciales?: number;
+  diasGremiales?: number;
+  diasGremialesMasivos?: number;
+  fechasGremiales?: string[];
 };
 
 export type HistorialCargaVales = {

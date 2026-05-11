@@ -38,6 +38,7 @@ const funcionarioValeSchema = z.object({
   jornada: z.string().optional().nullable(),
   calidadContractual: z.string().optional().nullable(),
   fechaIngreso: z.any().optional(),
+  esGremialista: z.boolean().optional().nullable(),
 });
 
 export async function addFuncionarioVale(data: any) {
@@ -147,6 +148,10 @@ export async function processMarcasMasivas(
     let guardados = 0;
     let noEncontrados: string[] = [];
 
+    // --- NUEVO: Buscar configuración gremial previa para este mes ---
+    const configRes = await getGremialesConfig(mesAsistencia);
+    const configGremial = configRes.success ? configRes.config : {};
+
     const historialRef = doc(collection(db, 'historial_cargas_vales'));
     let montoTotal = 0;
 
@@ -155,17 +160,33 @@ export async function processMarcasMasivas(
         const funcionarioMatch = funcionariosMap.get(result.acNo);
 
         if (funcionarioMatch) {
-            let valesAPagar = 0;
             const calidad = (funcionarioMatch.calidadContractual || 'C').trim().toUpperCase();
             const diasTrabajadosReales = result.jornadasValidas;
 
+            // --- NUEVO: Aplicar configuración gremial si existe ---
+            let diasGremialesMasivos = 0;
+            let fechasGremiales: string[] = [];
+            
+            if (configGremial && configGremial[funcionarioMatch.id]) {
+                diasGremialesMasivos = configGremial[funcionarioMatch.id].diasMasivos || 0;
+                fechasGremiales = configGremial[funcionarioMatch.id].fechas || [];
+            }
+            
+            const totalGremiales = diasGremialesMasivos + fechasGremiales.length;
+            const asistenciaEfectiva = diasTrabajadosReales + totalGremiales;
+
+            let valesFormula = 0;
             // R (Reemplazo), EDF (Reemplazo), TU (Titular/Otros) no aplican fórmula
             if (calidad === 'R' || calidad === 'EDF' || calidad === 'TU') {
-                valesAPagar = diasTrabajadosReales;
+                valesFormula = diasTrabajadosReales;
             } else {
+                // Cálculo de ausencias basado SOLO en días presenciales
                 const ausencias = Math.max(0, diasHabilesAsistencia - diasTrabajadosReales);
-                valesAPagar = Math.max(0, diasHabilesPago - ausencias);
+                valesFormula = Math.max(0, diasHabilesPago - ausencias);
             }
+
+            // Los días gremiales se suman AL FINAL, fuera de la lógica de ausencias
+            const valesAPagar = valesFormula + totalGremiales;
 
             const marcaRef = doc(collection(db, 'marcas_vales'));
             const marcaData: Partial<MarcaVale> = {
@@ -183,6 +204,9 @@ export async function processMarcasMasivas(
                 valesCalculadosReales: valesAPagar,
                 diasTrabajados: valesAPagar, // Stores final vales count
                 diasPresenciales: diasTrabajadosReales,
+                diasGremiales: totalGremiales,
+                diasGremialesMasivos,
+                fechasGremiales,
                 diasAusencia: result.noMarcajes,
                 montoAsignado: valesAPagar * valorVale,
                 fechaCarga: Timestamp.now(),
@@ -401,24 +425,36 @@ export async function recalculateMarcaVale(marcaId: string, valorVale: number = 
             diasTrabajadosReales = Math.floor(totalMarcasValidas / 2);
         }
 
-        // 3. Aplicar fórmula según calidad contractual detectada
-        let valesAPagar = 0;
+        // 2.5 Sumar días gremiales (Masivos + Únicos por fecha)
+        const diasGremialesMasivos = marcaData.diasGremialesMasivos || 0;
+        const diasGremialesUnicos = (marcaData.fechasGremiales || []).length;
+        const totalGremiales = diasGremialesMasivos + diasGremialesUnicos;
+        const asistenciaEfectiva = diasTrabajadosReales + totalGremiales;
+
+        // 3. Aplicar fórmula según calidad contractual detectada (SOLO sobre días presenciales)
+        let valesFormula = 0;
         const diasHabilesAsistencia = marcaData.diasHabilesAsistencia || 0;
         const diasHabilesPago = marcaData.diasHabilesPago || 0;
 
-        // R (Reemplazo), EDF (Reemplazo), TU (Titular/Otros) no aplican fórmula
         if (calidad === 'R' || calidad === 'EDF' || calidad === 'TU') {
-            valesAPagar = diasTrabajadosReales;
+            valesFormula = diasTrabajadosReales;
         } else {
+            // El cálculo de ausencias se hace SOLO con días presenciales
             const ausencias = Math.max(0, diasHabilesAsistencia - diasTrabajadosReales);
-            valesAPagar = Math.max(0, diasHabilesPago - ausencias);
+            valesFormula = Math.max(0, diasHabilesPago - ausencias);
         }
+
+        // 4. Sumar los días gremiales al resultado final del cálculo
+        const valesAPagar = valesFormula + totalGremiales;
 
         // 4. Actualizar el registro con el nuevo cálculo
         const res = await updateMarcaValeCount(marcaId, valesAPagar, valorVale);
         if (res.success) {
-            // También actualizamos el campo descriptivo
-            await updateDoc(marcaRef, { diasPresenciales: diasTrabajadosReales });
+            // También actualizamos los campos descriptivos y el total de gremiales
+            await updateDoc(marcaRef, { 
+                diasPresenciales: diasTrabajadosReales,
+                diasGremiales: totalGremiales // Mantenemos este como el total calculado
+            });
             // Retornamos también la nueva calidad por si cambió
             return { success: true, nuevaCalidad: calidad, nuevoConteo: valesAPagar, diasPresenciales: diasTrabajadosReales };
         }
@@ -593,6 +629,28 @@ export async function previewViaticosMasivos(viaticosList: any[], targetHistoria
     }
 }
 
+export async function saveGremialesBatch(updates: { marcaId: string, dias: number, fechas: string[] }[]) {
+    try {
+        const batch = writeBatch(db);
+        for (const update of updates) {
+            const ref = doc(db, "marcas_vales", update.marcaId);
+            batch.update(ref, { 
+                diasGremialesMasivos: update.diasMasivos ?? 0,
+                fechasGremiales: update.fechas ?? []
+            });
+        }
+        await batch.commit();
+
+        // Recalcular todos de forma asíncrona
+        const results = await Promise.all(updates.map(u => recalculateMarcaVale(u.marcaId)));
+        
+        return { success: true, count: updates.length };
+    } catch (e: any) {
+        console.error("Error en saveGremialesBatch:", e);
+        return { success: false, error: e.message };
+    }
+}
+
 export async function applySelectedViaticosMasivos(selectedDiscounts: any[], valorVale: number = 4000) {
     if (!selectedDiscounts || selectedDiscounts.length === 0) {
          return { error: 'No seleccionaste ningún descuento para aplicar.' };
@@ -682,5 +740,115 @@ export async function deleteHistorialViaticos(historialViaticosId: string) {
         return { success: true };
     } catch (error: any) {
         return { error: 'Error al eliminar historial de viáticos: ' + error.message };
+    }
+}
+
+// --- NUEVAS FUNCIONES PARA CONFIGURACIÓN ANTICIPADA DE GREMIALES ---
+
+/**
+ * Obtiene la configuración de días gremiales para un mes específico.
+ */
+export async function getGremialesConfig(mes: string) {
+    try {
+        const q = query(collection(db, 'configuracion_gremiales'), where('mes', '==', mes));
+        const snap = await getDocs(q);
+        const config: Record<string, { diasMasivos: number; fechas: string[] }> = {};
+        snap.docs.forEach(doc => {
+            const data = doc.data();
+            config[data.funcionarioId] = {
+                diasMasivos: data.diasMasivos || 0,
+                fechas: data.fechas || []
+            };
+        });
+        return { success: true, config };
+    } catch (error: any) {
+        return { success: false, error: error.message };
+    }
+}
+
+/**
+ * Guarda la configuración de días gremiales para un mes específico.
+ */
+export async function saveGremialesConfig(mes: string, updates: { funcionarioId: string; diasMasivos: number; fechas: string[] }[]) {
+    try {
+        const batch = writeBatch(db);
+        updates.forEach(upd => {
+            // ID compuesto por Mes y Funcionario para evitar duplicados
+            const docId = `${mes}_${upd.funcionarioId}`;
+            const docRef = doc(db, 'configuracion_gremiales', docId);
+            batch.set(docRef, {
+                funcionarioId: upd.funcionarioId,
+                mes: mes,
+                diasMasivos: upd.diasMasivos,
+                fechas: upd.fechas,
+                updatedAt: Timestamp.now()
+            }, { merge: true });
+        });
+        await batch.commit();
+        return { success: true };
+    } catch (error: any) {
+        return { success: false, error: error.message };
+    }
+}
+
+/**
+ * Aplica la configuración guardada de un mes a una carga (historial) específica.
+ */
+export async function applyGremialesConfigToCarga(historialId: string, customMonth?: string) {
+    try {
+        // 1. Obtener el historial
+        const histRef = doc(db, 'historial_cargas_vales', historialId);
+        const histSnap = await getDoc(histRef);
+        if (!histSnap.exists()) return { success: false, error: 'Carga no encontrada' };
+        const histData = histSnap.data();
+        const mes = customMonth || histData.mes; // Usar mes personalizado o el del historial
+
+        // 2. Obtener la configuración de ese mes
+        const configRes = await getGremialesConfig(mes);
+        if (!configRes.success) return configRes;
+        const config = configRes.config || {};
+
+        // 3. Obtener todas las marcas de esa carga
+        const qMarcas = query(collection(db, 'marcas_vales'), where('historialId', '==', historialId));
+        const marcasSnap = await getDocs(qMarcas);
+
+        if (marcasSnap.empty) return { success: true, message: 'No hay marcas en esta carga' };
+
+        // 4. Mapear funcionarios a sus IDs de documento en marcas_vales
+        const funcsSnap = await getDocs(collection(db, 'funcionarios_vales'));
+        const rutToId: Record<string, string> = {};
+        funcsSnap.docs.forEach(d => { rutToId[d.data().RUT] = d.id; });
+
+        const batch = writeBatch(db);
+        let appliedCount = 0;
+
+        for (const marcaDoc of marcasSnap.docs) {
+            const marcaData = marcaDoc.data();
+            const funcId = rutToId[marcaData.RUT];
+            
+            if (funcId && config[funcId]) {
+                const c = config[funcId];
+                batch.update(marcaDoc.ref, {
+                    diasGremialesMasivos: c.diasMasivos,
+                    fechasGremiales: c.fechas
+                });
+                appliedCount++;
+            }
+        }
+
+        await batch.commit();
+
+        // 5. RECALCULAR todas las marcas que fueron actualizadas
+        for (const marcaDoc of marcasSnap.docs) {
+            const funcId = rutToId[marcaDoc.data().RUT];
+            if (funcId && config[funcId]) {
+                await recalculateMarcaVale(marcaDoc.id);
+            }
+        }
+
+        return { success: true, count: appliedCount };
+    } catch (error: any) {
+        console.error('Error al aplicar configuración:', error);
+        return { success: false, error: error.message };
     }
 }

@@ -23,6 +23,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase/provider';
 import { collection, query } from 'firebase/firestore';
 import type { IngresoFuncionario } from '@/lib/types';
@@ -54,6 +55,7 @@ const funcionarioSchema = z.object({
   jornada: z.string().optional(),
   estado: z.string().optional(),
   calidadContractual: z.string().optional(),
+  esGremialista: z.boolean().optional().default(false),
 });
 
 type FormValues = z.infer<typeof funcionarioSchema>;
@@ -101,6 +103,7 @@ export function AddFuncionarioValeDialog({ open, onOpenChange, funcionario }: Ad
             jornada: "",
             estado: "Activo",
             calidadContractual: "",
+            esGremialista: false,
         },
     });
 
@@ -116,6 +119,7 @@ export function AddFuncionarioValeDialog({ open, onOpenChange, funcionario }: Ad
                 jornada: funcionario.jornada || "",
                 estado: funcionario.estado || "Activo",
                 calidadContractual: funcionario.calidadContractual || "",
+                esGremialista: !!funcionario.esGremialista,
             });
         } else if (!open) {
             form.reset({
@@ -128,6 +132,7 @@ export function AddFuncionarioValeDialog({ open, onOpenChange, funcionario }: Ad
                 jornada: "",
                 estado: "Activo",
                 calidadContractual: "",
+                esGremialista: false,
             });
         }
     }, [funcionario, open, form]);
@@ -349,7 +354,26 @@ export function AddFuncionarioValeDialog({ open, onOpenChange, funcionario }: Ad
                                     </FormItem>
                                 )}
                             />
-                            <div></div>
+                            <FormField
+                                control={form.control}
+                                name="esGremialista"
+                                render={({ field }) => (
+                                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+                                        <div className="space-y-0.5">
+                                            <FormLabel>Gremialista</FormLabel>
+                                            <div className="text-[10px] text-muted-foreground">
+                                                Habilita la carga de días gremiales.
+                                            </div>
+                                        </div>
+                                        <FormControl>
+                                            <Switch
+                                                checked={field.value}
+                                                onCheckedChange={field.onChange}
+                                            />
+                                        </FormControl>
+                                    </FormItem>
+                                )}
+                            />
                         </div>
                         <div className="flex justify-end gap-2 pt-4">
                             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
