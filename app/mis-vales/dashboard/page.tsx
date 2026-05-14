@@ -333,6 +333,13 @@ export default function DashboardPage() {
                                                     <span className="font-black text-slate-800">{vale.diasPresenciales || 0} / {vale.diasHabilesAsistencia || 20}</span>
                                                 </div>
 
+                                                <div className="flex justify-between items-center bg-blue-50/50 border border-blue-100 rounded-xl p-3 mt-2 shadow-sm">
+                                                    <span className="text-[10px] font-black text-blue-600 uppercase tracking-tight">Total a pagar</span>
+                                                    <span className="text-lg font-black text-blue-700">
+                                                        ${new Intl.NumberFormat('es-CL').format(vale.montoAsignado || ((vale.diasTrabajados || 0) * 4000))}
+                                                    </span>
+                                                </div>
+
                                                 {Number(vale.diasGremiales || 0) > 0 && (
                                                     <div className="flex justify-between text-[11px] text-blue-700 bg-blue-50 px-2 py-1.5 rounded-lg border border-blue-100">
                                                         <div className="flex flex-col">

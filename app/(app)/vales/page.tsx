@@ -17,12 +17,18 @@ import { ViaticosDetailsDialog } from './components/viaticos-details-dialog';
 import { PageHeader } from "@/components/page-header";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { Trash, Check, ChevronsUpDown, Eye } from 'lucide-react';
+import { Save, Loader2, Trash, Check, ChevronsUpDown, Eye, Info } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
 import { useToast } from '@/hooks/use-toast';
-import { deleteHistorialCarga, deleteMarcaVale } from './actions';
+import { 
+    deleteHistorialCarga, 
+    deleteMarcaVale, 
+    updateMarcasBatch, 
+    updateHistorialHeader 
+} from './actions';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 
@@ -43,6 +49,9 @@ export default function ValesPage() {
     const [isDeleting, setIsDeleting] = useState(false);
     const [activeTab, setActiveTab] = useState("marcas");
     const [isViaticosDetailsOpen, setIsViaticosDetailsOpen] = useState(false);
+    const [currentValorVale, setCurrentValorVale] = useState<number>(4000);
+    const [isUpdatingValue, setIsUpdatingValue] = useState(false);
+    const [updateProgress, setUpdateProgress] = useState(0);
     const { toast } = useToast();
 
     useEffect(() => {
@@ -114,6 +123,71 @@ export default function ValesPage() {
 
         return () => unsubMarcas();
     }, [searchType, selectedHistorialId, selectedPersonId]);
+
+    useEffect(() => {
+        if (selectedHistorialId && historiales.length > 0) {
+            const hist = historiales.find(h => h.id === selectedHistorialId);
+            if (hist) {
+                setCurrentValorVale(hist.valorVale || 4000);
+            }
+        }
+    }, [selectedHistorialId, historiales]);
+
+    const handleUpdateValorVale = async () => {
+        if (!selectedHistorialId || marcas.length === 0) return;
+        
+        const confirmUpdate = window.confirm(`¿Estás seguro de que deseas actualizar el valor del vale a $${currentValorVale} para los ${marcas.length} registros? Se recalcularán todos los montos asignados.`);
+        if (!confirmUpdate) return;
+
+        setIsUpdatingValue(true);
+        setUpdateProgress(0);
+        
+        try {
+            const chunkSize = 50;
+            let totalMonto = 0;
+            const chunks = [];
+            
+            // 1. Preparar todos los updates y calcular nuevo total
+            const allUpdates = marcas.map(m => {
+                const nuevoMonto = (m.diasTrabajados || 0) * currentValorVale;
+                totalMonto += nuevoMonto;
+                return { id: m.id, montoAsignado: nuevoMonto };
+            });
+
+            // 2. Dividir en chunks
+            for (let i = 0; i < allUpdates.length; i += chunkSize) {
+                chunks.push(allUpdates.slice(i, i + chunkSize));
+            }
+
+            // 3. Procesar chunks con progreso
+            for (let i = 0; i < chunks.length; i++) {
+                const res = await updateMarcasBatch(chunks[i]);
+                if (res.error) throw new Error(res.error);
+                setUpdateProgress(Math.round(((i + 1) / chunks.length) * 90)); // Llegamos al 90%
+            }
+
+            // 4. Actualizar cabecera del historial
+            const resHeader = await updateHistorialHeader(selectedHistorialId, {
+                valorVale: currentValorVale,
+                montoTotal: totalMonto
+            });
+            if (resHeader.error) throw new Error(resHeader.error);
+
+            setUpdateProgress(100);
+            toast({ title: 'Éxito', description: 'Valor del vale actualizado y montos recalculados con éxito.' });
+            
+            // Un pequeño delay antes de ocultar la barra
+            setTimeout(() => {
+                setIsUpdatingValue(false);
+                setUpdateProgress(0);
+            }, 1000);
+
+        } catch (error: any) {
+            toast({ variant: 'destructive', title: 'Error', description: error.message });
+            setIsUpdatingValue(false);
+            setUpdateProgress(0);
+        }
+    };
 
     const handleDeleteHistorial = async () => {
         if (!selectedHistorialId) return;
@@ -199,7 +273,7 @@ export default function ValesPage() {
                                 </div>
 
                                 {searchType === 'historial' ? (
-                                    <div className="flex items-center gap-2">
+                                    <div className="flex items-center gap-2 flex-wrap">
                                         <Select value={selectedHistorialId} onValueChange={setSelectedHistorialId} disabled={isLoadingHistoriales}>
                                             <SelectTrigger className="w-[300px]">
                                                 <SelectValue placeholder="Seleccionar carga..." />
@@ -213,8 +287,31 @@ export default function ValesPage() {
                                                 ))}
                                             </SelectContent>
                                         </Select>
+
                                         {selectedHistorialId && (
                                             <>
+                                                <div className="flex items-center gap-2 px-3 py-1 bg-white border rounded-md shadow-sm">
+                                                    <span className="text-[10px] font-black uppercase text-slate-400">Valor Vale:</span>
+                                                    <div className="flex items-center gap-1">
+                                                        <span className="text-xs font-bold text-slate-400">$</span>
+                                                        <input 
+                                                            type="number" 
+                                                            value={currentValorVale}
+                                                            onChange={(e) => setCurrentValorVale(Number(e.target.value))}
+                                                            className="w-16 h-7 text-xs font-black text-blue-600 focus:outline-none bg-transparent"
+                                                        />
+                                                        <Button 
+                                                            variant="ghost" 
+                                                            size="icon" 
+                                                            className="h-6 w-6 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                                                            onClick={handleUpdateValorVale}
+                                                            disabled={isUpdatingValue || currentValorVale === (historiales.find(h => h.id === selectedHistorialId)?.valorVale || 4000)}
+                                                        >
+                                                            {isUpdatingValue ? <Loader2 className="h-3 w-3 animate-spin" /> : <Save className="h-3 w-3" />}
+                                                        </Button>
+                                                    </div>
+                                                </div>
+
                                                 <Button variant="outline" size="sm" onClick={() => setIsViaticosDetailsOpen(true)}>
                                                     <Eye className="h-4 w-4 mr-2" />
                                                     Ver Viáticos Descontados
@@ -272,6 +369,19 @@ export default function ValesPage() {
                                                 </Command>
                                             </PopoverContent>
                                         </Popover>
+                                    </div>
+                                )}
+
+                                {isUpdatingValue && (
+                                    <div className="w-full mt-2 space-y-2 animate-in fade-in slide-in-from-top-2 duration-300">
+                                        <div className="flex items-center justify-between text-[10px] font-black uppercase text-blue-600">
+                                            <div className="flex items-center gap-2">
+                                                <Loader2 className="h-3 w-3 animate-spin" />
+                                                <span>Recalculando montos por cambio de valor...</span>
+                                            </div>
+                                            <span>{updateProgress}%</span>
+                                        </div>
+                                        <Progress value={updateProgress} className="h-1.5 bg-blue-100" />
                                     </div>
                                 )}
                             </div>

@@ -268,6 +268,7 @@ export type HistorialCargaVales = {
   fechaCarga: any;
   cantidadRegistros: number;
   montoTotal: number;
+  valorVale?: number;
 };
 
 export type HistorialCargaViaticos = {

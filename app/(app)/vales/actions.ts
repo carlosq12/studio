@@ -226,7 +226,8 @@ export async function processMarcasMasivas(
                 mes: mesAsistencia,
                 fechaCarga: Timestamp.now(),
                 cantidadRegistros: guardados,
-                montoTotal: montoTotal
+                montoTotal: montoTotal,
+                valorVale: valorVale
             });
             await batch.commit();
         }
@@ -238,6 +239,63 @@ export async function processMarcasMasivas(
         };
     } catch (error: any) {
         return { error: 'Error al persistir cálculo masivo: ' + error.message };
+    }
+}
+
+export async function updateHistorialValorVale(historialId: string, nuevoValor: number) {
+    if (!historialId || nuevoValor <= 0) return { error: 'Datos inválidos.' };
+
+    try {
+        const marcasSnapshot = await getDocs(query(collection(db, 'marcas_vales'), where('historialId', '==', historialId)));
+        const batch = writeBatch(db);
+        let nuevoMontoTotal = 0;
+
+        marcasSnapshot.docs.forEach(docSnap => {
+            const data = docSnap.data();
+            const vales = data.diasTrabajados || 0;
+            const nuevoMonto = vales * nuevoValor;
+            
+            batch.update(docSnap.ref, {
+                montoAsignado: nuevoMonto
+            });
+            nuevoMontoTotal += nuevoMonto;
+        });
+
+        // Actualizar el historial
+        batch.update(doc(db, 'historial_cargas_vales', historialId), {
+            valorVale: nuevoValor,
+            montoTotal: nuevoMontoTotal
+        });
+
+        await batch.commit();
+        return { success: true };
+    } catch (error: any) {
+        console.error("Error al actualizar valor del vale:", error);
+        return { error: 'No se pudo actualizar el valor del vale: ' + error.message };
+    }
+}
+
+export async function updateMarcasBatch(updates: { id: string, montoAsignado: number }[]) {
+    if (!updates || updates.length === 0) return { success: true };
+    try {
+        const batch = writeBatch(db);
+        updates.forEach(upd => {
+            const docRef = doc(db, 'marcas_vales', upd.id);
+            batch.update(docRef, { montoAsignado: upd.montoAsignado });
+        });
+        await batch.commit();
+        return { success: true };
+    } catch (error: any) {
+        return { error: error.message };
+    }
+}
+
+export async function updateHistorialHeader(historialId: string, data: { valorVale: number, montoTotal: number }) {
+    try {
+        await updateDoc(doc(db, 'historial_cargas_vales', historialId), data);
+        return { success: true };
+    } catch (error: any) {
+        return { error: error.message };
     }
 }
 
@@ -412,23 +470,25 @@ export async function recalculateMarcaVale(marcaId: string, valorVale: number = 
             console.error("Error al buscar calidad del funcionario:", e);
         }
 
-        // 2. Contar días trabajados reales (o usar el forzado)
-        let diasTrabajadosReales = 0;
+        // 2. Determinar días trabajados reales
+        let diasTrabajadosReales = marcaData.diasPresenciales || 0;
         
         if (forceRealDays !== undefined) {
             diasTrabajadosReales = forceRealDays;
-        } else if (marcaData.detalles) {
-            // Un vale corresponde a una jornada completa (Entrada + Salida).
-            // El motor de cálculo marca ambos registros (Entrada y Salida) como esValida: true.
-            // Por lo tanto, el total de días reales es el total de marcas válidas dividido por 2.
-            const totalMarcasValidas = marcaData.detalles.filter((d: any) => d.esValida).length;
-            diasTrabajadosReales = Math.floor(totalMarcasValidas / 2);
+        } else if (marcaData.detalles && Array.isArray(marcaData.detalles) && marcaData.detalles.length > 0) {
+            // Verificar si los detalles tienen el nuevo formato con esValida
+            const firstDetail = marcaData.detalles[0] as any;
+            if (typeof firstDetail === 'object' && firstDetail !== null && 'esValida' in firstDetail) {
+                const totalMarcasValidas = marcaData.detalles.filter((d: any) => d.esValida).length;
+                diasTrabajadosReales = Math.floor(totalMarcasValidas / 2);
+            }
+            // Si es el formato antiguo (strings) o no tiene esValida, mantenemos el diasPresenciales actual
         }
 
         // 2.5 Sumar días gremiales (Masivos + Únicos por fecha)
         const diasGremialesMasivos = marcaData.diasGremialesMasivos || 0;
-        const diasGremialesUnicos = (marcaData.fechasGremiales || []).length;
-        const totalGremiales = diasGremialesMasivos + diasGremialesUnicos;
+        const fechasGremiales = marcaData.fechasGremiales || [];
+        const totalGremiales = diasGremialesMasivos + fechasGremiales.length;
         const asistenciaEfectiva = diasTrabajadosReales + totalGremiales;
 
         // 3. Aplicar fórmula según calidad contractual detectada (SOLO sobre días presenciales)
@@ -629,7 +689,7 @@ export async function previewViaticosMasivos(viaticosList: any[], targetHistoria
     }
 }
 
-export async function saveGremialesBatch(updates: { marcaId: string, dias: number, fechas: string[] }[]) {
+export async function saveGremialesBatch(updates: { marcaId: string, diasMasivos: number, fechas: string[] }[]) {
     try {
         const batch = writeBatch(db);
         for (const update of updates) {
@@ -824,27 +884,27 @@ export async function applyGremialesConfigToCarga(historialId: string, customMon
 
         for (const marcaDoc of marcasSnap.docs) {
             const marcaData = marcaDoc.data();
-            const funcId = rutToId[marcaData.RUT];
+            const rutLimpio = cleanRut(marcaData.RUT);
+            const funcId = rutToId[rutLimpio];
             
-            if (funcId && config[funcId]) {
-                const c = config[funcId];
-                batch.update(marcaDoc.ref, {
-                    diasGremialesMasivos: c.diasMasivos,
-                    fechasGremiales: c.fechas
-                });
-                appliedCount++;
-            }
+            // Sincronización total: si no está en el plan, se resetea a 0
+            const c = (funcId && config[funcId]) ? config[funcId] : { diasMasivos: 0, fechas: [] };
+            
+            batch.update(marcaDoc.ref, {
+                diasGremialesMasivos: c.diasMasivos || 0,
+                fechasGremiales: c.fechas || []
+            });
+            appliedCount++;
         }
 
         await batch.commit();
 
-        // 5. RECALCULAR todas las marcas que fueron actualizadas
-        for (const marcaDoc of marcasSnap.docs) {
-            const funcId = rutToId[marcaDoc.data().RUT];
-            if (funcId && config[funcId]) {
-                await recalculateMarcaVale(marcaDoc.id);
-            }
-        }
+        // 5. RECALCULAR todas las marcas
+        const recalculatePromises = marcasSnap.docs.map(marcaDoc => {
+            return recalculateMarcaVale(marcaDoc.id);
+        });
+
+        await Promise.all(recalculatePromises);
 
         return { success: true, count: appliedCount };
     } catch (error: any) {

@@ -118,12 +118,13 @@ export function calcularJornadasAvanzado(
     });
     
     let esperandoEntradaIndex: number | null = null;
-    const detallesProcesados: { horario: string; estado: string; esValida: boolean }[] = registros.map(r => {
+    const detallesProcesados: { horario: string; estado: string; esValida: boolean; fechaSimple?: string }[] = registros.map(r => {
       const d = parseHorarioTS(r.horario);
       return { 
         horario: d ? format(d, "EEEE dd MMM yyyy|HH:mm", { locale: es }) : String(r.horario), 
         estado: r.estado,
-        esValida: false 
+        esValida: false,
+        fechaSimple: d ? format(d, "dd/MM/yyyy") : undefined
       };
     });
     

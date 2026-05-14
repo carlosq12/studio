@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Save, Users2, Calendar as CalendarIcon, Search, Plus, Trash2, RefreshCcw } from "lucide-react";
+import { Loader2, Save, Users2, Calendar as CalendarIcon, Search, Plus, Trash2, RefreshCcw, ShieldCheck } from "lucide-react";
 import { collection, query, where, getDocs, doc, getFirestore } from "firebase/firestore";
 import { getApps, initializeApp } from "firebase/app";
 import { firebaseConfig } from "@/firebase/config";
@@ -24,11 +24,16 @@ import { recalculateMarcaVale, saveGremialesBatch, getGremialesConfig, saveGremi
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { format, addDays, differenceInCalendarDays, isAfter } from "date-fns";
+import { format, addDays, differenceInCalendarDays, isAfter, parse } from "date-fns";
 import { es } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+ 
+ function cleanRut(rut: string) {
+     return rut.replace(/[^0-9Kk]/g, '').toUpperCase();
+ }
 
 const app = getApps().find(app => app.name === 'server-actions-vales') || initializeApp(firebaseConfig, 'server-actions-vales');
 const db = getFirestore(app);
@@ -49,6 +54,10 @@ export function GremialesDialog({ open, onOpenChange, historiales }: GremialesDi
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isApplyingConfig, setIsApplyingConfig] = useState(false);
+  const [validationSourceId, setValidationSourceId] = useState<string>("");
+  const [validationDates, setValidationDates] = useState<Date[]>([]);
+  const [isValidating, setIsValidating] = useState(false);
+  const [saveProgress, setSaveProgress] = useState(0);
   const [globalDays, setGlobalDays] = useState<number>(0);
   const { toast } = useToast();
 
@@ -70,7 +79,8 @@ export function GremialesDialog({ open, onOpenChange, historiales }: GremialesDi
           
           if (historiales.length > 0 && !selectedHistorialId) {
             setSelectedHistorialId(historiales[0].id);
-          }
+            setValidationSourceId(historiales[0].id);
+        }
         } catch (error) {
           console.error("Error fetching funcionarios:", error);
         } finally {
@@ -90,26 +100,43 @@ export function GremialesDialog({ open, onOpenChange, historiales }: GremialesDi
         }
         setIsLoading(true);
         try {
+          // 1. Obtener marcas actuales de la carga
           const q = query(
             collection(db, "marcas_vales"),
             where("historialId", "==", selectedHistorialId)
           );
           const snap = await getDocs(q);
-          const newMarcasMap: Record<string, any> = {};
+          const marcasBase: Record<string, any> = {};
           
           snap.docs.forEach(d => {
             const data = d.data() as MarcaVale;
-            const f = allFuncionarios.find(func => func.RUT === data.RUT);
+            const f = allFuncionarios.find(func => cleanRut(func.RUT) === cleanRut(data.RUT));
             if (f) {
-              newMarcasMap[f.id] = {
+              marcasBase[f.id] = {
                 marcaId: d.id,
                 diasMasivos: data.diasGremialesMasivos || 0,
                 fechas: data.fechasGremiales || [],
-                diasPresenciales: data.diasPresenciales || 0
+                diasPresenciales: data.diasPresenciales || 0,
+                detalles: data.detalles || []
               };
             }
           });
-          setMarcasGremiales(newMarcasMap);
+
+          // 2. Si hay un "Mes del Plan" seleccionado, cargar esos valores automáticamente
+          if (configMonth) {
+            const resPlan = await getGremialesConfig(configMonth);
+            if (resPlan.success && resPlan.config) {
+              const configPlan = resPlan.config;
+              // Aplicar los valores del plan sobre la estructura de la carga actual
+              Object.keys(marcasBase).forEach(funcId => {
+                const planData = configPlan[funcId] || { diasMasivos: 0, fechas: [] };
+                marcasBase[funcId].diasMasivos = planData.diasMasivos;
+                marcasBase[funcId].fechas = planData.fechas;
+              });
+            }
+          }
+
+          setMarcasGremiales(marcasBase);
         } catch (error) {
           console.error("Error fetching marcas:", error);
         } finally {
@@ -120,12 +147,40 @@ export function GremialesDialog({ open, onOpenChange, historiales }: GremialesDi
         if (!configMonth) return;
         setIsLoading(true);
         try {
+          // 1. Obtener la planificación guardada
           const res = await getGremialesConfig(configMonth);
-          if (res.success && res.config) {
-            setMarcasGremiales(res.config);
-          } else {
-            setMarcasGremiales({});
+          const configMap = res.success ? res.config : {};
+          
+          // 2. Intentar buscar si hay una carga real para este mes para mostrar los días presenciales
+          const matchingHistorial = historiales.find(h => h.mes === configMonth);
+          let realDaysMap: Record<string, number> = {};
+          
+          if (matchingHistorial) {
+            const q = query(
+              collection(db, "marcas_vales"),
+              where("historialId", "==", matchingHistorial.id)
+            );
+            const snap = await getDocs(q);
+            snap.docs.forEach(d => {
+              const data = d.data() as MarcaVale;
+              const f = allFuncionarios.find(func => cleanRut(func.RUT) === cleanRut(data.RUT));
+              if (f) realDaysMap[f.id] = data.diasPresenciales || 0;
+            });
           }
+
+          // 3. Combinar ambos mapas
+          const combinedMap: Record<string, any> = {};
+          
+          // Primero poblar con gremialistas conocidos
+          gremialistas.forEach(g => {
+            const c = configMap[g.id] || { diasMasivos: 0, fechas: [] };
+            combinedMap[g.id] = {
+              ...c,
+              diasPresenciales: realDaysMap[g.id] || 0
+            };
+          });
+
+          setMarcasGremiales(combinedMap);
         } catch (error) {
           console.error("Error fetching config:", error);
         } finally {
@@ -250,12 +305,144 @@ export function GremialesDialog({ open, onOpenChange, historiales }: GremialesDi
       }
     }));
   };
+  
+  const handleClearMonth = async () => {
+    if (!confirm(`¿Deseas borrar TODA la planificación guardada para ${configMonth}? Esta acción no se puede deshacer.`)) return;
+    
+    setIsLoading(true);
+    try {
+        const updates = gremialistas.map(g => ({
+            funcionarioId: g.id,
+            diasMasivos: 0,
+            fechas: []
+        }));
+        
+        const res = await saveGremialesConfig(configMonth, updates);
+        if (res.success) {
+            toast({ title: "Plan limpiado", description: `Se borraron los datos de ${configMonth}.` });
+            // Forzar recarga
+            const current = configMonth;
+            setConfigMonth("");
+            setTimeout(() => setConfigMonth(current), 10);
+        }
+    } catch (e: any) {
+        toast({ variant: "destructive", title: "Error", description: e.message });
+    } finally {
+        setIsLoading(false);
+    }
+  };
+
+  const handleValidateFridays = async () => {
+    if (validationDates.length === 0) {
+        toast({ variant: "destructive", title: "Sin fechas", description: "Selecciona al menos una fecha para validar." });
+        return;
+    }
+
+    setIsValidating(true);
+    try {
+        // Asegurar formato dd/MM/yyyy para comparar con horario de DB
+        const targetDatesStr = validationDates.map(d => {
+            const day = d.getDate().toString().padStart(2, '0');
+            const month = (d.getMonth() + 1).toString().padStart(2, '0');
+            const year = d.getFullYear();
+            return `${day}/${month}/${year}`;
+        });
+
+        const newMarcas = { ...marcasGremiales };
+        let totalAdjusted = 0;
+
+        // 1. Obtener marcas de la fuente de validación
+        let marksSource: any[] = [];
+        const sourceId = (validationSourceId && validationSourceId !== "") ? validationSourceId : selectedHistorialId;
+
+        const q = query(collection(db, "marcas_vales"), where("historialId", "==", sourceId));
+        const snap = await getDocs(q);
+        marksSource = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+        if (marksSource.length === 0) {
+            toast({ variant: "destructive", title: "Sin datos", description: "No se encontraron marcas en la carga seleccionada." });
+            setIsValidating(false);
+            return;
+        }
+
+        // 2. Procesar cada gremialista
+        Object.keys(newMarcas).forEach(funcId => {
+            const info = newMarcas[funcId];
+            const funcionario = allFuncionarios.find(f => f.id === funcId);
+            if (!funcionario) return;
+
+            const rutLimpio = cleanRut(funcionario.RUT || "");
+            const match = marksSource.find(m => cleanRut(m.RUT || "") === rutLimpio);
+            const sourceDetalles = match?.detalles || [];
+
+            if (!Array.isArray(sourceDetalles) || sourceDetalles.length === 0) return;
+
+            const workedDays = new Set<string>();
+            sourceDetalles.forEach((det: any) => {
+                if (!det?.esValida || !det?.horario) return;
+                
+                let datePart = "";
+                
+                if (det.fechaSimple) {
+                    datePart = det.fechaSimple;
+                } else {
+                    // EXTRACCIÓN POR FUERZA BRUTA
+                    // Ejemplo: "viernes 27 mar 2026|07:57"
+                    const cleaned = det.horario.toLowerCase();
+                    const dayMatch = cleaned.match(/\s(\d{1,2})\s/);
+                    const yearMatch = cleaned.match(/\s(\d{4})\|/);
+                    
+                    if (dayMatch && yearMatch) {
+                        const d = dayMatch[1].padStart(2, '0');
+                        const y = yearMatch[1];
+                        
+                        // Encontrar mes por texto (abreviaturas comunes)
+                        const months = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
+                        let m = "00";
+                        months.forEach((name, idx) => {
+                            if (cleaned.includes(name)) {
+                                m = (idx + 1).toString().padStart(2, '0');
+                            }
+                        });
+                        
+                        if (m !== "00") {
+                            datePart = `${d}/${m}/${y}`;
+                        }
+                    }
+                }
+
+                if (datePart && targetDatesStr.includes(datePart)) {
+                    workedDays.add(datePart);
+                }
+            });
+
+            const count = workedDays.size;
+            if (count > 0) {
+                const currentMasivos = info.diasMasivos || 0;
+                const newValue = Math.max(0, currentMasivos - count);
+                if (info.diasMasivos !== newValue) {
+                    newMarcas[funcId] = { ...info, diasMasivos: newValue };
+                    totalAdjusted++;
+                }
+            }
+        });
+
+        setMarcasGremiales(newMarcas);
+        toast({ title: "Validación completada", description: `Se ajustó la asignación de ${totalAdjusted} funcionarios.` });
+    } catch (e: any) {
+        console.error("Error en validación:", e);
+        toast({ variant: "destructive", title: "Error", description: `Fallo al validar: ${e.message || 'Error de conexión'}` });
+    } finally {
+        setIsValidating(false);
+    }
+  };
 
   const handleSave = async () => {
     setIsSaving(true);
+    setSaveProgress(0);
     try {
       if (mode === "manage") {
-        const updates = Object.values(marcasGremiales)
+        const allUpdates = Object.values(marcasGremiales)
           .filter(m => m.marcaId)
           .map(m => ({
             marcaId: m.marcaId!,
@@ -263,46 +450,59 @@ export function GremialesDialog({ open, onOpenChange, historiales }: GremialesDi
             fechas: m.fechas ?? []
           }));
 
-        if (updates.length === 0) {
+        if (allUpdates.length === 0) {
           toast({ title: "Sin cambios", description: "No hay datos nuevos para guardar." });
+          setIsSaving(false);
           return;
         }
 
-        const res = await saveGremialesBatch(updates);
-
-        if (res.success) {
-          toast({
-            title: "Cambios guardados",
-            description: `Se actualizaron ${res.count} registros correctamente.`,
-          });
-          // onOpenChange(false); // Eliminado para mantener la ventana abierta
-        } else {
-          throw new Error(res.error);
+        // Chunking for manage mode (heavy recalculation)
+        const chunkSize = 20;
+        for (let i = 0; i < allUpdates.length; i += chunkSize) {
+          const chunk = allUpdates.slice(i, i + chunkSize);
+          const res = await saveGremialesBatch(chunk);
+          if (!res.success) throw new Error(res.error);
+          setSaveProgress(Math.round(((i + chunk.length) / allUpdates.length) * 100));
         }
+
+        toast({
+          title: "Cambios guardados",
+          description: `Se actualizaron ${allUpdates.length} registros correctamente.`,
+        });
       } else {
         // MODO CONFIGURACIÓN
-        const updates = Object.entries(marcasGremiales).map(([funcId, m]) => ({
+        const allUpdates = Object.entries(marcasGremiales).map(([funcId, m]) => ({
           funcionarioId: funcId,
           diasMasivos: m.diasMasivos ?? 0,
           fechas: m.fechas ?? []
         }));
 
-        const res = await saveGremialesConfig(configMonth, updates);
-        if (res.success) {
-            toast({ title: "Configuración guardada", description: `Se guardó la planificación para el mes ${configMonth}.` });
-            // onOpenChange(false);
-        } else {
-            throw new Error(res.error);
+        // Chunking for config mode
+        const chunkSize = 50;
+        for (let i = 0; i < allUpdates.length; i += chunkSize) {
+          const chunk = allUpdates.slice(i, i + chunkSize);
+          const res = await saveGremialesConfig(configMonth, chunk);
+          if (!res.success) throw new Error(res.error);
+          setSaveProgress(Math.round(((i + chunk.length) / allUpdates.length) * 100));
         }
+
+        toast({ title: "Configuración guardada", description: `Se guardó la planificación para el mes ${configMonth}.` });
       }
+      
+      // Delay to show 100%
+      setTimeout(() => {
+        setIsSaving(false);
+        setSaveProgress(0);
+      }, 500);
+
     } catch (error: any) {
       toast({
         variant: "destructive",
         title: "Error al guardar",
         description: error.message,
       });
-    } finally {
       setIsSaving(false);
+      setSaveProgress(0);
     }
   };
 
@@ -419,6 +619,15 @@ export function GremialesDialog({ open, onOpenChange, historiales }: GremialesDi
                                 ))}
                             </SelectContent>
                         </Select>
+                        <Button 
+                            variant="outline" 
+                            className="bg-red-50 text-red-700 border-red-200 hover:bg-red-100 h-10 px-4"
+                            onClick={handleClearMonth}
+                            disabled={isLoading}
+                        >
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            Limpiar Plan
+                        </Button>
                     </div>
                 </div>
               )}
@@ -427,34 +636,129 @@ export function GremialesDialog({ open, onOpenChange, historiales }: GremialesDi
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-4">
-              <div className="bg-blue-50/50 p-4 rounded-lg border border-blue-100 space-y-3">
-                <Label className="text-xs font-bold text-blue-800 uppercase block">1. Asignación Masiva</Label>
-                <div className="flex items-center gap-2">
-                  <Input 
-                    type="number" 
-                    min="0" 
-                    max="31" 
-                    value={globalDays === 0 ? "" : globalDays} 
-                    placeholder="0"
-                    onChange={(e) => setGlobalDays(parseInt(e.target.value) || 0)}
-                    className="bg-white h-9"
-                  />
-                  <Button onClick={handleAssignToAll} className="bg-blue-600 hover:bg-blue-700 whitespace-nowrap h-9">
-                    Asignar
-                  </Button>
-                </div>
-                <div className="flex items-center justify-between">
-                  <p className="text-[10px] text-blue-600 italic leading-tight">
-                    Aplica estos días a todos los gremialistas.
-                  </p>
-                  <div className="flex flex-col items-end">
-                    <span className="text-[10px] font-bold text-slate-400 uppercase">Días Asignados</span>
-                    <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 font-black h-6 px-3 text-sm">
-                      {currentMassiveValue}
-                    </Badge>
+              {mode === "config" && (
+                <div className="rounded-xl border border-blue-100 bg-blue-50/30 p-4 shadow-sm">
+                  <div className="flex items-center gap-2 mb-4">
+                      <div className="p-1.5 bg-blue-100 rounded-lg text-blue-600">
+                          <Users2 className="h-4 w-4" />
+                      </div>
+                      <h3 className="text-xs font-black uppercase tracking-tight text-slate-700">
+                          1. Asignación Masiva
+                      </h3>
+                  </div>
+                  
+                  <div className="flex gap-2 items-end">
+                      <div className="flex-1 space-y-1.5">
+                          <Input 
+                              type="number" 
+                              placeholder="Ej: 22"
+                              value={globalDays}
+                              onChange={(e) => setGlobalDays(Number(e.target.value))}
+                              className="h-9 bg-white"
+                          />
+                      </div>
+                      <Button 
+                          onClick={handleAssignToAll}
+                          className="h-9 bg-blue-600 hover:bg-blue-700 font-bold px-6 shadow-md shadow-blue-100 transition-all active:scale-95"
+                      >
+                          Asignar
+                      </Button>
+                  </div>
+                  
+                  <div className="mt-4 flex items-center justify-between p-2 bg-white rounded-lg border border-blue-50">
+                      <span className="text-[10px] text-slate-400 italic font-medium">Aplica estos días a todos los gremialistas.</span>
+                      <div className="flex flex-col items-center">
+                          <span className="text-[8px] font-bold text-slate-400 uppercase">Días Asignados</span>
+                          <Badge variant="outline" className="h-6 min-w-10 justify-center bg-blue-50 text-blue-700 border-blue-200 font-black text-xs rounded-full">
+                              {globalDays}
+                          </Badge>
+                      </div>
                   </div>
                 </div>
-              </div>
+              )}
+
+              {mode === "config" && (
+                <div className="rounded-xl border border-orange-100 bg-orange-50/30 p-4 shadow-sm">
+                  <div className="flex items-center gap-2 mb-4">
+                      <div className="p-1.5 bg-orange-100 rounded-lg text-orange-600">
+                          <ShieldCheck className="h-4 w-4" />
+                      </div>
+                      <h3 className="text-xs font-black uppercase tracking-tight text-slate-700">
+                          2. Validación por Asistencia
+                      </h3>
+                  </div>
+
+                  <div className="space-y-4">
+                      <div className="space-y-1.5">
+                        <Label className="text-[9px] font-bold text-slate-400 uppercase">1. Fuente de Marcas</Label>
+                        <Select value={validationSourceId} onValueChange={setValidationSourceId}>
+                            <SelectTrigger className="h-8 text-[10px] bg-white">
+                                <SelectValue placeholder="Seleccionar carga..." />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {historiales.map(h => (
+                                    <SelectItem key={h.id} value={h.id} className="text-[10px]">
+                                        {h.mes} - {h.fechaCarga?.toDate ? format(h.fechaCarga.toDate(), "dd/MM") : ''}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                            <Label className="text-[9px] font-bold text-slate-400 uppercase">2. Fechas a Validar</Label>
+                        </div>
+                        
+                        <Popover>
+                            <PopoverTrigger asChild>
+                                <Button variant="outline" className="w-full h-8 text-[10px] justify-start bg-white border-dashed">
+                                    <CalendarIcon className="h-3.5 w-3.5 mr-2 text-slate-400" />
+                                    {validationDates.length === 0 ? "Añadir fechas..." : `${validationDates.length} fechas seleccionadas`}
+                                </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0" align="start">
+                                <Calendar
+                                    mode="multiple"
+                                    selected={validationDates}
+                                    onSelect={(dates) => setValidationDates(dates || [])}
+                                    initialFocus
+                                    locale={es}
+                                    captionLayout="dropdown-buttons"
+                                    fromYear={2024}
+                                    toYear={2026}
+                                />
+                            </PopoverContent>
+                        </Popover>
+
+                        {validationDates.length > 0 && (
+                            <div className="flex flex-wrap gap-1 mt-2 max-h-20 overflow-y-auto p-1 bg-white rounded border border-slate-100">
+                                {validationDates.sort((a,b) => a.getTime() - b.getTime()).map((d, i) => (
+                                    <Badge key={i} variant="secondary" className="text-[8px] px-1.5 py-0 h-5 bg-slate-100 text-slate-600 border-none flex items-center gap-1">
+                                        {format(d, "dd/MM")}
+                                        <button onClick={() => setValidationDates(validationDates.filter((_, idx) => idx !== i))}>
+                                            <Trash2 className="h-2 w-2 hover:text-red-500" />
+                                        </button>
+                                    </Badge>
+                                ))}
+                            </div>
+                        )}
+                      </div>
+
+                      <Button 
+                          onClick={handleValidateFridays}
+                          className="w-full h-9 text-[10px] font-black uppercase tracking-wider bg-orange-600 hover:bg-orange-700 shadow-lg shadow-orange-100 transition-all active:scale-95"
+                          disabled={isLoading || isValidating || Object.keys(marcasGremiales).length === 0 || validationDates.length === 0}
+                      >
+                          {isValidating ? (
+                            <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Procesando...</>
+                          ) : (
+                            <><Search className="h-4 w-4 mr-2" /> Validar Días Seleccionados</>
+                          )}
+                      </Button>
+                  </div>
+                </div>
+              )}
 
               <div className="space-y-2">
                 <Label className="text-xs font-bold text-slate-500 uppercase px-1">Detalle por Gremialista</Label>
@@ -482,7 +786,7 @@ export function GremialesDialog({ open, onOpenChange, historiales }: GremialesDi
                               <p className="text-[9px] text-slate-500 font-mono">{g.RUT}</p>
                             </div>
                             <div className="col-span-2 text-center text-[11px] text-slate-500 font-medium">
-                                {mode === "manage" ? (info?.diasPresenciales || 0) : "-"}
+                                {info?.diasPresenciales || 0}
                             </div>
                             <div className="col-span-1 flex justify-center">
                                 <Input
@@ -509,97 +813,106 @@ export function GremialesDialog({ open, onOpenChange, historiales }: GremialesDi
             </div>
 
             <div className="space-y-4">
-              <div className="bg-slate-50 p-4 rounded-lg border border-slate-200 space-y-3">
-                <Label className="text-xs font-bold text-slate-700 uppercase block">2. Días Únicos por Fecha</Label>
-                
-                <Popover open={openFuncSearch} onOpenChange={setOpenFuncSearch}>
-                  <PopoverTrigger asChild>
-                    <Button variant="outline" className="w-full justify-between text-[11px] h-9">
-                      {selectedFuncForDate ? `${selectedFuncForDate.nombres} ${selectedFuncForDate.apellidos}` : "Seleccionar Gremialista..."}
-                      <Search className="h-3 w-3 opacity-50" />
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-[300px] p-0" align="start">
-                    <Command>
-                      <CommandInput placeholder="Buscar..." />
-                      <CommandList>
-                        <CommandEmpty>No se encontró.</CommandEmpty>
-                        <CommandGroup>
-                          {gremialistas.map((f) => (
-                            <CommandItem
-                              key={f.id}
-                              onSelect={() => {
-                                setSelectedFuncForDate(f);
-                                setOpenFuncSearch(false);
-                              }}
-                            >
-                              <div className="flex flex-col">
-                                <span className="text-xs font-bold">{f.nombres} {f.apellidos}</span>
-                                <span className="text-[10px] text-slate-500">{f.RUT}</span>
-                              </div>
-                            </CommandItem>
-                          ))}
-                        </CommandGroup>
-                      </CommandList>
-                    </Command>
-                  </PopoverContent>
-                </Popover>
-
-                <div className="space-y-2">
-                  <div className="grid grid-cols-2 gap-2">
-                    <div className="space-y-1">
-                      <Label className="text-[10px] text-slate-400 uppercase font-bold">Desde</Label>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <Button variant="outline" className="w-full text-[11px] justify-start h-8 px-2">
-                            <CalendarIcon className="mr-1 h-3 w-3" />
-                            {fromDate ? format(fromDate, "dd/MM/yy") : "Inicio"}
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar
-                            mode="single"
-                            selected={fromDate}
-                            onSelect={setFromDate}
-                            initialFocus
-                            locale={es}
-                          />
-                        </PopoverContent>
-                      </Popover>
-                    </div>
-                    <div className="space-y-1">
-                      <Label className="text-[10px] text-slate-400 uppercase font-bold">Hasta</Label>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <Button variant="outline" className="w-full text-[11px] justify-start h-8 px-2">
-                            <CalendarIcon className="mr-1 h-3 w-3" />
-                            {toDate ? format(toDate, "dd/MM/yy") : "Fin"}
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar
-                            mode="single"
-                            selected={toDate}
-                            onSelect={setToDate}
-                            initialFocus
-                            locale={es}
-                          />
-                        </PopoverContent>
-                      </Popover>
-                    </div>
+              {mode === "config" && (
+                <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-4 shadow-sm">
+                  <div className="flex items-center gap-2 mb-4">
+                      <div className="p-1.5 bg-slate-200 rounded-lg text-slate-600">
+                          <CalendarIcon className="h-4 w-4" />
+                      </div>
+                      <h3 className="text-xs font-black uppercase tracking-tight text-slate-700">
+                          2. Días Únicos por Fecha
+                      </h3>
                   </div>
-                  
-                  <div className="flex items-center justify-between gap-2 pt-1">
-                    <div className="text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded border border-blue-100">
-                      Total: {fromDate && toDate && !isAfter(fromDate, toDate) ? differenceInCalendarDays(toDate, fromDate) + 1 : 0} días
-                    </div>
-                    <Button onClick={handleAddDateToFunc} disabled={!selectedFuncForDate} className="bg-slate-800 hover:bg-slate-900 h-8 px-4 text-xs">
-                      <Plus className="h-3 w-3 mr-1" />
-                      Agregar
-                    </Button>
+
+                  <div className="space-y-4">
+                      <div className="relative">
+                          <Button
+                              variant="outline"
+                              role="combobox"
+                              aria-expanded={openFuncSearch}
+                              className="w-full justify-between h-9 text-[10px] bg-white border-slate-200"
+                              onClick={() => setOpenFuncSearch(!openFuncSearch)}
+                          >
+                              {selectedFuncForDate ? `${selectedFuncForDate.nombres} ${selectedFuncForDate.apellidos || ''}` : "Seleccionar Gremialista..."}
+                              <Search className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                          </Button>
+                          {openFuncSearch && (
+                              <div className="absolute z-50 w-full mt-1 bg-white border rounded-md shadow-lg max-h-48 overflow-y-auto">
+                                  {gremialistas.map((f) => (
+                                      <div
+                                          key={f.id}
+                                          className="px-3 py-2 text-[10px] hover:bg-slate-50 cursor-pointer border-b last:border-0"
+                                          onClick={() => {
+                                              setSelectedFuncForDate(f);
+                                              setOpenFuncSearch(false);
+                                          }}
+                                      >
+                                          {f.nombres} {f.apellidos || ''}
+                                      </div>
+                                  ))}
+                              </div>
+                          )}
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-3">
+                          <div className="space-y-1">
+                              <Label className="text-[9px] font-bold text-slate-400 uppercase">Desde</Label>
+                              <Popover>
+                                  <PopoverTrigger asChild>
+                                      <Button variant="outline" className="w-full h-8 text-[10px] justify-start bg-white border-slate-200">
+                                          <CalendarIcon className="h-3.5 w-3.5 mr-2 text-slate-400" />
+                                          {fromDate ? format(fromDate, "dd/MM/yy") : "Elegir..."}
+                                      </Button>
+                                  </PopoverTrigger>
+                                  <PopoverContent className="w-auto p-0" align="start">
+                                      <Calendar
+                                          mode="single"
+                                          selected={fromDate}
+                                          onSelect={setFromDate}
+                                          initialFocus
+                                          locale={es}
+                                      />
+                                  </PopoverContent>
+                              </Popover>
+                          </div>
+                          <div className="space-y-1">
+                              <Label className="text-[9px] font-bold text-slate-400 uppercase">Hasta</Label>
+                              <Popover>
+                                  <PopoverTrigger asChild>
+                                      <Button variant="outline" className="w-full h-8 text-[10px] justify-start bg-white border-slate-200">
+                                          <CalendarIcon className="h-3.5 w-3.5 mr-2 text-slate-400" />
+                                          {toDate ? format(toDate, "dd/MM/yy") : "Elegir..."}
+                                      </Button>
+                                  </PopoverTrigger>
+                                  <PopoverContent className="w-auto p-0" align="start">
+                                      <Calendar
+                                          mode="single"
+                                          selected={toDate}
+                                          onSelect={setToDate}
+                                          initialFocus
+                                          locale={es}
+                                      />
+                                  </PopoverContent>
+                              </Popover>
+                          </div>
+                      </div>
+
+                      <div className="flex items-center justify-between pt-1">
+                          <Badge variant="secondary" className="h-6 bg-blue-50 text-blue-600 border-none font-bold text-[9px] px-2">
+                              Total: {fromDate && toDate ? differenceInCalendarDays(toDate, fromDate) + 1 : 0} días
+                          </Badge>
+                          <Button 
+                              onClick={handleAddDateToFunc}
+                              size="sm"
+                              className="h-8 bg-slate-700 hover:bg-slate-800 text-[10px] font-bold shadow-sm"
+                              disabled={!selectedFuncForDate || !fromDate || !toDate}
+                          >
+                              <Plus className="h-3.5 w-3.5 mr-1.5" /> Agregar
+                          </Button>
+                      </div>
                   </div>
                 </div>
-              </div>
+              )}
 
               <div className="space-y-2">
                 <Label className="text-xs font-bold text-slate-500 uppercase px-1">Resumen Fechas Específicas</Label>
@@ -633,16 +946,32 @@ export function GremialesDialog({ open, onOpenChange, historiales }: GremialesDi
           </div>
         </div>
 
-        <DialogFooter className="p-6 pt-2 gap-2 sm:gap-0 bg-slate-50 border-t mt-auto">
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
-          <Button 
-            onClick={handleSave} 
-            disabled={isSaving || !selectedHistorialId}
-            className="bg-blue-600 hover:bg-blue-700"
-          >
-            {isSaving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
-            Guardar Todos los Cambios
-          </Button>
+        <DialogFooter className="p-6 pt-2 flex flex-col gap-3">
+          {isSaving && (
+            <div className="w-full space-y-2 mb-2">
+                <div className="flex items-center justify-between text-[10px] font-black uppercase text-blue-600">
+                    <div className="flex items-center gap-2">
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                        <span>Guardando y recalculando vales...</span>
+                    </div>
+                    <span>{saveProgress}%</span>
+                </div>
+                <Progress value={saveProgress} className="h-1.5 bg-blue-100" />
+            </div>
+          )}
+          <div className="flex justify-end gap-3 w-full">
+            <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isSaving}>
+                Cancelar
+            </Button>
+            <Button 
+                className="bg-blue-600 hover:bg-blue-700 font-bold px-8" 
+                onClick={handleSave} 
+                disabled={isSaving || gremialistas.length === 0}
+            >
+                {isSaving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
+                Guardar Todos los Cambios
+            </Button>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>
